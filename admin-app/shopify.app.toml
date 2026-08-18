@@ -1,0 +1,18 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "550fa00abdafe4f76bddbbffefd93dd6"
+name = "unigrid-editor"
+application_url = "https://example.com"
+embedded = true
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "read_metaobject_definitions,write_metaobject_definitions,read_metaobjects,write_metaobjects,read_products,read_files"
+optional_scopes = [ ]
+use_legacy_install_flow = false
+
+[auth]
+redirect_urls = [ "http://localhost" ]
+
+[webhooks]
+api_version = "2026-07"
