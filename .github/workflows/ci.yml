@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # CLAUDE.md §3 / TASKS.md Gate 3: core/ declares no dependencies.
+      # Asserted here rather than in a core/ test — it is a fact about
+      # packaging, not about grid math.
+      - name: core/ has zero dependencies
+        run: |
+          test "$(node -p "JSON.stringify(require('./core/package.json').dependencies)")" = '{}'
+      # Order matters: the §3 boundary guard lives in lint, so it fails the
+      # build before anything slower runs.
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test

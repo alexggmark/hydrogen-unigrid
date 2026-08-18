@@ -1,0 +1,26 @@
+{
+  "name": "unigrid",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "core",
+    "storefront"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace storefront",
+    "build": "npm run build --workspace storefront",
+    "lint": "eslint core && npm run lint --workspace storefront",
+    "typecheck": "tsc -p core --noEmit && npm run typecheck --workspace storefront",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.18.0",
+    "eslint": "^9.18.0",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.67.0",
+    "vitest": "^4.1.11"
+  },
+  "engines": {
+    "node": "^22 || ^24"
+  }
+}

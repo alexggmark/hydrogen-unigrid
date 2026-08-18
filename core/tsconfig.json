@@ -1,0 +1,27 @@
+{
+  "include": ["src/**/*.ts", "test/**/*.ts"],
+  "compilerOptions": {
+    /* CLAUDE.md §3: core/ has no DOM. Omitting the DOM lib and all ambient
+       @types makes `document`/`window`/`localStorage` type errors, not just
+       lint errors — the boundary holds even if someone edits eslint.config.js. */
+    "lib": ["ES2022"],
+    "types": [],
+
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "Bundler",
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "resolveJsonModule": true,
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  }
+}
