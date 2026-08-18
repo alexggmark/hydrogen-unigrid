@@ -15,14 +15,11 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      # CLAUDE.md §3 / TASKS.md Gate 3: core/ declares no dependencies.
-      # Asserted here rather than in a core/ test — it is a fact about
-      # packaging, not about grid math.
-      - name: core/ has zero dependencies
+      # core declares no dependencies
+      - name: core has zero dependencies
         run: |
           test "$(node -p "JSON.stringify(require('./core/package.json').dependencies)")" = '{}'
-      # Order matters: the §3 boundary guard lives in lint, so it fails the
-      # build before anything slower runs.
+      # lint carries the boundary guard, so it runs before anything slower
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test

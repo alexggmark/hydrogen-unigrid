@@ -1,9 +1,7 @@
 {
   "include": ["src/**/*.ts", "test/**/*.ts"],
   "compilerOptions": {
-    /* CLAUDE.md §3: core/ has no DOM. Omitting the DOM lib and all ambient
-       @types makes `document`/`window`/`localStorage` type errors, not just
-       lint errors — the boundary holds even if someone edits eslint.config.js. */
+    // no dom lib, no ambient types: core has no browser
     "lib": ["ES2022"],
     "types": [],
 
