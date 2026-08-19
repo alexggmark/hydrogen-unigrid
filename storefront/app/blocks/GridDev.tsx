@@ -1,5 +1,6 @@
 import {useEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
+import {gridUnits} from './units';
 
 // dev instrumentation: surfaces --u, flags text blocks past their authored span
 
@@ -26,12 +27,10 @@ export function GridDev() {
     if (!(grid instanceof HTMLElement)) return;
 
     const report = () => {
-      const cs = getComputedStyle(grid);
+      const units = gridUnits(grid);
+      if (!units) return;
+      const {col, row, gutter, cols} = units;
       const width = grid.getBoundingClientRect().width;
-      const cols = Number(cs.getPropertyValue('--cols').trim());
-      const gutter = parseFloat(cs.getPropertyValue('--gutter'));
-      const col = (width - (cols - 1) * gutter) / cols;
-      const row = col * 0.75;
 
       setReadout({
         band: cols === 12 ? 'A' : cols === 8 ? 'B' : 'C',
@@ -39,7 +38,7 @@ export function GridDev() {
         u: width / 100,
         col,
         row,
-        type: parseFloat(cs.fontSize),
+        type: parseFloat(getComputedStyle(grid).fontSize),
       });
 
       for (const block of grid.querySelectorAll<HTMLElement>(

@@ -16,16 +16,6 @@ export const HARNESS: Layout = {
       },
     },
     {
-      id: 'index',
-      type: 'text',
-      content: {kind: 'none'},
-      at: {
-        a: {col: 10, colSpan: 3, row: 1, rowSpan: 2},
-        b: {col: 1, colSpan: 4, row: 3, rowSpan: 1},
-        c: {col: 1, colSpan: 4, row: 4, rowSpan: 2},
-      },
-    },
-    {
       id: 'figure',
       type: 'image',
       content: {kind: 'none'},

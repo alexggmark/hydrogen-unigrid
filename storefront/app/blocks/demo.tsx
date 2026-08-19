@@ -9,7 +9,6 @@ export type Chrome = {
 
 export const CHROME: Record<string, Chrome> = {
   masthead: {as: 'header', className: 'b-plain'},
-  index: {as: 'aside', className: 'b-plain b-rule'},
   figure: {as: 'figure', className: 'b-red'},
   essay: {as: 'article', className: 'b-paper'},
   fig02: {className: 'b-yellow'},
@@ -28,14 +27,6 @@ export const CONTENT: Record<string, ReactNode> = {
       <br />
       GRID
     </h1>
-  ),
-  index: (
-    <>
-      <p className="u-micro">Scaling harness</p>
-      <p className="u-micro u-dim">
-        Three bands · one block set · positions per band
-      </p>
-    </>
   ),
   figure: (
     <>

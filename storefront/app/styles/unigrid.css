@@ -23,7 +23,8 @@
   --u: 1cqw;
   --gutter: calc(var(--u) * 1.5);
   --col: calc((100cqw - (var(--cols) - 1) * var(--gutter)) / var(--cols));
-  --row: calc(var(--col) * 0.75);
+  --ratio: 0.75; /* fixed cell proportion, declared once */
+  --row: calc(var(--col) * var(--ratio));
 
   display: grid;
   grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
@@ -168,4 +169,30 @@
   --cs: var(--csc, var(--csa));
   --r: var(--rc, var(--ra));
   --rs: var(--rsc, var(--rsa));
+}
+
+/* measurement probes. laid out by the grid like anything else, which is the
+   whole point — they report what the browser did, not what the css asked for. */
+.u-probe {
+  visibility: hidden;
+  pointer-events: none;
+  grid-row: 1 / span 1;
+}
+.u-probe[data-probe='one'] {
+  grid-column: 1 / span 1;
+}
+.u-probe[data-probe='across'] {
+  grid-column: 2 / span 1;
+}
+.u-probe[data-probe='down'] {
+  grid-column: 1 / span 1;
+  grid-row: 1 / span 2;
+}
+
+/* measurement only: let text blocks take their natural height so what comes back
+   is a function of the text, not of the span the last measurement gave them.
+   never painted — set and cleared inside one synchronous pass. */
+.u-grid[data-measuring] .u-block[data-text] {
+  block-size: max-content;
+  align-self: start;
 }

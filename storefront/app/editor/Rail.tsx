@@ -1,4 +1,5 @@
 import {BANDS, WIDEST, type Band, type Cell, type Layout} from '@unigrid/core';
+import {Palette} from './Palette';
 
 // the customiser rail. chrome only — every decision it triggers is core's.
 
@@ -15,6 +16,7 @@ export type RailProps = {
   selected: string | null;
   authored: Cell | undefined;
   resolved: Cell | undefined;
+  editable: Cell | undefined;
   grown: number;
   error: string | null;
   dirty: boolean;
@@ -32,7 +34,7 @@ export type RailProps = {
 };
 
 export function Rail(props: RailProps) {
-  const {layout, band, selected, authored, resolved, grown} = props;
+  const {layout, band, selected, authored, resolved, editable, grown} = props;
   const derived = selected !== null && band !== WIDEST && !authored;
 
   return (
@@ -62,6 +64,12 @@ export function Rail(props: RailProps) {
         </p>
       </section>
 
+      <section className="e-sec">
+        <h2>Add</h2>
+        <Palette />
+        <p className="e-dim">Drag onto a module. Nothing is placed by default.</p>
+      </section>
+
       <section className="e-sec e-grow">
         <h2>Blocks</h2>
         <ul className="e-list">
@@ -81,8 +89,8 @@ export function Rail(props: RailProps) {
       </section>
 
       <section className="e-sec">
-        <h2>Placement</h2>
-        {selected === null || !resolved ? (
+        <h2>Placement — authored</h2>
+        {selected === null || !resolved || !editable ? (
           <p className="e-dim">Nothing selected.</p>
         ) : (
           <>
@@ -93,6 +101,9 @@ export function Rail(props: RailProps) {
                   ? 'derived — editing overrides it'
                   : 'overridden in this band'}
             </p>
+            <p className="e-dim" style={{margin: '0 0 8px'}}>
+              What you author. Growth and push are the engine&rsquo;s answer to it.
+            </p>
             <div className="e-fields">
               {AXES.map((axis) => (
                 <label key={axis.key}>
@@ -100,7 +111,7 @@ export function Rail(props: RailProps) {
                   <input
                     type="number"
                     min={1}
-                    value={resolved[axis.key]}
+                    value={editable[axis.key]}
                     onChange={(e) => {
                       const n = Number(e.target.value);
                       if (Number.isInteger(n) && n >= 1) {
@@ -115,6 +126,13 @@ export function Rail(props: RailProps) {
               <p className="e-note">
                 text grew {grown} row{grown === 1 ? '' : 's'} past its authored
                 span
+              </p>
+            ) : null}
+            {resolved.row !== authored?.row ? (
+              <p className="e-note">
+                pushed down {resolved.row - (authored?.row ?? resolved.row)} row
+                {resolved.row - (authored?.row ?? resolved.row) === 1 ? '' : 's'} —
+                it still collides at its authored row {authored?.row}
               </p>
             ) : null}
             <div className="e-row">
@@ -159,7 +177,7 @@ export function Rail(props: RailProps) {
       </section>
 
       <footer className="e-foot e-dim">
-        arrows move · shift+arrows resize · esc deselect
+        drag to move · grab an edge to resize · arrows nudge · esc deselect
       </footer>
     </aside>
   );

@@ -1,19 +1,16 @@
 import {BANDS, type Band, type Measurements} from '@unigrid/core';
+import {gridUnits} from '~/blocks/units';
 
 // text height needs a dom, so it is measured here and handed to core as numbers.
 // same arithmetic as the dev hud: a block spanning n rows is n rows plus the
 // n-1 gutters between them.
-const rowsFor = (height: number, row: number, gutter: number): number =>
-  Math.max(1, Math.ceil((height + gutter) / (row + gutter)));
+// n rows is n tracks plus the n-1 gutters between them, inverted.
+// sub-pixel slack only: the height going in is now content, not a box, so there
+// is nothing left to drift.
+const SLACK = 0.5;
 
-function rowUnit(grid: HTMLElement): {row: number; gutter: number} {
-  const cs = getComputedStyle(grid);
-  const cols = Number(cs.getPropertyValue('--cols').trim());
-  const gutter = parseFloat(cs.getPropertyValue('--gutter'));
-  const width = grid.getBoundingClientRect().width;
-  const col = (width - (cols - 1) * gutter) / cols;
-  return {row: col * 0.75, gutter};
-}
+const rowsFor = (height: number, row: number, gutter: number): number =>
+  Math.max(1, Math.ceil((height - SLACK + gutter) / (row + gutter)));
 
 // all three bands without resizing the window. within a band the composition
 // only zooms, so characters-per-line is constant and the row count holds at any
@@ -27,12 +24,29 @@ export function measureBands(
 
   for (const band of BANDS) {
     host.dataset.band = band;
-    const {row, gutter} = rowUnit(grid);
+    const units = gridUnits(grid);
     const found: Record<string, number> = {};
-    for (const el of grid.querySelectorAll<HTMLElement>('.u-block[data-text]')) {
-      const id = el.dataset.block;
-      if (id) found[id] = rowsFor(el.scrollHeight, row, gutter);
+
+    if (units) {
+      // release the row span first. measuring the box measures the last
+      // measurement — a block already grown to n rows reports n rows back, and
+      // any rounding on the way through ratchets it up by one on every edit.
+      // at max-content the number depends on the text and the column width and
+      // nothing else, so measuring twice gives the same answer.
+      grid.toggleAttribute('data-measuring', true);
+      for (const el of grid.querySelectorAll<HTMLElement>('.u-block[data-text]')) {
+        const id = el.dataset.block;
+        if (!id) continue;
+        // fractional, unlike scrollHeight, so no rounding enters at all
+        const height = el.getBoundingClientRect().height;
+        const rows = rowsFor(height, units.row, units.gutter);
+        // a bad measurement is worse than none: core reads a non-finite row
+        // count as no growth, so it would fail silently rather than loudly
+        if (Number.isFinite(rows)) found[id] = rows;
+      }
+      grid.toggleAttribute('data-measuring', false);
     }
+
     out[band] = found;
   }
 

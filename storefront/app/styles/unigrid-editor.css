@@ -192,3 +192,101 @@
     max-block-size: none;
   }
 }
+
+/* drag surfaces. the move surface fills the block so the whole thing is the
+   handle; edges sit above it and win the pointer. */
+.e-move,
+.e-handle {
+  position: absolute;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  appearance: none;
+}
+.e-move {
+  inset: 0;
+  cursor: grab;
+  z-index: 1;
+}
+.e-move:active {
+  cursor: grabbing;
+}
+.e-handle {
+  z-index: 2;
+  background: #0b57d0;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.u-block[data-selected] .e-handle {
+  opacity: 1;
+}
+.e-handle:focus-visible {
+  opacity: 1;
+  outline: 2px solid #0b57d0;
+  outline-offset: 2px;
+}
+
+.e-handle-n,
+.e-handle-s {
+  inset-inline: 18%;
+  block-size: 6px;
+  cursor: ns-resize;
+}
+.e-handle-n {
+  inset-block-start: -3px;
+}
+.e-handle-s {
+  inset-block-end: -3px;
+}
+.e-handle-e,
+.e-handle-w {
+  inset-block: 18%;
+  inline-size: 6px;
+  cursor: ew-resize;
+}
+.e-handle-w {
+  inset-inline-start: -3px;
+}
+.e-handle-e {
+  inset-inline-end: -3px;
+}
+.e-handle-se {
+  inset-block-end: -4px;
+  inset-inline-end: -4px;
+  inline-size: 10px;
+  block-size: 10px;
+  cursor: nwse-resize;
+}
+
+/* where it will actually land — the resolver's answer, not the pointer's */
+.e-ghost {
+  pointer-events: none;
+  border: 2px solid #0b57d0;
+  background: rgb(11 87 208 / 10%);
+  z-index: 3;
+}
+.e-ghost[data-invalid] {
+  border-color: #a1101a;
+  background: rgb(161 16 26 / 10%);
+}
+
+.e-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.e-chip {
+  cursor: grab;
+  text-transform: lowercase;
+}
+.e-chip[data-dragging] {
+  opacity: 0.5;
+}
+
+/* where a displaced block still occupies the grid. only drawn mid-drag, and
+   only for blocks the resolver has actually moved. */
+.e-authored {
+  pointer-events: none;
+  border: 1px dashed rgb(11 87 208 / 45%);
+  z-index: 2;
+}
