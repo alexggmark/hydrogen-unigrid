@@ -120,6 +120,10 @@ body {
 .b-ink    { background: #111;    color: #efece6; }
 .b-paper  { background: #fff; }
 
+/* a rule on the element beats an inherited value, so name them explicitly */
+.unigrid :where(p, li, dd, dt, figcaption, blockquote, h1, h2, h3, h4, h5, h6) {
+  font-size: inherit; line-height: inherit;
+}
 h1, h2, h3 { font-weight: 700; letter-spacing: -0.02em; line-height: 1.02; }
 .mega  { font-size: var(--t-mega); line-height: 0.86; letter-spacing: -0.04em; }
 .h1    { font-size: var(--t-h1); }

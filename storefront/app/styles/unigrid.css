@@ -1,6 +1,5 @@
-/* the grid layer. no px in this file — every geometric and type value is a
-   multiple of --u. the rem cap on .u-frame is the one exception: it is a
-   boundary, not composition. */
+/* the grid layer. no px here: every value is a multiple of --u. the rem cap on
+   .u-frame is the one exception — it is a boundary, not composition. */
 
 .u-frame *,
 .u-frame *::before,
@@ -8,10 +7,8 @@
   box-sizing: border-box;
 }
 
-/* frame carries container-type, grid carries --u. they must be separate
-   elements: cqw inside an element resolves against its *ancestor* container,
-   so a grid declaring --u: 1cqw on itself would measure its parent. sharing an
-   inline-size keeps --u equal to the grid's own width. */
+/* separate elements on purpose: cqw resolves against the ancestor container, so
+   a grid declaring --u: 1cqw on itself would measure its parent */
 .u-frame {
   --margin: min(4vw, 6rem);
   --grid-max: 100rem;
@@ -35,9 +32,7 @@
   padding-block: calc(var(--u) * 4);
 }
 
-/* three fixed compositions. crossing a bound switches composition, inside a
-   bound nothing moves. --f is per band because a band scaled far enough down
-   hits the readability floor. */
+/* three fixed compositions. crossing a bound switches, inside one nothing moves */
 .u-grid {
   --cols: 12;
   --f: 1;
@@ -65,9 +60,7 @@
   line-height: 1.42;
 }
 
-/* a block declares its wide-band cell and optionally overrides b and c. an
-   absent override inherits the wide band — the css analogue of the per block
-   per band override flag. */
+/* an absent override inherits the wide band — per block, per band */
 .u-block {
   position: relative;
   margin: 0; /* ua gives figure/blockquote inline margins in px, which break the column */
@@ -103,6 +96,12 @@
 }
 .u-block > * + * {
   margin-block-start: calc(var(--u) * 0.9 * var(--f));
+}
+
+/* a rule on the element beats an inherited value, so name them explicitly */
+.u-grid :where(p, li, dd, dt, figcaption, blockquote, h1, h2, h3, h4, h5, h6) {
+  font-size: inherit;
+  line-height: inherit;
 }
 
 .u-grid h1,

@@ -8,8 +8,7 @@
   "assets": {
     "directory": "./dist/client"
   },
-  // no vars here on purpose. every value comes from `wrangler secret bulk .env`,
-  // so there is one source of truth and no chance of a stale duplicate winning.
+  // every value comes from `wrangler secret bulk .env`, so there is one source
   "observability": {
     "enabled": true
   }

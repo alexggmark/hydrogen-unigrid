@@ -4,8 +4,7 @@ import {Block} from '~/blocks/Block';
 import unigridStyles from '~/styles/unigrid.css?url';
 import demoStyles from '~/styles/unigrid-demo.css?url';
 
-// scaling harness. the composition from grid.html, rendered through the real
-// primitives, so the promotion can be diffed by eye. no data, no editing.
+// scaling harness: grid.html through the real primitives, so it can be diffed
 
 export const handle = {bare: true};
 

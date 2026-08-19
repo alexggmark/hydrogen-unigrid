@@ -1,6 +1,5 @@
-// per band placement, expressed as css custom properties. bands b and c are
-// partial: an absent value falls back to band a in css, which is how a block
-// stays derived in a narrow band until it is overridden there.
+// bands b and c are partial: an absent value falls back to band a, which is
+// how a block stays derived until it is overridden in that band
 
 export type Band = 'a' | 'b' | 'c';
 

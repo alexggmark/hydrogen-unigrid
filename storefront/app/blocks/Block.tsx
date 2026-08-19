@@ -1,8 +1,7 @@
 import type {CSSProperties, ReactNode} from 'react';
 import {placementVars, type Placement} from './placement';
 
-// the tags a block is allowed to be. a closed union rather than generic
-// polymorphism: blocks are page furniture, not a component library.
+// closed union, not generic polymorphism: blocks are furniture, not a library
 type BlockTag =
   'div' | 'header' | 'footer' | 'section' | 'article' | 'aside' | 'figure';
 

@@ -1,5 +1,4 @@
-/* dev chrome. px is allowed here and nowhere else in the grid layer — this
-   file is imported only when import.meta.env.DEV, so it never ships. */
+/* dev chrome. px allowed here only; DEV-gated, so it never ships */
 
 .u-overlay {
   position: absolute;
@@ -41,8 +40,7 @@ body.u-show-grid .u-overlay {
   );
 }
 
-/* a text block whose content exceeds its authored span. the resolver handles
-   this for real; flagged here so the failure is visible, not silent. */
+/* text past its authored span. flagged so the failure is visible, not silent */
 .u-block.u-over {
   outline: 2px solid #d8261c;
   outline-offset: -2px;

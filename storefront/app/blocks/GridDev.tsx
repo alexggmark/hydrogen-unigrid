@@ -1,9 +1,7 @@
 import {useEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
 
-// dev instrumentation. surfaces --u so the readability floor of each band can
-// be found by dragging the window, and flags text blocks that already exceed
-// their authored span — the case the resolver will own.
+// dev instrumentation: surfaces --u, flags text blocks past their authored span
 
 const COLUMNS = 12;
 const TYPE_FLOOR_PX = 14;
@@ -79,9 +77,8 @@ export function GridDev() {
           <i key={i} />
         ))}
       </div>
-      {/* the hud is portalled out: .u-frame sets container-type, which makes it the
-          containing block for fixed descendants, so a nested hud anchors to the
-          grid instead of the viewport */}
+      {/* .u-frame sets container-type, making it the containing block for fixed
+          descendants — the hud has to leave the subtree to pin to the viewport */}
       {readout
         ? createPortal(
             <div className="u-hud">
