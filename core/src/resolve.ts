@@ -1,5 +1,5 @@
 import type {Band} from './bands';
-import {cellIn} from './layout';
+import {derive} from './derive';
 import type {Cell, Layout} from './types';
 
 // rows a block's rendered content needs, measured in the browser, keyed by id.
@@ -84,10 +84,5 @@ export function resolve(
   band: Band,
   measurements: Measurements,
 ): Map<string, Cell> {
-  const authored = new Map<string, Cell>();
-  for (const block of layout.blocks) {
-    const cell = cellIn(block, band);
-    if (cell) authored.set(block.id, cell);
-  }
-  return resolveCells(authored, measurements);
+  return resolveCells(derive(layout, band), measurements);
 }

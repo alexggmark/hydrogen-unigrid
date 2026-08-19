@@ -46,3 +46,5 @@ export {
   type Measurements,
   type Resolved,
 } from './resolve';
+export {derive, cellFor} from './derive';
+export {insertAfter} from './insert';
