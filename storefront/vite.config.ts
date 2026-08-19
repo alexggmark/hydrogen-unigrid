@@ -11,6 +11,10 @@ export default defineConfig({
       // Vite's native tsconfig path resolver does not cover JavaScript
       // projects that use jsconfig.json, so define Hydrogen's app alias here.
       '~': fileURLToPath(new URL('./app', import.meta.url)),
+      // core ships raw ts, so vite has to compile it rather than externalise it
+      '@unigrid/core': fileURLToPath(
+        new URL('../core/src/index.ts', import.meta.url),
+      ),
     },
     tsconfigPaths: true,
   },

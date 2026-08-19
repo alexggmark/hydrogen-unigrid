@@ -1,31 +1,18 @@
-// bands b and c are partial: an absent value falls back to band a, which is
-// how a block stays derived until it is overridden in that band
+import {BANDS, type Band, type Cell} from '@unigrid/core';
 
-export type Band = 'a' | 'b' | 'c';
-
-export type Cell = {
-  col: number;
-  colSpan: number;
-  row: number;
-  rowSpan: number;
-};
-
-export type Placement = {
-  a: Cell;
-  b?: Partial<Cell>;
-  c?: Partial<Cell>;
-};
+// bands b and c are optional here only so a caller can omit them; the engine
+// resolves all three, so in practice every band arrives filled
+export type Placement = {a: Cell} & Partial<Record<Exclude<Band, 'a'>, Cell>>;
 
 const SHORT = {col: 'c', colSpan: 'cs', row: 'r', rowSpan: 'rs'} as const;
 
 export function placementVars(at: Placement): Record<string, number> {
   const out: Record<string, number> = {};
-  for (const band of ['a', 'b', 'c'] as const) {
+  for (const band of BANDS) {
     const cell = at[band];
     if (!cell) continue;
     for (const key of ['col', 'colSpan', 'row', 'rowSpan'] as const) {
-      const value = cell[key];
-      if (value !== undefined) out[`--${SHORT[key]}${band}`] = value;
+      out[`--${SHORT[key]}${band}`] = cell[key];
     }
   }
   return out;
