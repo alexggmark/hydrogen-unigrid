@@ -1,0 +1,138 @@
+/* the grid layer. no px in this file — every geometric and type value is a
+   multiple of --u. the rem cap on .frame is the one exception: it is a
+   boundary, not composition. */
+
+.frame *,
+.frame *::before,
+.frame *::after {
+  box-sizing: border-box;
+}
+
+/* frame carries container-type, grid carries --u. they must be separate
+   elements: cqw inside an element resolves against its *ancestor* container,
+   so a grid declaring --u: 1cqw on itself would measure its parent. sharing an
+   inline-size keeps --u equal to the grid's own width. */
+.frame {
+  --margin: min(4vw, 6rem);
+  --grid-max: 100rem;
+  inline-size: min(100% - var(--margin) * 2, var(--grid-max));
+  margin-inline: auto;
+  container-type: inline-size;
+  container-name: grid;
+}
+
+.unigrid {
+  position: relative;
+  --u: 1cqw;
+  --gutter: calc(var(--u) * 1.5);
+  --col: calc((100cqw - (var(--cols) - 1) * var(--gutter)) / var(--cols));
+  --row: calc(var(--col) * 0.75);
+
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  grid-auto-rows: var(--row);
+  gap: var(--gutter);
+  padding-block: calc(var(--u) * 4);
+}
+
+/* three fixed compositions. crossing a bound switches composition, inside a
+   bound nothing moves. --f is per band because a band scaled far enough down
+   hits the readability floor. */
+.unigrid {
+  --cols: 12;
+  --f: 1;
+}
+@container grid (width < 60rem) {
+  .unigrid {
+    --cols: 8;
+    --f: 1.45;
+  }
+}
+@container grid (width < 36rem) {
+  .unigrid {
+    --cols: 4;
+    --f: 2.6;
+  }
+}
+
+.unigrid {
+  --t-mega: calc(var(--u) * 7.6 * var(--f));
+  --t-h1: calc(var(--u) * 3.4 * var(--f));
+  --t-h2: calc(var(--u) * 1.9 * var(--f));
+  --t-body: calc(var(--u) * 1.25 * var(--f));
+  --t-micro: calc(var(--u) * 0.85 * var(--f));
+  font-size: var(--t-body);
+  line-height: 1.42;
+}
+
+/* a block declares its wide-band cell and optionally overrides b and c. an
+   absent override inherits the wide band — the css analogue of the per block
+   per band override flag. */
+.block {
+  position: relative;
+  margin: 0; /* ua gives figure/blockquote inline margins in px, which break the column */
+  --c: var(--ca);
+  --cs: var(--csa);
+  --r: var(--ra);
+  --rs: var(--rsa);
+  grid-column: var(--c) / span var(--cs);
+  grid-row: var(--r) / span var(--rs);
+  min-inline-size: 0;
+  overflow: hidden;
+  padding: calc(var(--u) * 1);
+}
+@container grid (width < 60rem) {
+  .block {
+    --c: var(--cb, var(--ca));
+    --cs: var(--csb, var(--csa));
+    --r: var(--rb, var(--ra));
+    --rs: var(--rsb, var(--rsa));
+  }
+}
+@container grid (width < 36rem) {
+  .block {
+    --c: var(--cc, var(--ca));
+    --cs: var(--csc, var(--csa));
+    --r: var(--rc, var(--ra));
+    --rs: var(--rsc, var(--rsa));
+  }
+}
+
+.block > * {
+  margin: 0;
+}
+.block > * + * {
+  margin-block-start: calc(var(--u) * 0.9 * var(--f));
+}
+
+.unigrid h1,
+.unigrid h2,
+.unigrid h3 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+}
+.unigrid p {
+  max-inline-size: 62ch;
+}
+
+.mega {
+  font-size: var(--t-mega);
+  line-height: 0.86;
+  letter-spacing: -0.04em;
+}
+.h1 {
+  font-size: var(--t-h1);
+}
+.h2 {
+  font-size: var(--t-h2);
+}
+.micro {
+  font-size: var(--t-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 700;
+}
+.dim {
+  opacity: 0.55;
+}

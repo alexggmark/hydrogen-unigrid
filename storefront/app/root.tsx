@@ -9,6 +9,7 @@ import {
   Scripts,
   ScrollRestoration,
   useRouteLoaderData,
+  useMatches,
 } from 'react-router';
 import type {Route} from './+types/root';
 import favicon from '~/assets/favicon.svg';
@@ -165,8 +166,12 @@ export function Layout({children}: {children?: React.ReactNode}) {
 
 export default function App() {
   const data = useRouteLoaderData<RootLoader>('root');
+  // a route opts out of store chrome with `export const handle = {bare: true}`
+  const bare = useMatches().some(
+    (m) => (m.handle as {bare?: boolean} | undefined)?.bare,
+  );
 
-  if (!data) {
+  if (!data || bare) {
     return <Outlet />;
   }
 
