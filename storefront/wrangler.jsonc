@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "unigrid",
+  "main": "./dist/server/index.js",
+  "compatibility_date": "2026-08-01",
+  // hydrogen and its graphql deps reach for node built-ins
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "./dist/client"
+  },
+  // no vars here on purpose. every value comes from `wrangler secret bulk .env`,
+  // so there is one source of truth and no chance of a stale duplicate winning.
+  "observability": {
+    "enabled": true
+  }
+}

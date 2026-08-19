@@ -11,3 +11,4 @@ build/
 .cache/
 *.tsbuildinfo
 .DS_Store
+.wrangler/

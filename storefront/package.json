@@ -11,7 +11,9 @@
     "lint": "eslint --no-error-on-unmatched-pattern .",
     "typecheck": "react-router typegen && tsc --noEmit",
     "codegen": "shopify hydrogen codegen --path \"$PWD\" && react-router typegen",
-    "deploy": "shopify hydrogen deploy --path \"$PWD\""
+    "deploy": "npm run build && wrangler deploy",
+    "deploy:oxygen": "shopify hydrogen deploy --path \"$PWD\"",
+    "cf:types": "wrangler types"
   },
   "prettier": "@shopify/prettier-config",
   "dependencies": {
@@ -55,7 +57,8 @@
     "graphql-config": "^5.0.3",
     "prettier": "^3.4.2",
     "typescript": "^5.9.2",
-    "vite": "^8.0.1"
+    "vite": "^8.0.1",
+    "wrangler": "^4.124.0"
   },
   "engines": {
     "node": "^22 || ^24"
