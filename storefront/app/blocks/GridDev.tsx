@@ -1,5 +1,5 @@
 import {useEffect, useRef, useState} from 'react';
-import '~/styles/unigrid-dev.css';
+import {createPortal} from 'react-dom';
 
 // dev instrumentation. surfaces --u so the readability floor of each band can
 // be found by dragging the window, and flags text blocks that already exceed
@@ -24,7 +24,7 @@ export function GridDev() {
   const [readout, setReadout] = useState<Readout | null>(null);
 
   useEffect(() => {
-    const grid = ref.current?.closest('.unigrid');
+    const grid = ref.current?.closest('.u-grid');
     if (!(grid instanceof HTMLElement)) return;
 
     const report = () => {
@@ -45,11 +45,13 @@ export function GridDev() {
       });
 
       for (const block of grid.querySelectorAll<HTMLElement>(
-        '.block[data-text]',
+        '.u-block[data-text]',
       )) {
-        const needed = Math.ceil((block.scrollHeight + gutter) / (row + gutter));
+        const needed = Math.ceil(
+          (block.scrollHeight + gutter) / (row + gutter),
+        );
         block.classList.toggle(
-          'is-over',
+          'u-over',
           block.scrollHeight > block.clientHeight + 1,
         );
         block.dataset.rows = String(needed);
@@ -63,8 +65,8 @@ export function GridDev() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'g') document.body.classList.toggle('show-grid');
-      if (e.key === 'h') document.body.classList.toggle('hide-hud');
+      if (e.key === 'g') document.body.classList.toggle('u-show-grid');
+      if (e.key === 'h') document.body.classList.toggle('u-hide-hud');
     };
     addEventListener('keydown', onKey);
     return () => removeEventListener('keydown', onKey);
@@ -72,48 +74,56 @@ export function GridDev() {
 
   return (
     <>
-      <div className="overlay" aria-hidden ref={ref}>
+      <div className="u-overlay" aria-hidden ref={ref}>
         {Array.from({length: COLUMNS}, (_, i) => (
           <i key={i} />
         ))}
       </div>
-      {readout ? (
-        <div className="hud">
-          <span>
-            band <b>{readout.band}</b>
-          </span>
-          <span>
-            grid <b>{px(readout.width)}</b>
-          </span>
-          <span>
-            --u <b>{px(readout.u)}</b>
-          </span>
-          <span>
-            col <b>{px(readout.col)}</b>
-          </span>
-          <span>
-            row <b>{px(readout.row)}</b>
-          </span>
-          <span>
-            body <b>{px(readout.type)}</b>
-          </span>
-          {readout.type < TYPE_FLOOR_PX ? (
-            <span className="warn">type below floor — band bound too low</span>
-          ) : null}
-          <button
-            type="button"
-            onClick={() => document.body.classList.toggle('show-grid')}
-          >
-            grid (g)
-          </button>
-          <button
-            type="button"
-            onClick={() => document.body.classList.toggle('hide-hud')}
-          >
-            hide (h)
-          </button>
-        </div>
-      ) : null}
+      {/* the hud is portalled out: .u-frame sets container-type, which makes it the
+          containing block for fixed descendants, so a nested hud anchors to the
+          grid instead of the viewport */}
+      {readout
+        ? createPortal(
+            <div className="u-hud">
+              <span>
+                band <b>{readout.band}</b>
+              </span>
+              <span>
+                grid <b>{px(readout.width)}</b>
+              </span>
+              <span>
+                --u <b>{px(readout.u)}</b>
+              </span>
+              <span>
+                col <b>{px(readout.col)}</b>
+              </span>
+              <span>
+                row <b>{px(readout.row)}</b>
+              </span>
+              <span>
+                body <b>{px(readout.type)}</b>
+              </span>
+              {readout.type < TYPE_FLOOR_PX ? (
+                <span className="warn">
+                  type below floor — band bound too low
+                </span>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => document.body.classList.toggle('u-show-grid')}
+              >
+                grid (g)
+              </button>
+              <button
+                type="button"
+                onClick={() => document.body.classList.toggle('u-hide-hud')}
+              >
+                hide (h)
+              </button>
+            </div>,
+            document.body,
+          )
+        : null}
     </>
   );
 }

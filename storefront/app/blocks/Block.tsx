@@ -4,13 +4,7 @@ import {placementVars, type Placement} from './placement';
 // the tags a block is allowed to be. a closed union rather than generic
 // polymorphism: blocks are page furniture, not a component library.
 type BlockTag =
-  | 'div'
-  | 'header'
-  | 'footer'
-  | 'section'
-  | 'article'
-  | 'aside'
-  | 'figure';
+  'div' | 'header' | 'footer' | 'section' | 'article' | 'aside' | 'figure';
 
 export type BlockProps = {
   at: Placement;
@@ -30,7 +24,7 @@ export function Block({
 }: BlockProps) {
   return (
     <Tag
-      className={className ? `block ${className}` : 'block'}
+      className={className ? `u-block ${className}` : 'u-block'}
       style={placementVars(at) as CSSProperties}
       data-text={text ? '' : undefined}
     >

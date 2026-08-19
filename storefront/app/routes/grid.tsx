@@ -1,5 +1,5 @@
 import type {LinksFunction} from 'react-router';
-import {Grid} from '~/blocks/Grid';
+import {Grid, gridDevLinks} from '~/blocks/Grid';
 import {Block} from '~/blocks/Block';
 import unigridStyles from '~/styles/unigrid.css?url';
 import demoStyles from '~/styles/unigrid-demo.css?url';
@@ -12,6 +12,7 @@ export const handle = {bare: true};
 export const links: LinksFunction = () => [
   {rel: 'stylesheet', href: unigridStyles},
   {rel: 'stylesheet', href: demoStyles},
+  ...gridDevLinks(),
 ];
 
 export default function GridHarness() {
@@ -27,7 +28,7 @@ export default function GridHarness() {
             c: {col: 1, colSpan: 4, row: 1, rowSpan: 3},
           }}
         >
-          <h1 className="mega">
+          <h1 className="u-mega">
             UNI
             <br />
             GRID
@@ -43,8 +44,8 @@ export default function GridHarness() {
             c: {col: 1, colSpan: 4, row: 4, rowSpan: 2},
           }}
         >
-          <p className="micro">Scaling harness</p>
-          <p className="micro dim">
+          <p className="u-micro">Scaling harness</p>
+          <p className="u-micro u-dim">
             Three bands · one block set · positions per band
           </p>
         </Block>
@@ -58,8 +59,8 @@ export default function GridHarness() {
             c: {col: 1, colSpan: 4, row: 6, rowSpan: 4},
           }}
         >
-          <p className="micro">Fig. 01</p>
-          <p className="h2">Media keeps its span.</p>
+          <p className="u-micro">Fig. 01</p>
+          <p className="u-h2">Media keeps its span.</p>
         </Block>
 
         <Block
@@ -72,8 +73,8 @@ export default function GridHarness() {
             c: {col: 1, colSpan: 4, row: 10, rowSpan: 10},
           }}
         >
-          <p className="micro">Essay</p>
-          <h2 className="h1">Zoom, not reflow.</h2>
+          <p className="u-micro">Essay</p>
+          <h2 className="u-h1">Zoom, not reflow.</h2>
           <p>
             Within a band the composition is fixed. Column count, positions and
             spans do not change — only size. A screenshot at 1600px and one at
@@ -86,7 +87,9 @@ export default function GridHarness() {
             margins absorb the surplus; that is the one deliberate break from
             pure zoom.
           </p>
-          <p className="micro dim">Drag the window. Watch --u in the bar above.</p>
+          <p className="u-micro u-dim">
+            Drag the window. Watch --u in the bar above.
+          </p>
         </Block>
 
         <Block
@@ -97,7 +100,7 @@ export default function GridHarness() {
             c: {col: 1, colSpan: 4, row: 20, rowSpan: 3},
           }}
         >
-          <p className="micro">Fig. 02</p>
+          <p className="u-micro">Fig. 02</p>
         </Block>
 
         {/* deliberate air above the blue block below — never repack */}
@@ -109,8 +112,8 @@ export default function GridHarness() {
             c: {col: 1, colSpan: 4, row: 23, rowSpan: 3},
           }}
         >
-          <p className="micro">Occupancy is sparse</p>
-          <p className="dim">
+          <p className="u-micro">Occupancy is sparse</p>
+          <p className="u-dim">
             A block alone in an empty region is a valid layout. Gaps are
             authored, not accidental.
           </p>
@@ -124,7 +127,7 @@ export default function GridHarness() {
             c: {col: 1, colSpan: 4, row: 26, rowSpan: 3},
           }}
         >
-          <p className="micro">Fig. 03</p>
+          <p className="u-micro">Fig. 03</p>
         </Block>
 
         <Block
@@ -136,7 +139,7 @@ export default function GridHarness() {
             c: {col: 1, colSpan: 4, row: 29, rowSpan: 3},
           }}
         >
-          <p className="micro">Note</p>
+          <p className="u-micro">Note</p>
           <p>
             Text is the exception: measured, rounded up to whole rows, grown
             downward, pushing only the columns it intersects.
@@ -151,13 +154,13 @@ export default function GridHarness() {
             c: {col: 1, colSpan: 4, row: 32, rowSpan: 5},
           }}
         >
-          <p className="micro">Product</p>
-          <p className="h2">
+          <p className="u-micro">Product</p>
+          <p className="u-h2">
             Reference,
             <br />
             not payload.
           </p>
-          <p className="micro dim">{`{ kind: 'product', handle }`}</p>
+          <p className="u-micro u-dim">{`{ kind: 'product', handle }`}</p>
         </Block>
 
         <Block
@@ -168,7 +171,7 @@ export default function GridHarness() {
             c: {col: 1, colSpan: 4, row: 37, rowSpan: 2},
           }}
         >
-          <p className="micro dim">
+          <p className="u-micro u-dim">
             01 grid · 02 blocks · 03 resolver · 04 editor
           </p>
         </Block>
@@ -182,7 +185,7 @@ export default function GridHarness() {
             c: {col: 1, colSpan: 4, row: 39, rowSpan: 3},
           }}
         >
-          <p className="micro">
+          <p className="u-micro">
             Row lines stay global — one CSS Grid, not masonry
           </p>
         </Block>
