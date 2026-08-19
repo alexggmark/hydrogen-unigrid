@@ -11,6 +11,9 @@ export type BlockProps = {
   className?: string;
   // marks the block as text, whose height the resolver measures rather than trusts
   text?: boolean;
+  // editor hooks. the block stays dumb — selection is decided above it
+  blockId?: string;
+  selected?: boolean;
   children?: ReactNode;
 };
 
@@ -19,6 +22,8 @@ export function Block({
   as: Tag = 'div',
   className,
   text,
+  blockId,
+  selected,
   children,
 }: BlockProps) {
   return (
@@ -26,6 +31,8 @@ export function Block({
       className={className ? `u-block ${className}` : 'u-block'}
       style={placementVars(at) as CSSProperties}
       data-text={text ? '' : undefined}
+      data-block={blockId}
+      data-selected={selected ? '' : undefined}
     >
       {children}
     </Tag>

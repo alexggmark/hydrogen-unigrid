@@ -135,3 +135,37 @@
 .u-dim {
   opacity: 0.55;
 }
+
+/* forced band. specificity beats the container queries, so any band can be
+   inspected at any width — within a band only scale changes, so this is honest. */
+[data-band='a'] .u-grid {
+  --cols: 12;
+  --f: 1;
+}
+[data-band='b'] .u-grid {
+  --cols: 8;
+  --f: 1.45;
+}
+[data-band='c'] .u-grid {
+  --cols: 4;
+  --f: 2.6;
+}
+
+[data-band='a'] .u-block {
+  --c: var(--ca);
+  --cs: var(--csa);
+  --r: var(--ra);
+  --rs: var(--rsa);
+}
+[data-band='b'] .u-block {
+  --c: var(--cb, var(--ca));
+  --cs: var(--csb, var(--csa));
+  --r: var(--rb, var(--ra));
+  --rs: var(--rsb, var(--rsa));
+}
+[data-band='c'] .u-block {
+  --c: var(--cc, var(--ca));
+  --cs: var(--csc, var(--csa));
+  --r: var(--rc, var(--ra));
+  --rs: var(--rsc, var(--rsa));
+}

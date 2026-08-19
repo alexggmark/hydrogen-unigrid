@@ -1,0 +1,194 @@
+/* editor chrome. px is fine here — the ban is on the grid layer, and this is
+   furniture around it, not composition. */
+
+.e-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  min-block-size: 100dvh;
+  background: #f4f4f2;
+}
+
+.e-stage {
+  overflow: auto;
+  padding-block: 24px;
+}
+
+/* selection is an outline, never a border — a border would take layout space
+   and move the thing it is describing */
+.u-block[data-selected] {
+  outline: 2px solid #0b57d0;
+  outline-offset: 2px;
+}
+.e-stage .u-block {
+  cursor: pointer;
+}
+
+.e-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-inline-start: 1px solid #d8d8d4;
+  background: #fff;
+  font: 500 13px/1.45 ui-sans-serif, system-ui, sans-serif;
+  max-block-size: 100dvh;
+  overflow: auto;
+  position: sticky;
+  inset-block-start: 0;
+}
+
+.e-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 14px 16px;
+  border-block-end: 1px solid #e8e8e4;
+}
+.e-head strong {
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+
+.e-sec {
+  padding: 14px 16px;
+  border-block-end: 1px solid #e8e8e4;
+}
+.e-sec h2 {
+  margin: 0 0 8px;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #6b6b66;
+}
+.e-grow {
+  min-block-size: 0;
+}
+.e-dim {
+  color: #6b6b66;
+  font-size: 11px;
+  margin: 8px 0 0;
+}
+.e-foot {
+  padding: 12px 16px;
+  margin-block-start: auto;
+}
+
+.e-tabs {
+  display: grid;
+  grid-auto-flow: column;
+  gap: 4px;
+}
+
+.e-rail button {
+  font: inherit;
+  padding: 6px 10px;
+  border: 1px solid #d8d8d4;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  color: inherit;
+}
+.e-rail button:hover:not(:disabled) {
+  background: #f4f4f2;
+}
+.e-rail button[aria-pressed='true'] {
+  background: #111;
+  border-color: #111;
+  color: #fff;
+}
+.e-rail button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.e-rail button:focus-visible,
+.e-rail input:focus-visible {
+  outline: 2px solid #0b57d0;
+  outline-offset: 1px;
+}
+
+.e-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+  max-block-size: 220px;
+  overflow: auto;
+}
+.e-list button {
+  inline-size: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  text-align: start;
+  border-color: transparent;
+}
+.e-list button[aria-pressed='true'] .e-dim {
+  color: #cfcfca;
+}
+
+.e-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.e-fields label {
+  display: grid;
+  gap: 4px;
+}
+.e-fields span {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #6b6b66;
+}
+.e-fields input {
+  font: inherit;
+  inline-size: 100%;
+  padding: 6px 8px;
+  border: 1px solid #d8d8d4;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.e-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-block-start: 10px;
+  flex-wrap: wrap;
+}
+.e-badge {
+  margin: 0 0 10px;
+  font-size: 11px;
+  color: #6b6b66;
+}
+.e-note {
+  margin: 10px 0 0;
+  font-size: 11px;
+  color: #7a5a00;
+  background: #fff6d8;
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+.e-error {
+  margin: 10px 0 0;
+  font-size: 11px;
+  color: #a1101a;
+  background: #fdeceb;
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+.e-danger {
+  color: #a1101a;
+}
+
+@media (width < 60rem) {
+  .e-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .e-rail {
+    position: static;
+    max-block-size: none;
+  }
+}

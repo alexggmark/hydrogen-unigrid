@@ -58,11 +58,22 @@ export function GridDev() {
 
     const observer = new ResizeObserver(report);
     observer.observe(grid);
-    return () => observer.disconnect();
+
+    // a forced band changes --cols without changing width, so resize never fires
+    const host = grid.closest('[data-band]');
+    const attrs = new MutationObserver(report);
+    if (host) attrs.observe(host, {attributes: true, attributeFilter: ['data-band']});
+
+    return () => {
+      observer.disconnect();
+      attrs.disconnect();
+    };
   }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement | null;
+      if (el?.matches('input, textarea, select, [contenteditable]')) return;
       if (e.key === 'g') document.body.classList.toggle('u-show-grid');
       if (e.key === 'h') document.body.classList.toggle('u-hide-hud');
     };

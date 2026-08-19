@@ -95,3 +95,14 @@ body.u-show-grid .u-overlay {
 body.u-hide-hud .u-hud {
   display: none;
 }
+
+/* forced band: the container queries above key off width, which no longer moves */
+[data-band='a'] .u-overlay i:nth-child(n) {
+  display: block;
+}
+[data-band='b'] .u-overlay i:nth-child(n + 9) {
+  display: none;
+}
+[data-band='c'] .u-overlay i:nth-child(n + 5) {
+  display: none;
+}
