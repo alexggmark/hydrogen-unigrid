@@ -1,11 +1,25 @@
 import type {CSSProperties} from 'react';
 import {isGroup, type Element, type Flex, type Node} from '@unigrid/core';
 
+const JUSTIFY: Record<Flex['justify'], string> = {
+  start: 'flex-start',
+  center: 'center',
+  end: 'flex-end',
+  between: 'space-between',
+};
+
+const ALIGN: Record<Flex['align'], string> = {
+  start: 'flex-start',
+  center: 'center',
+  end: 'flex-end',
+  stretch: 'stretch',
+};
+
 export const flexVars = (f: Flex): CSSProperties =>
   ({
     '--fd': f.direction,
-    '--jc': f.justify === 'between' ? 'space-between' : `flex-${f.justify}`,
-    '--ai': f.align === 'stretch' ? 'stretch' : `flex-${f.align}`,
+    '--jc': JUSTIFY[f.justify],
+    '--ai': ALIGN[f.align],
     '--gap': f.gap,
   }) as CSSProperties;
 
