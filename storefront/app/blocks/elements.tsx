@@ -20,9 +20,7 @@ function Leaf({node}: {node: Element}) {
     case 'text':
       return <p className={`u-text u-text-${node.size}`}>{node.value}</p>;
     case 'richText':
-      // newline-separated paragraphs until rich text becomes its own metaobject.
-      // whitespace-pre-line does the split in css, so there are no keys to invent
-      // for lines that have no identity of their own.
+      // pre-line splits paragraphs in css, so lines need no keys of their own
       return (
         <p className={`u-text u-text-${node.size} u-lines`}>{node.value}</p>
       );

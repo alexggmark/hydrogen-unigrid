@@ -8,29 +8,3 @@
   -webkit-font-smoothing: antialiased;
   min-block-size: 100vb;
 }
-
-.b-plain {
-  padding: 0;
-}
-.b-rule {
-  border-block-start: 1px solid #111;
-}
-.b-red {
-  background: #d8261c;
-  color: #fff;
-}
-.b-yellow {
-  background: #f2c200;
-  color: #111;
-}
-.b-blue {
-  background: #0b4bd8;
-  color: #fff;
-}
-.b-ink {
-  background: #111;
-  color: #efece6;
-}
-.b-paper {
-  background: #fff;
-}

@@ -1,10 +1,10 @@
 import {useDraggable} from '@dnd-kit/react';
 import {Feedback} from '@dnd-kit/dom';
+import {Button} from '@radix-ui/themes';
 
 const NO_FEEDBACK = [Feedback.configure({feedback: 'none'})];
 
-// a block is a container now, so there is one kind of thing to drag on.
-// what goes inside is added from the rail once it is placed.
+// one chip: what goes inside a block is added from the rail once it is placed
 export const NEW_SPAN = {colSpan: 4, rowSpan: 3};
 
 export function Palette() {
@@ -14,7 +14,7 @@ export function Palette() {
     plugins: NO_FEEDBACK,
   });
   return (
-    <div className="e-chips">
+    <Button asChild size="1" variant="surface">
       <button
         ref={ref}
         type="button"
@@ -24,6 +24,6 @@ export function Palette() {
       >
         block
       </button>
-    </div>
+    </Button>
   );
 }

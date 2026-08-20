@@ -44,6 +44,7 @@ import {NEW_SPAN} from '~/editor/Palette';
 import {cellAt, gridUnits, moved, resized, snap, type Edge} from '~/editor/geometry';
 import {dropTarget, type NodeDrag} from '~/editor/Tree';
 import {Rail} from '~/editor/Rail';
+import radixStyles from '@radix-ui/themes/styles.css?url';
 import unigridStyles from '~/styles/unigrid.css?url';
 import demoStyles from '~/styles/unigrid-demo.css?url';
 import editorStyles from '~/styles/unigrid-editor.css?url';
@@ -53,6 +54,7 @@ import editorStyles from '~/styles/unigrid-editor.css?url';
 export const handle = {bare: true};
 
 export const links: LinksFunction = () => [
+  {rel: 'stylesheet', href: radixStyles},
   {rel: 'stylesheet', href: unigridStyles},
   {rel: 'stylesheet', href: demoStyles},
   {rel: 'stylesheet', href: editorStyles},

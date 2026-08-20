@@ -53,7 +53,7 @@ export function Block({block, at, blockId, selected, chrome}: BlockProps) {
           }
         />
       ) : null}
-      {/* the one measured element. everything else in here is background or chrome. */}
+      {/* the one measured element; the rest is background or chrome */}
       <div className="u-flow" style={flexVars(block.flex)}>
         <Nodes nodes={block.children} />
       </div>

@@ -32,8 +32,7 @@ export type Flex = {
 
 export type Group = {id: string; kind: 'group'; flex: Flex; children: Element[]};
 
-// one level only. nesting groups inside groups is how this turns into a
-// general-purpose page builder, which is an explicit non-goal.
+// one level only: nested groups make this a page builder
 export type Node = Element | Group;
 
 export type Media = {kind: 'image' | 'video'; src: string};

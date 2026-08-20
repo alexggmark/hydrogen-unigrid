@@ -1,31 +1,23 @@
 /* editor chrome. px is fine here — the ban is on the grid layer. */
 
-/* pinned to the viewport rather than sized from body. an editor shell laid out
-   in normal flow inherits whatever width the page has, and anything that widens
-   the document pushes the rail off the right edge. inset:0 makes that
-   impossible: the shell is the viewport, and both panes scroll inside it. */
+/* the shell is the viewport, not a box in the page flow — both panes scroll inside it */
 .e-shell {
   position: fixed;
   inset: 0;
   display: grid;
-  /* rows explicit for the same reason columns are: an implicit `auto` row is
-     sized by its tallest pane, so a long rail would stretch the stage past the
-     viewport instead of letting either of them scroll */
+  /* an implicit `auto` row would size to the taller pane and neither could scroll */
   grid-template-columns: minmax(0, 1fr) minmax(0, clamp(300px, 22vw, 380px));
   grid-template-rows: minmax(0, 1fr);
   overflow: hidden;
   background: #f4f4f2;
 }
-
-/* min-block-size:0 is what lets overflow engage — grid items floor at
-   min-content in the block axis too, not just the inline one */
+/* grid items floor at min-content in both axes, and that floor stops overflow engaging */
 .e-stage {
   min-inline-size: 0;
   min-block-size: 0;
   overflow: auto;
   padding-block: 24px;
 }
-
 /* outline, never a border: a border takes layout space and moves the block */
 .u-block[data-selected] {
   outline: 2px solid #0b57d0;
@@ -34,12 +26,9 @@
 .e-stage .u-block {
   cursor: pointer;
 }
-
 .e-rail {
   display: grid;
-  /* every track in here is minmax(0,…) on purpose. an implicit `auto` track
-     floors at min-content, which overflows the box no matter how narrow the
-     box is allowed to get — the rail cannot be sized from the outside alone. */
+  /* an `auto` track overflows the box however narrow the box is allowed to get */
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr) auto;
   min-inline-size: 0;
@@ -51,16 +40,12 @@
   background: #fff;
   font: 500 13px/1.45 ui-sans-serif, system-ui, sans-serif;
 }
-
-/* minmax(0,1fr) above is what lets this scroll — a default `auto` row floor
-   sizes to content and the overflow never engages */
 .e-scroll {
   min-inline-size: 0;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
-
 .e-head {
   display: flex;
   min-inline-size: 0;
@@ -70,154 +55,11 @@
   padding: 14px 16px;
   border-block-end: 1px solid #e8e8e4;
 }
-.e-head strong {
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  font-size: 11px;
-}
-
-.e-sec {
-  min-inline-size: 0;
-  padding: 14px 16px;
-  border-block-end: 1px solid #e8e8e4;
-}
-.e-sec h2 {
-  margin: 0 0 8px;
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: #6b6b66;
-}
-.e-grow {
-  min-block-size: 0;
-}
-.e-dim {
-  color: #6b6b66;
-  font-size: 11px;
-  margin: 8px 0 0;
-}
 .e-foot {
   min-inline-size: 0;
   padding: 12px 16px;
   margin-block-start: auto;
 }
-
-.e-tabs {
-  display: grid;
-  grid-auto-columns: minmax(0, 1fr);
-  grid-auto-flow: column;
-  gap: 4px;
-}
-
-.e-rail button {
-  font: inherit;
-  padding: 6px 10px;
-  border: 1px solid #d8d8d4;
-  border-radius: 4px;
-  background: #fff;
-  cursor: pointer;
-  color: inherit;
-}
-.e-rail button:hover:not(:disabled) {
-  background: #f4f4f2;
-}
-.e-rail button[aria-pressed='true'] {
-  background: #111;
-  border-color: #111;
-  color: #fff;
-}
-.e-rail button:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-.e-rail button:focus-visible,
-.e-rail input:focus-visible {
-  outline: 2px solid #0b57d0;
-  outline-offset: 1px;
-}
-
-.e-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 2px;
-  max-block-size: 220px;
-  overflow: auto;
-}
-.e-list button {
-  inline-size: 100%;
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  text-align: start;
-  border-color: transparent;
-}
-.e-list button > span {
-  min-inline-size: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.e-list button[aria-pressed='true'] .e-dim {
-  color: #cfcfca;
-}
-
-/* minmax(0,…) not 1fr: a bare 1fr floors at min-content, and a number input's
-   intrinsic width is ~150px, so two of them set the rail's width from inside */
-.e-fields {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-.e-fields label {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 4px;
-}
-.e-fields span {
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #6b6b66;
-}
-.e-fields input {
-  font: inherit;
-  inline-size: 100%;
-  min-inline-size: 0;
-  padding: 6px 8px;
-  border: 1px solid #d8d8d4;
-  border-radius: 4px;
-  background: #fff;
-}
-
-.e-row {
-  display: flex;
-  min-inline-size: 0;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  margin-block-start: 10px;
-  flex-wrap: wrap;
-}
-.e-badge {
-  margin: 0 0 10px;
-  font-size: 11px;
-  color: #6b6b66;
-}
-.e-error {
-  margin: 10px 0 0;
-  font-size: 11px;
-  color: #a1101a;
-  background: #fdeceb;
-  padding: 6px 8px;
-  border-radius: 4px;
-}
-.e-danger {
-  color: #a1101a;
-}
-
 @media (width < 60rem) {
   .e-shell {
     position: static;
@@ -237,7 +79,6 @@
     overflow-y: visible;
   }
 }
-
 /* the move surface fills the block; edges sit above it and win the pointer */
 .e-move,
 .e-handle {
@@ -269,7 +110,6 @@
   outline: 2px solid #0b57d0;
   outline-offset: 2px;
 }
-
 .e-handle-n,
 .e-handle-s {
   inset-inline: 18%;
@@ -301,7 +141,6 @@
   block-size: 10px;
   cursor: nwse-resize;
 }
-
 /* amber, not red: the layout is legal, the content just does not fit it */
 .e-clip {
   position: absolute;
@@ -326,20 +165,6 @@
   outline-style: solid;
   outline-color: #0b57d0;
 }
-
-.e-warn {
-  margin: 10px 0 0;
-  font-size: 11px;
-  color: #6b4300;
-  background: #fdf3e2;
-  padding: 8px;
-  border-radius: 4px;
-}
-.e-warn button {
-  display: block;
-  margin-block-start: 8px;
-}
-
 .e-ghost {
   pointer-events: none;
   border: 2px solid #0b57d0;
@@ -350,121 +175,10 @@
   border-color: #a1101a;
   background: rgb(161 16 26 / 10%);
 }
-
-.e-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.e-chip {
-  cursor: grab;
-  text-transform: lowercase;
-}
 .e-chip[data-dragging] {
   opacity: 0.5;
 }
-
-
-.e-sec h3 {
-  margin: 14px 0 6px;
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: #6b6b66;
-}
-
-.e-choice {
-  display: grid;
-  gap: 4px;
-  margin-block-end: 10px;
-}
-.e-choice > span {
-  font-size: 11px;
-  color: #6b6b66;
-}
-.e-seg {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
-}
-.e-seg button {
-  flex: 1 1 0;
-  min-inline-size: 0;
-  padding: 4px 6px;
-  font-size: 11px;
-  text-transform: lowercase;
-}
-.e-seg button[aria-pressed='true'] {
-  background: #111110;
-  color: #fff;
-  border-color: #111110;
-}
-
-.e-field {
-  display: block;
-  margin-block-end: 8px;
-}
-.e-field > span {
-  display: block;
-  margin-block-end: 4px;
-  font-size: 11px;
-  color: #6b6b66;
-}
-.e-field input[type='text'],
-.e-field textarea {
-  inline-size: 100%;
-  min-inline-size: 0;
-  font: inherit;
-  font-size: 12px;
-  padding: 6px 8px;
-  border: 1px solid #d8d8d4;
-  border-radius: 3px;
-  background: #fff;
-  resize: vertical;
-}
-.e-inline {
-  display: grid;
-  grid-template-columns: 40px minmax(0, auto);
-  align-items: center;
-  gap: 6px 8px;
-}
-.e-inline > span {
-  grid-column: 1 / -1;
-  margin: 0;
-}
-.e-inline input[type='color'] {
-  inline-size: 40px;
-  block-size: 26px;
-  padding: 0;
-  border: 1px solid #d8d8d4;
-  background: none;
-}
-
-.e-range {
-  display: block;
-  margin-block-end: 8px;
-}
-.e-range > span {
-  display: block;
-  margin-block-end: 2px;
-  font-size: 11px;
-  color: #6b6b66;
-}
-.e-range input {
-  inline-size: 100%;
-}
-
-.e-toggle {
-  display: flex;
-  min-inline-size: 0;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  margin-block-start: 10px;
-}
-
-/* the content tree. indent is the only thing that says a row is in a group,
-   so it has to survive the row being the full width of the rail. */
+/* indent is the only thing marking a row as inside a group */
 .e-tree {
   list-style: none;
   margin: 0 0 10px;
@@ -489,8 +203,7 @@
 .e-tree li[data-dragging] {
   opacity: 0.4;
 }
-/* the rule is enforced in core either way; this is so it is visible at the
-   gesture rather than only after the drop does nothing */
+/* core refuses the move anyway; this makes the refusal visible at the gesture */
 .e-tree li[data-invalid] {
   outline: 2px solid #a1101a;
   outline-offset: 1px;
@@ -504,48 +217,27 @@
 .e-grip {
   flex: none;
   cursor: grab;
-  padding: 5px 4px;
-  font-size: 12px;
-  line-height: 1;
-  color: #9a9a94;
-  border-color: transparent;
-  background: none;
 }
 .e-grip:active {
   cursor: grabbing;
 }
-.e-node {
-  flex: 1 1 auto;
-  min-inline-size: 0;
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  text-align: start;
-  padding: 5px 8px;
-  font-size: 12px;
+
+/* radix has no colour input */
+.e-swatch {
+  inline-size: 32px;
+  block-size: 24px;
+  padding: 0;
+  border: 1px solid var(--gray-a6);
+  border-radius: var(--radius-2);
+  background: none;
+  cursor: pointer;
 }
-.e-node > span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+
+/* the shell background must not show through the panel */
+.e-rail {
+  background: var(--color-panel-solid);
 }
-.e-node > span:last-child {
-  flex: 1 1 auto;
-  font-size: 11px;
-}
-.e-node[aria-pressed='true'] {
-  background: #111110;
-  color: #fff;
-  border-color: #111110;
-}
-.e-nudge {
-  display: flex;
-  min-inline-size: 0;
-  gap: 2px;
-  flex: none;
-}
-.e-nudge button {
-  padding: 4px 6px;
-  font-size: 11px;
-  line-height: 1;
+.e-head,
+.e-foot {
+  border-color: var(--gray-a5);
 }

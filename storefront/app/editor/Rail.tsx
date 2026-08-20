@@ -1,4 +1,21 @@
 import {
+  Badge,
+  Box,
+  Button,
+  Callout,
+  Flex,
+  Grid,
+  Heading,
+  Slider,
+  Switch,
+  Text,
+  TextArea,
+  TextField,
+  SegmentedControl,
+  Separator,
+  Theme,
+} from '@radix-ui/themes';
+import {
   BANDS,
   isGroup,
   WIDEST,
@@ -8,7 +25,7 @@ import {
   type Element,
   type ElementKind,
   type Fill,
-  type Flex,
+  type Flex as FlexModel,
   type Found,
   type Group,
   type Layout,
@@ -16,19 +33,17 @@ import {
 import {Palette} from './Palette';
 import {Tree, type NodeDrag} from './Tree';
 
-// the customiser rail. chrome only — every decision it triggers is core's.
-
 const AXES = [
-  {key: 'col', label: 'col'},
-  {key: 'colSpan', label: 'span'},
-  {key: 'row', label: 'row'},
-  {key: 'rowSpan', label: 'rows'},
+  {key: 'col', label: 'Col'},
+  {key: 'colSpan', label: 'Span'},
+  {key: 'row', label: 'Row'},
+  {key: 'rowSpan', label: 'Rows'},
 ] as const;
 
 const DIRECTION = ['column', 'row'] as const;
 const JUSTIFY = ['start', 'center', 'end', 'between'] as const;
 const ALIGN = ['start', 'center', 'end', 'stretch'] as const;
-const LEVELS = [1, 2, 3, 4, 5] as const;
+const LEVELS = ['1', '2', '3', '4', '5'] as const;
 const SIZES = ['sm', 'lg'] as const;
 const VARIANTS = ['primary', 'secondary'] as const;
 const ADDABLE: (ElementKind | 'group')[] = [
@@ -39,7 +54,7 @@ const ADDABLE: (ElementKind | 'group')[] = [
   'group',
 ];
 
-const LABEL: Record<string, string> = {
+export const LABEL: Record<string, string> = {
   headline: 'Headline',
   text: 'Text',
   richText: 'Rich text',
@@ -77,10 +92,35 @@ export type RailProps = {
   onMoveNode: (id: string, delta: number) => void;
   onRemoveNode: (id: string) => void;
   onPatchBlock: (patch: Partial<Pick<Block, 'fill' | 'flex' | 'invert'>>) => void;
-  onFlex: (id: string, patch: Partial<Flex>) => void;
+  onFlex: (id: string, patch: Partial<FlexModel>) => void;
 };
 
-function Choice<T extends string | number>({
+function Field({label, children}: {label: string; children: React.ReactNode}) {
+  return (
+    <Box>
+      <Text as="label" size="1" color="gray" mb="1" style={{display: 'block'}}>
+        {label}
+      </Text>
+      {children}
+    </Box>
+  );
+}
+
+function Section({title, children}: {title: string; children: React.ReactNode}) {
+  return (
+    <Box p="3">
+      <Heading as="h3" size="1" mb="2" color="gray" style={{letterSpacing: '0.08em'}}>
+        {title.toUpperCase()}
+      </Heading>
+      <Flex direction="column" gap="3">
+        {children}
+      </Flex>
+      <Separator size="4" mt="3" />
+    </Box>
+  );
+}
+
+function Segment<T extends string>({
   label,
   value,
   options,
@@ -92,21 +132,20 @@ function Choice<T extends string | number>({
   onPick: (next: T) => void;
 }) {
   return (
-    <div className="e-choice">
-      <span>{label}</span>
-      <div className="e-seg">
+    <Field label={label}>
+      <SegmentedControl.Root
+        size="1"
+        value={value}
+        onValueChange={(v) => onPick(v as T)}
+        style={{width: '100%'}}
+      >
         {options.map((o) => (
-          <button
-            key={String(o)}
-            type="button"
-            aria-pressed={o === value}
-            onClick={() => onPick(o)}
-          >
-            {String(o)}
-          </button>
+          <SegmentedControl.Item key={o} value={o}>
+            {o}
+          </SegmentedControl.Item>
         ))}
-      </div>
-    </div>
+      </SegmentedControl.Root>
+    </Field>
   );
 }
 
@@ -114,40 +153,39 @@ function FlexFields({
   flex,
   onChange,
 }: {
-  flex: Flex;
-  onChange: (patch: Partial<Flex>) => void;
+  flex: FlexModel;
+  onChange: (patch: Partial<FlexModel>) => void;
 }) {
   return (
     <>
-      <Choice
-        label="direction"
+      <Segment
+        label="Direction"
         value={flex.direction}
         options={DIRECTION}
         onPick={(direction) => onChange({direction})}
       />
-      <Choice
-        label="justify"
+      <Segment
+        label="Justify"
         value={flex.justify}
         options={JUSTIFY}
         onPick={(justify) => onChange({justify})}
       />
-      <Choice
-        label="align"
+      <Segment
+        label="Align"
         value={flex.align}
         options={ALIGN}
         onPick={(align) => onChange({align})}
       />
-      <label className="e-range">
-        <span>gap {flex.gap}</span>
-        <input
-          type="range"
+      <Field label={`Gap — ${flex.gap}`}>
+        <Slider
+          size="1"
           min={0}
           max={8}
           step={1}
-          value={flex.gap}
-          onChange={(e) => onChange({gap: Number(e.target.value)})}
+          value={[flex.gap]}
+          onValueChange={([gap]) => onChange({gap: gap ?? 0})}
         />
-      </label>
+      </Field>
     </>
   );
 }
@@ -162,28 +200,28 @@ function AddMenu({
   // a group takes elements only, so it is never offered inside one
   const offer = parentId ? ADDABLE.filter((k) => k !== 'group') : ADDABLE;
   return (
-    <div className="e-chips">
+    <Flex gap="1" wrap="wrap">
       {offer.map((kind) => (
-        <button
+        <Button
           key={kind}
-          type="button"
-          className="e-chip"
+          size="1"
+          variant="soft"
           onClick={() => onAdd(kind, parentId)}
         >
           + {LABEL[kind]}
-        </button>
+        </Button>
       ))}
-    </div>
+    </Flex>
   );
 }
 
 function Inspector({found, props}: {found: Found; props: RailProps}) {
   const {node} = found;
+
   if (isGroup(node)) {
     return (
       <>
         <FlexFields flex={node.flex} onChange={(p) => props.onFlex(node.id, p)} />
-        <h3>Add to group</h3>
         <AddMenu parentId={node.id} onAdd={props.onAddChild} />
       </>
     );
@@ -194,48 +232,61 @@ function Inspector({found, props}: {found: Found; props: RailProps}) {
   return (
     <>
       {node.kind === 'headline' ? (
-        <Choice label="level" value={node.level} options={LEVELS} onPick={(level) => patch({level})} />
+        <Segment
+          label="Level"
+          value={String(node.level) as (typeof LEVELS)[number]}
+          options={LEVELS}
+          onPick={(l) => patch({level: Number(l) as 1 | 2 | 3 | 4 | 5})}
+        />
       ) : null}
       {node.kind === 'text' || node.kind === 'richText' ? (
-        <Choice label="size" value={node.size} options={SIZES} onPick={(size) => patch({size})} />
+        <Segment
+          label="Size"
+          value={node.size}
+          options={SIZES}
+          onPick={(size) => patch({size})}
+        />
       ) : null}
       {node.kind === 'button' ? (
-        <Choice
-          label="style"
+        <Segment
+          label="Style"
           value={node.variant}
           options={VARIANTS}
           onPick={(variant) => patch({variant})}
         />
       ) : null}
 
-      <label className="e-field">
-        <span>{node.kind === 'button' ? 'label' : 'content'}</span>
+      <Field label={node.kind === 'button' ? 'Label' : 'Content'}>
         {node.kind === 'richText' ? (
-          <textarea
+          <TextArea
+            size="1"
             rows={5}
             value={node.value}
             onChange={(e) => patch({value: e.target.value})}
           />
         ) : (
-          <input
-            type="text"
+          <TextField.Root
+            size="1"
             value={node.kind === 'button' ? node.label : node.value}
             onChange={(e) =>
-              patch(node.kind === 'button' ? {label: e.target.value} : {value: e.target.value})
+              patch(
+                node.kind === 'button'
+                  ? {label: e.target.value}
+                  : {value: e.target.value},
+              )
             }
           />
         )}
-      </label>
+      </Field>
 
       {node.kind === 'button' ? (
-        <label className="e-field">
-          <span>link</span>
-          <input
-            type="text"
+        <Field label="Link">
+          <TextField.Root
+            size="1"
             value={node.href}
             onChange={(e) => patch({href: e.target.value})}
           />
-        </label>
+        </Field>
       ) : null}
     </>
   );
@@ -248,22 +299,24 @@ function Appearance({block, props}: {block: Block; props: RailProps}) {
 
   return (
     <>
-      <label className="e-field e-inline">
-        <span>background</span>
-        <input
-          type="color"
-          value={fill.color ?? '#ffffff'}
-          onChange={(e) => setFill({color: e.target.value})}
-        />
-        <button type="button" onClick={() => setFill({color: undefined})}>
-          clear
-        </button>
-      </label>
+      <Field label="Background">
+        <Flex gap="2" align="center">
+          <input
+            className="e-swatch"
+            type="color"
+            aria-label="Background colour"
+            value={fill.color ?? '#ffffff'}
+            onChange={(e) => setFill({color: e.target.value})}
+          />
+          <Button size="1" variant="soft" onClick={() => setFill({color: undefined})}>
+            Clear
+          </Button>
+        </Flex>
+      </Field>
 
-      <label className="e-field">
-        <span>image or video url</span>
-        <input
-          type="text"
+      <Field label="Image or video URL">
+        <TextField.Root
+          size="1"
           placeholder="https://… or gid://…"
           value={fill.media?.src ?? ''}
           onChange={(e) => {
@@ -275,52 +328,65 @@ function Appearance({block, props}: {block: Block; props: RailProps}) {
             });
           }}
         />
-      </label>
+      </Field>
 
-      <label className="e-field e-inline">
-        <span>overlay</span>
-        <input
-          type="color"
-          value={fill.overlay?.color ?? '#000000'}
-          onChange={(e) =>
-            setFill({
-              overlay: {color: e.target.value, opacity: fill.overlay?.opacity ?? 0.4},
-            })
-          }
-        />
-        <button type="button" onClick={() => setFill({overlay: undefined})}>
-          clear
-        </button>
-      </label>
-      {fill.overlay ? (
-        <label className="e-range">
-          <span>opacity {Math.round(fill.overlay.opacity * 100)}%</span>
+      <Field label="Overlay">
+        <Flex gap="2" align="center">
           <input
-            type="range"
-            min={0}
-            max={100}
-            step={1}
-            value={Math.round(fill.overlay.opacity * 100)}
+            className="e-swatch"
+            type="color"
+            aria-label="Overlay colour"
+            value={fill.overlay?.color ?? '#000000'}
             onChange={(e) =>
               setFill({
                 overlay: {
-                  color: fill.overlay?.color ?? '#000000',
-                  opacity: Number(e.target.value) / 100,
+                  color: e.target.value,
+                  opacity: fill.overlay?.opacity ?? 0.4,
                 },
               })
             }
           />
-        </label>
+          <Button
+            size="1"
+            variant="soft"
+            onClick={() => setFill({overlay: undefined})}
+          >
+            Clear
+          </Button>
+        </Flex>
+      </Field>
+
+      {fill.overlay ? (
+        <Field label={`Opacity — ${Math.round(fill.overlay.opacity * 100)}%`}>
+          <Slider
+            size="1"
+            min={0}
+            max={100}
+            step={1}
+            value={[Math.round(fill.overlay.opacity * 100)]}
+            onValueChange={([v]) =>
+              setFill({
+                overlay: {
+                  color: fill.overlay?.color ?? '#000000',
+                  opacity: (v ?? 0) / 100,
+                },
+              })
+            }
+          />
+        </Field>
       ) : null}
 
-      <label className="e-toggle">
-        <input
-          type="checkbox"
+      <Flex gap="2" align="center">
+        <Switch
+          size="1"
+          id="invert"
           checked={block.invert}
-          onChange={(e) => props.onPatchBlock({invert: e.target.checked})}
+          onCheckedChange={(invert) => props.onPatchBlock({invert})}
         />
-        <span>invert colour</span>
-      </label>
+        <Text as="label" htmlFor="invert" size="2">
+          Invert colour
+        </Text>
+      </Flex>
     </>
   );
 }
@@ -330,73 +396,97 @@ export function Rail(props: RailProps) {
   const derived = selected !== null && band !== WIDEST && !authored;
 
   return (
-    <aside className="e-rail">
-      <header className="e-head">
-        <strong>unigrid</strong>
-        <span className="e-dim">editor spike</span>
-      </header>
+    <Theme
+      className="e-rail"
+      appearance="light"
+      accentColor="indigo"
+      grayColor="sand"
+      radius="small"
+      scaling="90%"
+    >
+      <Flex
+        className="e-head"
+        align="baseline"
+        justify="between"
+        gap="2"
+        px="3"
+        py="2"
+      >
+        <Heading as="h2" size="2">
+          unigrid
+        </Heading>
+        <Text size="1" color="gray">
+          editor spike
+        </Text>
+      </Flex>
 
-      <div className="e-scroll">
-        <section className="e-sec">
-          <h2>Band</h2>
-          <div className="e-tabs">
+      <Box className="e-scroll">
+        <Section title="Band">
+          <SegmentedControl.Root
+            size="1"
+            value={band}
+            onValueChange={(b) => props.onBand(b as Band)}
+            style={{width: '100%'}}
+          >
             {BANDS.map((b) => (
-              <button
-                key={b}
-                type="button"
-                aria-pressed={b === band}
-                onClick={() => props.onBand(b)}
-              >
+              <SegmentedControl.Item key={b} value={b}>
                 {b.toUpperCase()}
-              </button>
+              </SegmentedControl.Item>
             ))}
-          </div>
-        </section>
+          </SegmentedControl.Root>
+        </Section>
 
-        <section className="e-sec">
-          <h2>Add block</h2>
+        <Section title="Add block">
           <Palette />
-          <p className="e-dim">Drag onto a module.</p>
-        </section>
+          <Text size="1" color="gray">
+            Drag onto a module.
+          </Text>
+        </Section>
 
-        <section className="e-sec">
-          <h2>Blocks</h2>
-          <ul className="e-list">
+        <Section title="Blocks">
+          <Flex direction="column" gap="1">
             {layout.blocks.map((b) => (
-              <li key={b.id}>
-                <button
-                  type="button"
-                  aria-pressed={b.id === selected}
-                  onClick={() => props.onSelect(b.id === selected ? null : b.id)}
-                >
-                  <span>{b.id}</span>
-                  <span className="e-dim">{b.children.length}</span>
-                </button>
-              </li>
+              <Button
+                key={b.id}
+                size="1"
+                variant={b.id === selected ? 'solid' : 'soft'}
+                onClick={() => props.onSelect(b.id === selected ? null : b.id)}
+                style={{justifyContent: 'space-between'}}
+              >
+                <Text truncate>{b.id}</Text>
+                <Badge size="1" variant="surface">
+                  {b.children.length}
+                </Badge>
+              </Button>
             ))}
-          </ul>
-        </section>
+          </Flex>
+        </Section>
 
         {selected === null || !editable || !block ? (
-          <section className="e-sec">
-            <p className="e-dim">Nothing selected.</p>
-          </section>
+          <Box p="3">
+            <Text size="1" color="gray">
+              Nothing selected.
+            </Text>
+          </Box>
         ) : (
           <>
-            <section className="e-sec">
-              <h2>Placement</h2>
-              <p className="e-badge">
+            <Section title="Placement">
+              <Badge
+                size="1"
+                color={band === WIDEST ? 'indigo' : derived ? 'gray' : 'green'}
+              >
                 {band === WIDEST
                   ? 'widest band — authoritative'
                   : derived
                     ? 'derived — editing overrides it'
                     : 'overridden in this band'}
-              </p>
-              <div className="e-fields">
+              </Badge>
+
+              <Grid columns="2" gap="2">
                 {AXES.map((axis) => (
-                  <label key={axis.key}>
-                    <span>{axis.label}</span>
-                    <input
+                  <Field key={axis.key} label={axis.label}>
+                    <TextField.Root
+                      size="1"
                       type="number"
                       min={1}
                       value={editable[axis.key]}
@@ -407,50 +497,58 @@ export function Rail(props: RailProps) {
                         }
                       }}
                     />
-                  </label>
+                  </Field>
                 ))}
-              </div>
+              </Grid>
+
               {clipped > 0 ? (
-                <p className="e-warn">
-                  Content is clipped — {clipped} more row{clipped === 1 ? '' : 's'} would
-                  fit it.
-                  <button type="button" onClick={props.onFit}>
-                    Add {clipped} row{clipped === 1 ? '' : 's'}
-                  </button>
-                </p>
+                <Callout.Root size="1" color="amber">
+                  <Callout.Text>
+                    Content is clipped — {clipped} more row
+                    {clipped === 1 ? '' : 's'} would fit it.
+                  </Callout.Text>
+                  <Box mt="2">
+                    <Button size="1" variant="soft" color="amber" onClick={props.onFit}>
+                      Add {clipped} row{clipped === 1 ? '' : 's'}
+                    </Button>
+                  </Box>
+                </Callout.Root>
               ) : null}
-              <div className="e-row">
-                <button
-                  type="button"
+
+              {props.error ? (
+                <Callout.Root size="1" color="red">
+                  <Callout.Text>{props.error}</Callout.Text>
+                </Callout.Root>
+              ) : null}
+
+              <Flex gap="2" wrap="wrap">
+                <Button
+                  size="1"
+                  variant="soft"
                   onClick={props.onReset}
                   disabled={band === WIDEST || derived}
                 >
                   Reset to derived
-                </button>
-                <button type="button" className="e-danger" onClick={props.onDelete}>
+                </Button>
+                <Button size="1" variant="soft" color="red" onClick={props.onDelete}>
                   Delete block
-                </button>
-              </div>
-              {props.error ? <p className="e-error">{props.error}</p> : null}
-            </section>
+                </Button>
+              </Flex>
+            </Section>
 
-            <section className="e-sec">
-              <h2>Appearance</h2>
+            <Section title="Appearance">
               <Appearance block={block} props={props} />
-            </section>
+            </Section>
 
-            <section className="e-sec">
-              <h2>Layout</h2>
-              <FlexFields
-                flex={block.flex}
-                onChange={(p) => props.onFlex(block.id, p)}
-              />
-            </section>
+            <Section title="Layout">
+              <FlexFields flex={block.flex} onChange={(p) => props.onFlex(block.id, p)} />
+            </Section>
 
-            <section className="e-sec">
-              <h2>Contents</h2>
+            <Section title="Contents">
               {block.children.length === 0 ? (
-                <p className="e-dim">Empty. Add an element below.</p>
+                <Text size="1" color="gray">
+                  Empty. Add an element below.
+                </Text>
               ) : (
                 <Tree
                   block={block}
@@ -462,41 +560,41 @@ export function Rail(props: RailProps) {
                 />
               )}
               <AddMenu parentId={null} onAdd={props.onAddChild} />
-            </section>
+            </Section>
 
             {node ? (
-              <section className="e-sec">
-                <h2>{LABEL[node.node.kind] ?? node.node.kind}</h2>
+              <Section title={LABEL[node.node.kind] ?? node.node.kind}>
                 <Inspector found={node} props={props} />
-              </section>
+              </Section>
             ) : null}
           </>
         )}
 
-        <section className="e-sec">
-          <h2>State</h2>
-          <div className="e-row">
-            <button type="button" onClick={props.onUndo} disabled={!props.canUndo}>
+        <Section title="State">
+          <Flex gap="2" wrap="wrap">
+            <Button size="1" variant="soft" onClick={props.onUndo} disabled={!props.canUndo}>
               Undo
-            </button>
-            <button type="button" onClick={props.onRedo} disabled={!props.canRedo}>
+            </Button>
+            <Button size="1" variant="soft" onClick={props.onRedo} disabled={!props.canRedo}>
               Redo
-            </button>
-          </div>
-          <div className="e-row">
-            <button type="button" onClick={props.onSave}>
+            </Button>
+          </Flex>
+          <Flex gap="2" align="center" justify="between">
+            <Button size="1" onClick={props.onSave}>
               {props.dirty ? 'Save •' : 'Save'}
-            </button>
-            <span className="e-dim">
+            </Button>
+            <Text size="1" color="gray">
               {(props.bytes / 1024).toFixed(1)}kb / 128kb
-            </span>
-          </div>
-        </section>
-      </div>
+            </Text>
+          </Flex>
+        </Section>
+      </Box>
 
-      <footer className="e-foot e-dim">
-        drag to move · grab an edge to resize · arrows nudge · esc deselect
-      </footer>
-    </aside>
+      <Box className="e-foot" px="3" py="2">
+        <Text size="1" color="gray">
+          drag to move · grab an edge to resize · arrows nudge · esc deselect
+        </Text>
+      </Box>
+    </Theme>
   );
 }

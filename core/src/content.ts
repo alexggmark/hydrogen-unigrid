@@ -73,8 +73,7 @@ const shift = <T>(list: T[], from: number, delta: number): T[] => {
   return next;
 };
 
-// reorder within the current parent only. moving between parents is a drag
-// gesture the rail does not have, and a silent reparent would be worse.
+// reorder within the current parent; reparenting is placeNode
 export function moveNode(layout: Layout, nodeId: string, delta: number): Layout {
   const found = findNode(layout, nodeId);
   if (!found) return layout;
@@ -93,9 +92,7 @@ export function moveNode(layout: Layout, nodeId: string, delta: number): Layout 
   );
 }
 
-// move a node to a parent at an index, reparenting if needed. parentId null is
-// the block itself. a group can only ever sit at the root, so a group aimed at
-// a group is refused here rather than represented.
+// parentId null is the block itself. a group can only sit at the root.
 export function placeNode(
   layout: Layout,
   nodeId: string,

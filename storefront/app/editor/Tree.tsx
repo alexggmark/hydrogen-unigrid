@@ -1,14 +1,12 @@
 import {isSortable, useSortable} from '@dnd-kit/react/sortable';
 import type {DragDropManager} from '@dnd-kit/dom';
+import {Badge, Button, Flex, IconButton, Text} from '@radix-ui/themes';
 import {isGroup, type Block, type Node} from '@unigrid/core';
 
-// the rail's content tree. two containers: the block root, which takes anything,
-// and each group, which takes elements only. a group aimed at a group is shown
-// as invalid rather than silently ignored, so the rule is visible at the gesture.
+// two drop containers: the block root takes anything, a group takes elements only
 
 export type NodeDrag = {kind: 'node'; node: string; group: boolean};
 
-// the container naming lives here, so reading a drop back out does too
 export const ROOT = 'root';
 
 export function dropTarget(
@@ -77,39 +75,56 @@ function Row({
       data-dragging={isDragging ? '' : undefined}
       data-invalid={rejects ? '' : undefined}
     >
-      <button
-        ref={handleRef}
-        type="button"
-        className="e-grip"
-        aria-label={`Reorder ${LABEL[node.kind] ?? node.kind}`}
-      >
-        ⠿
-      </button>
-      <button
-        type="button"
-        className="e-node"
-        aria-pressed={active}
-        onClick={() => onPick(active ? null : node.id)}
-      >
-        <span>{LABEL[node.kind] ?? node.kind}</span>
-        <span className="e-dim">{preview(node)}</span>
-      </button>
-      <span className="e-nudge">
-        <button type="button" onClick={() => onMove(node.id, -1)} aria-label="Move up">
-          ↑
-        </button>
-        <button type="button" onClick={() => onMove(node.id, 1)} aria-label="Move down">
-          ↓
-        </button>
+      <IconButton asChild size="1" variant="ghost" color="gray">
         <button
+          ref={handleRef}
           type="button"
-          className="e-danger"
+          className="e-grip"
+          aria-label={`Reorder ${LABEL[node.kind] ?? node.kind}`}
+        >
+          ⠿
+        </button>
+      </IconButton>
+      <Button
+        size="1"
+        variant={active ? 'solid' : 'soft'}
+        onClick={() => onPick(active ? null : node.id)}
+        style={{flex: '1 1 auto', minInlineSize: 0, justifyContent: 'flex-start'}}
+      >
+        <Text truncate>{LABEL[node.kind] ?? node.kind}</Text>
+        <Text truncate size="1" color={active ? undefined : 'gray'}>
+          {preview(node)}
+        </Text>
+      </Button>
+      <Flex gap="1" flexShrink="0">
+        <IconButton
+          size="1"
+          variant="ghost"
+          color="gray"
+          onClick={() => onMove(node.id, -1)}
+          aria-label="Move up"
+        >
+          ↑
+        </IconButton>
+        <IconButton
+          size="1"
+          variant="ghost"
+          color="gray"
+          onClick={() => onMove(node.id, 1)}
+          aria-label="Move down"
+        >
+          ↓
+        </IconButton>
+        <IconButton
+          size="1"
+          variant="ghost"
+          color="red"
           onClick={() => onRemove(node.id)}
           aria-label="Remove"
         >
           ×
-        </button>
-      </span>
+        </IconButton>
+      </Flex>
     </li>
   );
 }
@@ -131,7 +146,9 @@ function EmptySlot({group, dragging}: {group: string; dragging: NodeDrag | null}
       data-slot=""
       data-invalid={isDropTarget && dragging?.group ? '' : undefined}
     >
-      <span className="e-dim">{isDropTarget ? 'drop here' : 'empty group'}</span>
+      <Badge size="1" variant="surface" color="gray">
+        {isDropTarget ? 'drop here' : 'empty group'}
+      </Badge>
     </li>
   );
 }
