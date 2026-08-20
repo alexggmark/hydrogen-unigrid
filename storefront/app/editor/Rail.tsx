@@ -72,6 +72,7 @@ export type RailProps = {
   block: Block | undefined;
   node: Found | undefined;
   dragging: NodeDrag | null;
+  resync: number;
   error: string | null;
   dirty: boolean;
   bytes: number;
@@ -554,6 +555,7 @@ export function Rail(props: RailProps) {
                   block={block}
                   activeNode={node?.node.id ?? null}
                   dragging={props.dragging}
+                  resync={props.resync}
                   onPick={props.onPickNode}
                   onMove={props.onMoveNode}
                   onRemove={props.onRemoveNode}

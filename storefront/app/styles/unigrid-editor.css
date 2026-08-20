@@ -178,39 +178,36 @@
 .e-chip[data-dragging] {
   opacity: 0.5;
 }
-/* indent is the only thing marking a row as inside a group */
 .e-tree {
   list-style: none;
   margin: 0 0 10px;
   padding: 0;
 }
-.e-branch {
-  display: block;
-}
-.e-branch > .e-tree {
-  margin: 0;
-}
 .e-tree li[data-depth] {
+  min-inline-size: 0;
+  margin-block-end: 2px;
+  border-radius: 3px;
+}
+.e-rowline {
   display: flex;
   min-inline-size: 0;
   align-items: center;
   gap: 4px;
-  margin-block-end: 2px;
-  border-radius: 3px;
 }
-.e-tree li[data-depth='1'] {
-  margin-inline-start: 14px;
-  border-inline-start: 1px solid #e0e0dc;
+/* indent belongs to the nested list, so a group and its rows move as one */
+.e-sub {
+  margin: 2px 0 0 14px;
+  border-inline-start: 1px solid var(--gray-a5);
   padding-inline-start: 6px;
 }
 .e-tree li[data-dragging] {
   opacity: 0.4;
 }
-/* core refuses the move anyway; this makes the refusal visible at the gesture */
-.e-tree li[data-invalid] {
-  outline: 2px solid #a1101a;
-  outline-offset: 1px;
-  background: #fdeceb;
+/* a group cannot go inside a group, so say so for the whole gesture rather than
+   only when one is hovered — the drop is refused before it can be attempted */
+.e-sub[data-blocked] {
+  border-inline-start-color: var(--red-9);
+  opacity: 0.5;
 }
 .e-tree li[data-slot] {
   padding: 6px 8px;

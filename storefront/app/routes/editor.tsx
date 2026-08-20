@@ -132,6 +132,10 @@ export default function Editor() {
   const [clipped, setClipped] = useState<Record<string, number>>({});
   // rail-tree drags are their own gesture: no ghost, no cell, no placement
   const [nodeDrag, setNodeDrag] = useState<NodeDrag | null>(null);
+  // dnd-kit reorders the dom during a drag and does not undo it across groups.
+  // a refused drop leaves the model unchanged, so the tree needs telling to
+  // rebuild from it rather than keep what the drag left behind.
+  const [resync, setResync] = useState(0);
 
   const layout = hist.present;
   const at = useMemo(() => deriveAll(layout), [layout]);
@@ -334,6 +338,7 @@ export default function Editor() {
     setNodeDrag(null);
 
     if (node) {
+      setResync((n) => n + 1);
       if (event.canceled) return;
       const to = dropTarget(manager);
       if (!to) return;
@@ -483,6 +488,7 @@ export default function Editor() {
           block={block}
           node={picked}
           dragging={nodeDrag}
+          resync={resync}
           error={error}
           dirty={saved !== json}
           bytes={bytes}

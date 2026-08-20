@@ -38,10 +38,10 @@ type RowProps = {
   container: string;
   depth: number;
   active: boolean;
-  dragging: NodeDrag | null;
   onPick: (id: string | null) => void;
   onMove: (id: string, delta: number) => void;
   onRemove: (id: string) => void;
+  children?: React.ReactNode;
 };
 
 function Row({
@@ -50,103 +50,102 @@ function Row({
   container,
   depth,
   active,
-  dragging,
   onPick,
   onMove,
   onRemove,
+  children,
 }: RowProps) {
   const group = isGroup(node);
-  const {ref, handleRef, isDragging, isDropTarget} = useSortable({
+  const {ref, handleRef, targetRef, isDragging} = useSortable({
     id: node.id,
     index,
     group: container,
     type: group ? 'group' : 'element',
-    accept: ['element', 'group'],
+    // a group only sits at the root. refusing it as a target here is what stops
+    // dnd-kit reordering the dom into a position the model will not accept.
+    accept: container === ROOT ? ['element', 'group'] : ['element'],
     data: {kind: 'node', node: node.id, group} satisfies NodeDrag,
   });
-
-  // a group can only live at the root, so anything landing inside one is refused
-  const rejects =
-    isDropTarget && dragging?.group === true && container !== ROOT;
 
   return (
     <li
       ref={ref}
       data-depth={depth}
       data-dragging={isDragging ? '' : undefined}
-      data-invalid={rejects ? '' : undefined}
     >
-      <IconButton asChild size="1" variant="ghost" color="gray">
-        <button
-          ref={handleRef}
-          type="button"
-          className="e-grip"
-          aria-label={`Reorder ${LABEL[node.kind] ?? node.kind}`}
-        >
-          ⠿
-        </button>
-      </IconButton>
-      <Button
-        size="1"
-        variant={active ? 'solid' : 'soft'}
-        onClick={() => onPick(active ? null : node.id)}
-        style={{flex: '1 1 auto', minInlineSize: 0, justifyContent: 'flex-start'}}
-      >
-        <Text truncate>{LABEL[node.kind] ?? node.kind}</Text>
-        <Text truncate size="1" color={active ? undefined : 'gray'}>
-          {preview(node)}
-        </Text>
-      </Button>
-      <Flex gap="1" flexShrink="0">
-        <IconButton
-          size="1"
-          variant="ghost"
-          color="gray"
-          onClick={() => onMove(node.id, -1)}
-          aria-label="Move up"
-        >
-          ↑
+      <div className="e-rowline" ref={targetRef}>
+        <IconButton asChild size="1" variant="ghost" color="gray">
+          <button
+            ref={handleRef}
+            type="button"
+            className="e-grip"
+            aria-label={`Reorder ${LABEL[node.kind] ?? node.kind}`}
+          >
+            ⠿
+          </button>
         </IconButton>
-        <IconButton
+        <Button
           size="1"
-          variant="ghost"
-          color="gray"
-          onClick={() => onMove(node.id, 1)}
-          aria-label="Move down"
+          variant={active ? 'solid' : 'soft'}
+          onClick={() => onPick(active ? null : node.id)}
+          style={{
+            flex: '1 1 auto',
+            minInlineSize: 0,
+            justifyContent: 'flex-start',
+          }}
         >
-          ↓
-        </IconButton>
-        <IconButton
-          size="1"
-          variant="ghost"
-          color="red"
-          onClick={() => onRemove(node.id)}
-          aria-label="Remove"
-        >
-          ×
-        </IconButton>
-      </Flex>
+          <Text truncate>{LABEL[node.kind] ?? node.kind}</Text>
+          <Text truncate size="1" color={active ? undefined : 'gray'}>
+            {preview(node)}
+          </Text>
+        </Button>
+        <Flex gap="1" flexShrink="0">
+          <IconButton
+            size="1"
+            variant="ghost"
+            color="gray"
+            onClick={() => onMove(node.id, -1)}
+            aria-label="Move up"
+          >
+            ↑
+          </IconButton>
+          <IconButton
+            size="1"
+            variant="ghost"
+            color="gray"
+            onClick={() => onMove(node.id, 1)}
+            aria-label="Move down"
+          >
+            ↓
+          </IconButton>
+          <IconButton
+            size="1"
+            variant="ghost"
+            color="red"
+            onClick={() => onRemove(node.id)}
+            aria-label="Remove"
+          >
+            ×
+          </IconButton>
+        </Flex>
+      </div>
+      {children}
     </li>
   );
 }
 
 // an empty group has no row to drop next to, so it gets a target of its own
-function EmptySlot({group, dragging}: {group: string; dragging: NodeDrag | null}) {
+function EmptySlot({group}: {group: string}) {
   const {ref, isDropTarget} = useSortable({
     id: `${group}:empty`,
     index: 0,
     group,
     type: 'slot',
-    accept: ['element', 'group'],
+    accept: ['element'],
     disabled: {draggable: true},
   });
   return (
-    <li
-      ref={ref}
-      data-depth={1}
-      data-slot=""
-      data-invalid={isDropTarget && dragging?.group ? '' : undefined}
-    >
+    <li ref={ref} data-depth={1} data-slot="">
       <Badge size="1" variant="surface" color="gray">
         {isDropTarget ? 'drop here' : 'empty group'}
       </Badge>
@@ -158,6 +157,7 @@ export type TreeProps = {
   block: Block;
   activeNode: string | null;
   dragging: NodeDrag | null;
+  resync: number;
   onPick: (id: string | null) => void;
   onMove: (id: string, delta: number) => void;
   onRemove: (id: string) => void;
@@ -171,7 +171,9 @@ export function Tree(props: TreeProps) {
   // on the shape makes react drop this whole list and rebuild, rather than
   // unmount a row that is no longer where it left it.
   const shape = block.children
-    .map((c) => (isGroup(c) ? `${c.id}[${c.children.map((x) => x.id).join()}]` : c.id))
+    .map((c) =>
+      isGroup(c) ? `${c.id}[${c.children.map((x) => x.id).join()}]` : c.id,
+    )
     .join('|');
 
   const row = (node: Node, index: number, container: string, depth: number) => (
@@ -182,31 +184,41 @@ export function Tree(props: TreeProps) {
       container={container}
       depth={depth}
       active={node.id === activeNode}
-      dragging={dragging}
       onPick={props.onPick}
       onMove={props.onMove}
       onRemove={props.onRemove}
     />
   );
 
-  // each container is one dom parent, so the items dnd-kit sorts are siblings
+  // a group is a single node in the root list with its own list inside it, so an
+  // element arriving from above does not have to cross the group's own row first
   return (
-    <ul className="e-tree" key={shape}>
+    <ul className="e-tree" key={`${shape}#${props.resync}`}>
       {block.children.map((child, i) => (
-        <Fragment key={child.id}>
-          {row(child, i, ROOT, 0)}
+        <Row
+          key={child.id}
+          node={child}
+          index={i}
+          container={ROOT}
+          depth={0}
+          active={child.id === activeNode}
+          onPick={props.onPick}
+          onMove={props.onMove}
+          onRemove={props.onRemove}
+        >
           {isGroup(child) ? (
-            <li className="e-branch">
-              <ul className="e-tree">
-                {child.children.length ? (
-                  child.children.map((leaf, j) => row(leaf, j, child.id, 1))
-                ) : (
-                  <EmptySlot group={child.id} dragging={dragging} />
-                )}
-              </ul>
-            </li>
+            <ul
+              className="e-tree e-sub"
+              data-blocked={dragging?.group ? '' : undefined}
+            >
+              {child.children.length ? (
+                child.children.map((leaf, j) => row(leaf, j, child.id, 1))
+              ) : (
+                <EmptySlot group={child.id} />
+              )}
+            </ul>
           ) : null}
-        </Fragment>
+        </Row>
       ))}
     </ul>
   );
