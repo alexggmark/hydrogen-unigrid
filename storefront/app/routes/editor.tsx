@@ -1,7 +1,14 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import type {LinksFunction} from 'react-router';
 import {DragDropProvider} from '@dnd-kit/react';
-import type {DragDropManager} from '@dnd-kit/dom';
+import {
+  Accessibility,
+  AutoScroller,
+  Cursor,
+  Feedback,
+  PreventSelection,
+  type DragDropManager,
+} from '@dnd-kit/dom';
 import {
   add,
   addNode,
@@ -80,6 +87,17 @@ type Drag =
   | {kind: 'new'};
 
 type Preview = {cell: Cell; ok: boolean; reason?: string};
+
+// `move` transforms the dragged element itself. every other mode inserts a
+// placeholder clone beside it and reparents the original, both outside react's
+// knowledge, so a drop across containers unmounts a node react no longer owns.
+const PLUGINS = [
+  Accessibility,
+  AutoScroller,
+  Cursor,
+  PreventSelection,
+  Feedback.configure({feedback: 'move'}),
+];
 
 const nextId = (taken: (id: string) => boolean, prefix: string): string => {
   let n = 1;
@@ -407,6 +425,7 @@ export default function Editor() {
 
   return (
     <DragDropProvider
+      plugins={PLUGINS}
       onDragStart={onDragStart}
       onDragMove={onDragMove}
       onDragEnd={onDragEnd}

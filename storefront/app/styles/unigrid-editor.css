@@ -187,6 +187,9 @@
 .e-branch {
   display: block;
 }
+.e-branch > .e-tree {
+  margin: 0;
+}
 .e-tree li[data-depth] {
   display: flex;
   min-inline-size: 0;

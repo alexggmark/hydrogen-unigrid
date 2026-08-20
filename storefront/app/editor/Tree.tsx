@@ -1,3 +1,4 @@
+import {Fragment} from 'react';
 import {isSortable, useSortable} from '@dnd-kit/react/sortable';
 import type {DragDropManager} from '@dnd-kit/dom';
 import {Badge, Button, Flex, IconButton, Text} from '@radix-ui/themes';
@@ -164,6 +165,15 @@ export type TreeProps = {
 
 export function Tree(props: TreeProps) {
   const {block, activeNode, dragging} = props;
+
+  // dnd-kit reorders the real dom as you drag and only restores it within one
+  // group, so after a cross-group drop react's tree no longer matches. keying
+  // on the shape makes react drop this whole list and rebuild, rather than
+  // unmount a row that is no longer where it left it.
+  const shape = block.children
+    .map((c) => (isGroup(c) ? `${c.id}[${c.children.map((x) => x.id).join()}]` : c.id))
+    .join('|');
+
   const row = (node: Node, index: number, container: string, depth: number) => (
     <Row
       key={node.id}
@@ -179,19 +189,24 @@ export function Tree(props: TreeProps) {
     />
   );
 
+  // each container is one dom parent, so the items dnd-kit sorts are siblings
   return (
-    <ul className="e-tree">
+    <ul className="e-tree" key={shape}>
       {block.children.map((child, i) => (
-        <li key={child.id} className="e-branch">
-          <ul className="e-tree">
-            {row(child, i, ROOT, 0)}
-            {isGroup(child)
-              ? child.children.length
-                ? child.children.map((leaf, j) => row(leaf, j, child.id, 1))
-                : [<EmptySlot key="empty" group={child.id} dragging={dragging} />]
-              : null}
-          </ul>
-        </li>
+        <Fragment key={child.id}>
+          {row(child, i, ROOT, 0)}
+          {isGroup(child) ? (
+            <li className="e-branch">
+              <ul className="e-tree">
+                {child.children.length ? (
+                  child.children.map((leaf, j) => row(leaf, j, child.id, 1))
+                ) : (
+                  <EmptySlot group={child.id} dragging={dragging} />
+                )}
+              </ul>
+            </li>
+          ) : null}
+        </Fragment>
       ))}
     </ul>
   );

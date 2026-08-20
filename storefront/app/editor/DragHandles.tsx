@@ -2,7 +2,7 @@ import {useDraggable} from '@dnd-kit/react';
 import {Feedback} from '@dnd-kit/dom';
 import type {Edge} from './geometry';
 
-// no dnd-kit drag feedback: the ghost shows the module, so nothing is off-grid
+// the ghost on the grid is ours; the block itself must not fly with the pointer
 const NO_FEEDBACK = [Feedback.configure({feedback: 'none'})];
 
 const EDGES: {edge: Edge; label: string}[] = [

@@ -2,6 +2,7 @@ import {useDraggable} from '@dnd-kit/react';
 import {Feedback} from '@dnd-kit/dom';
 import {Button} from '@radix-ui/themes';
 
+// the ghost on the grid is ours; the block itself must not fly with the pointer
 const NO_FEEDBACK = [Feedback.configure({feedback: 'none'})];
 
 // one chip: what goes inside a block is added from the rail once it is placed
