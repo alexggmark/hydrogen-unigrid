@@ -10,8 +10,10 @@ export const HARNESS: Layout = {
       type: 'text',
       content: {kind: 'none'},
       at: {
-        a: {col: 1, colSpan: 8, row: 1, rowSpan: 2},
-        b: {col: 1, colSpan: 8, row: 1, rowSpan: 2},
+        // three rows, not two: the mega heading is two lines and nothing grows
+        // to cover an under-authored span any more
+        a: {col: 1, colSpan: 8, row: 1, rowSpan: 3},
+        b: {col: 1, colSpan: 8, row: 1, rowSpan: 3},
         c: {col: 1, colSpan: 4, row: 1, rowSpan: 3},
       },
     },

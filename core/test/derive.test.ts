@@ -3,7 +3,6 @@ import {BANDS, COLUMNS, WIDEST, type Band} from '../src/bands';
 import {derive} from '../src/derive';
 import {insertAfter} from '../src/insert';
 import {overlaps, readingOrder, resetToDerived} from '../src/layout';
-import {resolve} from '../src/resolve';
 import type {Block, Cell, Layout} from '../src/types';
 import {densePacked, int, rng} from './random';
 
@@ -174,16 +173,14 @@ describe('derivation', () => {
   });
 });
 
-describe('resolution over derived bands', () => {
-  it('resolves every band without overlap', () => {
+describe('every band', () => {
+  it('derives without overlap', () => {
     for (let seed = 0; seed < 500; seed++) {
       const r = rng(seed);
       const layout = withOverrides(densePacked(r, int(r, 3, 14)), 'c', seed);
-      const m: Record<string, number> = {};
-      for (const b of layout.blocks) if (r() < 0.6) m[b.id] = int(r, 1, 20);
       for (const band of BANDS) {
         expect(
-          clean(resolve(layout, band, m).values()),
+          clean(derive(layout, band).values()),
           `seed ${seed} band ${band}`,
         ).toBe(true);
       }
@@ -193,8 +190,17 @@ describe('resolution over derived bands', () => {
   it('gives every block a cell in every band', () => {
     const layout = densePacked(rng(4), 10);
     for (const band of BANDS) {
-      const resolved = resolve(layout, band, {});
-      expect(resolved.size).toBe(layout.blocks.length);
+      expect(derive(layout, band).size).toBe(layout.blocks.length);
+    }
+  });
+
+  // clipping, not growth: a band renders exactly the span that was authored
+  it('renders the authored span, never a larger one', () => {
+    const layout = withOverrides(densePacked(rng(7), 12), 'c', 7);
+    for (const b of layout.blocks) {
+      expect(derive(layout, WIDEST).get(b.id)).toEqual(b.at.a);
+      const override = b.at.c;
+      if (override) expect(derive(layout, 'c').get(b.id)).toEqual(override);
     }
   });
 });
@@ -227,7 +233,7 @@ describe('insert from a narrow band', () => {
     });
   });
 
-  it('pushes the column stack down when the slot is taken', () => {
+  it('steps past a taken slot instead of displacing it', () => {
     const layout: Layout = {
       version: 1,
       blocks: [
@@ -241,8 +247,9 @@ describe('insert from a narrow band', () => {
       {id: 'new', type: 'text', content: {kind: 'none'}, rowSpan: 2},
       'pred',
     );
-    expect(after.blocks.find((b) => b.id === 'new')?.at.a.row).toBe(3);
-    expect(after.blocks.find((b) => b.id === 'under')?.at.a.row).toBe(5);
+    // `under` occupies rows 3-4, so the newcomer starts below it and nothing moves
+    expect(after.blocks.find((b) => b.id === 'new')?.at.a.row).toBe(5);
+    expect(after.blocks.find((b) => b.id === 'under')?.at.a.row).toBe(3);
     expect(after.blocks.find((b) => b.id === 'beside')?.at.a.row).toBe(3);
   });
 

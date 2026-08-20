@@ -3,12 +3,12 @@ import {Grid, gridDevLinks} from '~/blocks/Grid';
 import {Block} from '~/blocks/Block';
 import {CHROME, CONTENT} from '~/blocks/demo';
 import {HARNESS} from '~/blocks/harness';
-import {resolveAll} from '~/blocks/placement';
+import {deriveAll} from '~/blocks/placement';
 import unigridStyles from '~/styles/unigrid.css?url';
 import demoStyles from '~/styles/unigrid-demo.css?url';
 
-// read-only reference render. no measurements, so the resolver is identity here
-// and what you see is the authored layout. /editor is where it gets driven.
+// read-only reference render of the authored layout. /editor is the same
+// geometry with chrome on top — never a second implementation.
 
 export const handle = {bare: true};
 
@@ -19,7 +19,7 @@ export const links: LinksFunction = () => [
 ];
 
 export default function GridHarness() {
-  const at = resolveAll(HARNESS);
+  const at = deriveAll(HARNESS);
 
   return (
     <div className="unigrid-demo">
@@ -34,7 +34,6 @@ export default function GridHarness() {
               at={placement}
               as={chrome.as}
               className={chrome.className}
-              text={block.type === 'text'}
             >
               {CONTENT[block.id]}
             </Block>

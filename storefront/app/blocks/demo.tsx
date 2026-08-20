@@ -31,7 +31,7 @@ export const CONTENT: Record<string, ReactNode> = {
   figure: (
     <>
       <p className="u-micro">Fig. 01</p>
-      <p className="u-h2">Media keeps its span.</p>
+      <p className="u-h2">Every block keeps its span.</p>
     </>
   ),
   essay: (
@@ -69,8 +69,8 @@ export const CONTENT: Record<string, ReactNode> = {
     <>
       <p className="u-micro">Note</p>
       <p>
-        Text is the exception: measured, rounded up to whole rows, grown
-        downward, pushing only the columns it intersects.
+        No exceptions by type. The authored span is the rendered span, and
+        content that overruns it is clipped — never grown, never pushed.
       </p>
     </>
   ),

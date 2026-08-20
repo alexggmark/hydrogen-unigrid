@@ -2,7 +2,7 @@ import {BANDS, type Band} from './bands';
 import type {Block, BlockType, Cell, ContentRef, Layout} from './types';
 
 // wire format is positional and drops defaults. the storefront json metafield
-// caps at 128kb and has to hold measurements too.
+// caps at 128kb, so nothing derivable is written.
 //
 //   [version, [block, ...]]
 //   block = [id, type, content, cellA, cellB?, cellC?]

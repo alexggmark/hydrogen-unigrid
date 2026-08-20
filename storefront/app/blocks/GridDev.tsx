@@ -2,7 +2,7 @@ import {useEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
 import {gridUnits} from './units';
 
-// dev instrumentation: surfaces --u, flags text blocks past their authored span
+// dev instrumentation: surfaces --u, flags any block whose content is clipped
 
 const COLUMNS = 12;
 const TYPE_FLOOR_PX = 14;
@@ -29,7 +29,7 @@ export function GridDev() {
     const report = () => {
       const units = gridUnits(grid);
       if (!units) return;
-      const {col, row, gutter, cols} = units;
+      const {col, row, cols} = units;
       const width = grid.getBoundingClientRect().width;
 
       setReadout({
@@ -41,17 +41,11 @@ export function GridDev() {
         type: parseFloat(getComputedStyle(grid).fontSize),
       });
 
-      for (const block of grid.querySelectorAll<HTMLElement>(
-        '.u-block[data-text]',
-      )) {
-        const needed = Math.ceil(
-          (block.scrollHeight + gutter) / (row + gutter),
-        );
+      for (const block of grid.querySelectorAll<HTMLElement>('.u-block')) {
         block.classList.toggle(
           'u-over',
           block.scrollHeight > block.clientHeight + 1,
         );
-        block.dataset.rows = String(needed);
       }
     };
 

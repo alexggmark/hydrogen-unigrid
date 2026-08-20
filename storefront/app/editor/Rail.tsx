@@ -15,9 +15,7 @@ export type RailProps = {
   band: Band;
   selected: string | null;
   authored: Cell | undefined;
-  resolved: Cell | undefined;
   editable: Cell | undefined;
-  grown: number;
   error: string | null;
   dirty: boolean;
   bytes: number;
@@ -34,7 +32,7 @@ export type RailProps = {
 };
 
 export function Rail(props: RailProps) {
-  const {layout, band, selected, authored, resolved, editable, grown} = props;
+  const {layout, band, selected, authored, editable} = props;
   const derived = selected !== null && band !== WIDEST && !authored;
 
   return (
@@ -89,8 +87,8 @@ export function Rail(props: RailProps) {
       </section>
 
       <section className="e-sec">
-        <h2>Placement — authored</h2>
-        {selected === null || !resolved || !editable ? (
+        <h2>Placement</h2>
+        {selected === null || !editable ? (
           <p className="e-dim">Nothing selected.</p>
         ) : (
           <>
@@ -102,7 +100,8 @@ export function Rail(props: RailProps) {
                   : 'overridden in this band'}
             </p>
             <p className="e-dim" style={{margin: '0 0 8px'}}>
-              What you author. Growth and push are the engine&rsquo;s answer to it.
+              The authored span is the rendered span. Content that does not fit
+              is clipped — nothing here moves anything else.
             </p>
             <div className="e-fields">
               {AXES.map((axis) => (
@@ -122,19 +121,6 @@ export function Rail(props: RailProps) {
                 </label>
               ))}
             </div>
-            {grown > 0 ? (
-              <p className="e-note">
-                text grew {grown} row{grown === 1 ? '' : 's'} past its authored
-                span
-              </p>
-            ) : null}
-            {resolved.row !== authored?.row ? (
-              <p className="e-note">
-                pushed down {resolved.row - (authored?.row ?? resolved.row)} row
-                {resolved.row - (authored?.row ?? resolved.row) === 1 ? '' : 's'} —
-                it still collides at its authored row {authored?.row}
-              </p>
-            ) : null}
             <div className="e-row">
               <button
                 type="button"

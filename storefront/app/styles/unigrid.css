@@ -72,6 +72,8 @@
   grid-column: var(--c) / span var(--cs);
   grid-row: var(--r) / span var(--rs);
   min-inline-size: 0;
+  /* the authored span is the size. content that exceeds it is clipped rather
+     than allowed to grow the box, which would move every block beneath it. */
   overflow: hidden;
   padding: calc(var(--u) * 1);
 }
@@ -187,12 +189,4 @@
 .u-probe[data-probe='down'] {
   grid-column: 1 / span 1;
   grid-row: 1 / span 2;
-}
-
-/* measurement only: let text blocks take their natural height so what comes back
-   is a function of the text, not of the span the last measurement gave them.
-   never painted — set and cleared inside one synchronous pass. */
-.u-grid[data-measuring] .u-block[data-text] {
-  block-size: max-content;
-  align-self: start;
 }

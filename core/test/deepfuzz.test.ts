@@ -1,13 +1,13 @@
 import {describe, expect, it} from 'vitest';
+import {BANDS} from '../src/bands';
+import {derive} from '../src/derive';
 import {overlaps} from '../src/layout';
-import {resolve} from '../src/resolve';
 import type {Cell} from '../src/types';
 import {densePacked, int, rng} from './random';
 
 describe('gate 4 sweep', () => {
-  it('no-overlap and convergence over 25000 dense random layouts', () => {
+  it('no overlap in any band over 25000 dense random layouts', () => {
     let blocks = 0;
-    let grown = 0;
     for (let seed = 0; seed < 25_000; seed++) {
       const r = rng(seed);
       const layout = densePacked(r, int(r, 4, 18));
@@ -26,29 +26,22 @@ describe('gate 4 sweep', () => {
         }
       }
 
-      const m: Record<string, number> = {};
-      for (const b of layout.blocks) if (r() < 0.6) m[b.id] = int(r, 1, 30);
-
-      const resolved = resolve(layout, 'a', m);
-      const cells: Cell[] = [...resolved.values()];
-      for (let i = 0; i < cells.length; i++) {
-        for (let j = i + 1; j < cells.length; j++) {
-          const a = cells[i];
-          const b = cells[j];
-          if (a && b && overlaps(a, b)) {
-            throw new Error(
-              `seed ${seed}: ${JSON.stringify(a)} vs ${JSON.stringify(b)}`,
-            );
+      for (const band of BANDS) {
+        const cells: Cell[] = [...derive(layout, band).values()];
+        for (let i = 0; i < cells.length; i++) {
+          for (let j = i + 1; j < cells.length; j++) {
+            const a = cells[i];
+            const b = cells[j];
+            if (a && b && overlaps(a, b)) {
+              throw new Error(
+                `seed ${seed} band ${band}: ${JSON.stringify(a)} vs ${JSON.stringify(b)}`,
+              );
+            }
           }
         }
-      }
-      blocks += cells.length;
-      for (const b of layout.blocks) {
-        const rc = resolved.get(b.id);
-        if (rc && rc.rowSpan > b.at.a.rowSpan) grown++;
+        blocks += cells.length;
       }
     }
-    expect(blocks).toBeGreaterThan(250_000);
-    expect(grown).toBeGreaterThan(100_000);
+    expect(blocks).toBeGreaterThan(750_000);
   });
 });

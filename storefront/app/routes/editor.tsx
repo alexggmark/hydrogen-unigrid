@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import type {LinksFunction} from 'react-router';
 import {DragDropProvider} from '@dnd-kit/react';
 import type {DragDropManager} from '@dnd-kit/dom';
@@ -18,21 +18,18 @@ import {
   redo,
   remove,
   resetToDerived,
-  resolve,
   undo,
   WIDEST,
   type Band,
   type BlockType,
   type Cell,
-  type Measurements,
 } from '@unigrid/core';
 import {Grid, gridDevLinks} from '~/blocks/Grid';
 import {Block} from '~/blocks/Block';
 import {CHROME, CONTENT} from '~/blocks/demo';
 import {HARNESS} from '~/blocks/harness';
-import {resolveAll} from '~/blocks/placement';
+import {deriveAll} from '~/blocks/placement';
 import {DragHandles} from '~/editor/DragHandles';
-import {measureBands, sameMeasurements} from '~/editor/measure';
 import {NEW_SPAN} from '~/editor/Palette';
 import {cellAt, gridUnits, moved, resized, snap, type Edge} from '~/editor/geometry';
 import {Rail} from '~/editor/Rail';
@@ -42,10 +39,6 @@ import editorStyles from '~/styles/unigrid-editor.css?url';
 
 // editing is in memory and save is a stub, which is the shape the real editor
 // has anyway — a save button commits, dragging never writes.
-
-// measurement is client-only by nature, so the server never wants the layout pass
-const useMeasureEffect =
-  typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 export const handle = {bare: true};
 
@@ -68,14 +61,14 @@ type DragData =
   | {kind: 'resize'; block: string; edge: Edge}
   | {kind: 'new'; type: BlockType};
 
+// nothing is displaced by an edit, so the cell grabbed on screen is the cell
+// written back — no translation between the two
 type Drag =
   | {kind: 'move'; block: string; from: Cell}
   | {kind: 'resize'; block: string; edge: Edge; from: Cell}
   | {kind: 'new'; type: BlockType};
 
-// authored cell, ghost cell. they differ whenever something above is growing:
-// the drag edits authored, the ghost shows where the resolver will put it.
-type Preview = {cell: Cell; shown: Cell; ok: boolean; reason?: string};
+type Preview = {cell: Cell; ok: boolean; reason?: string};
 
 const nextId = (blocks: {id: string}[], type: BlockType): string => {
   let n = 1;
@@ -88,18 +81,13 @@ export default function Editor() {
   const [hist, setHist] = useState(() => history(HARNESS));
   const [band, setBand] = useState<Band>(WIDEST);
   const [selected, setSelected] = useState<string | null>(null);
-  const [measurements, setMeasurements] =
-    useState<Record<Band, Measurements> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
   const [drag, setDrag] = useState<Drag | null>(null);
   const [preview, setPreview] = useState<Preview | null>(null);
 
   const layout = hist.present;
-  const at = useMemo(
-    () => resolveAll(layout, measurements ?? {}),
-    [layout, measurements],
-  );
+  const at = useMemo(() => deriveAll(layout), [layout]);
   const json = useMemo(() => encode(layout), [layout]);
   const bytes = useMemo(() => new TextEncoder().encode(json).length, [json]);
 
@@ -112,13 +100,10 @@ export default function Editor() {
   );
 
   const block = selected ? findBlock(layout, selected) : undefined;
+  // absent in a narrow band means the block is still derived there; editing it
+  // is what writes the override
   const authored = block ? cellIn(block, band) : undefined;
-  const resolved = selected ? cellOf(selected) : undefined;
-  // what an edit acts on. never the resolved cell: that carries growth and push,
-  // and writing it back would author the displacement, then displace it again.
-  const editable = authored ?? resolved;
-  const grown =
-    resolved && authored ? Math.max(0, resolved.rowSpan - authored.rowSpan) : 0;
+  const editable = authored ?? (selected ? cellOf(selected) : undefined);
 
   const gridEl = () =>
     hostRef.current?.querySelector<HTMLElement>('.u-grid') ?? null;
@@ -139,31 +124,6 @@ export default function Editor() {
     else params.delete('sel');
     window.history.replaceState(null, '', `?${params.toString()}`);
   }, [band, selected]);
-
-  // measure after paint, then feed core. converges in one pass: a grown block
-  // reports its grown height, which is the number that grew it.
-  useMeasureEffect(() => {
-    const host = hostRef.current;
-    const grid = gridEl();
-    if (!host || !grid) return;
-    const next = measureBands(host, grid);
-    setMeasurements((prev) => (sameMeasurements(prev, next) ? prev : next));
-  }, [layout]);
-
-  // webfonts land after first paint and change every height
-  useEffect(() => {
-    let live = true;
-    void document.fonts?.ready.then(() => {
-      const host = hostRef.current;
-      const grid = gridEl();
-      if (!live || !host || !grid) return;
-      const next = measureBands(host, grid);
-      setMeasurements((prev) => (sameMeasurements(prev, next) ? prev : next));
-    });
-    return () => {
-      live = false;
-    };
-  }, []);
 
   const reasonOf = (r: {reason: string; with?: string}) =>
     r.reason === 'overlap'
@@ -191,8 +151,8 @@ export default function Editor() {
     [commitCell, editable, selected],
   );
 
-  // the ghost is the resolver's answer, not the pointer's. dragging edits the
-  // authored cell and the engine decides where that actually lands.
+  // the ghost is exactly the cell that will be committed. core only says
+  // whether it is legal — it never answers with a different cell.
   const previewOf = useCallback(
     (candidate: Cell, id: string | null): Preview => {
       if (!id) {
@@ -202,24 +162,16 @@ export default function Editor() {
         });
         return {
           cell: candidate,
-          shown: candidate,
           ok: !clash,
           reason: clash ? `${REASON.overlap} — ${clash.id}` : undefined,
         };
       }
       const result = place(layout, id, band, candidate);
-      if (!result.ok) {
-        return {
-          cell: candidate,
-          shown: candidate,
-          ok: false,
-          reason: reasonOf(result),
-        };
-      }
-      const cells = resolve(result.value, band, measurements?.[band] ?? {});
-      return {cell: candidate, shown: cells.get(id) ?? candidate, ok: true};
+      return result.ok
+        ? {cell: candidate, ok: true}
+        : {cell: candidate, ok: false, reason: reasonOf(result)};
     },
-    [band, cellOf, layout, measurements],
+    [band, cellOf, layout],
   );
 
   const addAt = (type: BlockType, cell: Cell) => {
@@ -263,8 +215,7 @@ export default function Editor() {
     if (!data) return;
     if (data.kind === 'new') return setDrag({kind: 'new', type: data.type});
 
-    const b = findBlock(layout, data.block);
-    const from = b ? (cellIn(b, band) ?? cellOf(data.block)) : undefined;
+    const from = cellOf(data.block);
     if (!from) return;
     setSelected(data.block);
     setError(null);
@@ -291,11 +242,11 @@ export default function Editor() {
     }
 
     const {dCol, dRow} = snap(operation.transform.x, operation.transform.y, u);
-    const candidate =
-      drag.kind === 'move'
-        ? moved(drag.from, dCol, dRow, u.cols)
-        : resized(drag.from, drag.edge, dCol, dRow, u.cols);
-    setPreview(previewOf(candidate, drag.block));
+    const target =
+      drag.kind === 'resize'
+        ? resized(drag.from, drag.edge, dCol, dRow, u.cols)
+        : moved(drag.from, dCol, dRow, u.cols);
+    setPreview(previewOf(target, drag.block));
   };
 
   const onDragEnd = (event: {canceled: boolean}) => {
@@ -386,7 +337,6 @@ export default function Editor() {
                     at={p}
                     as={chrome.as}
                     className={chrome.className}
-                    text={b.type === 'text'}
                     blockId={b.id}
                     selected={b.id === selected}
                   >
@@ -395,44 +345,14 @@ export default function Editor() {
                   </Block>
                 );
               })}
-              {/* a block pushed down by growing text is drawn where it lands,
-                  but it still collides where it was authored. during a drag
-                  that authored footprint is the only thing that explains a
-                  refusal, so show it rather than let it read as a phantom. */}
-              {drag
-                ? layout.blocks.map((b) => {
-                    const a = cellIn(b, band);
-                    const r = cellOf(b.id);
-                    if (!a || !r) return null;
-                    if (
-                      a.col === r.col &&
-                      a.row === r.row &&
-                      a.colSpan === r.colSpan &&
-                      a.rowSpan === r.rowSpan
-                    ) {
-                      return null;
-                    }
-                    return (
-                      <div
-                        key={`authored-${b.id}`}
-                        className="e-authored"
-                        aria-hidden
-                        style={{
-                          gridColumn: `${a.col} / span ${a.colSpan}`,
-                          gridRow: `${a.row} / span ${a.rowSpan}`,
-                        }}
-                      />
-                    );
-                  })
-                : null}
               {preview ? (
                 <div
                   className="e-ghost"
                   aria-hidden
                   data-invalid={preview.ok ? undefined : ''}
                   style={{
-                    gridColumn: `${preview.shown.col} / span ${preview.shown.colSpan}`,
-                    gridRow: `${preview.shown.row} / span ${preview.shown.rowSpan}`,
+                    gridColumn: `${preview.cell.col} / span ${preview.cell.colSpan}`,
+                    gridRow: `${preview.cell.row} / span ${preview.cell.rowSpan}`,
                   }}
                 />
               ) : null}
@@ -445,9 +365,7 @@ export default function Editor() {
           band={band}
           selected={selected}
           authored={authored}
-          resolved={resolved}
           editable={editable}
-          grown={grown}
           error={error}
           dirty={saved !== json}
           bytes={bytes}

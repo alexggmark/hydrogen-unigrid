@@ -1,14 +1,7 @@
-import {
-  BANDS,
-  resolve,
-  type Band,
-  type Cell,
-  type Layout,
-  type Measurements,
-} from '@unigrid/core';
+import {BANDS, derive, type Band, type Cell, type Layout} from '@unigrid/core';
 
-// bands b and c are optional here only so a caller can omit them; the engine
-// resolves all three, so in practice every band arrives filled
+// bands b and c are optional here only so a caller can omit them; derivation
+// fills all three, so in practice every band arrives filled
 export type Placement = {a: Cell} & Partial<Record<Exclude<Band, 'a'>, Cell>>;
 
 const SHORT = {col: 'c', colSpan: 'cs', row: 'r', rowSpan: 'rs'} as const;
@@ -25,15 +18,9 @@ export function placementVars(at: Placement): Record<string, number> {
   return out;
 }
 
-// every band resolved up front so switching bands is a css swap, not a recompute.
-// measurements are per band because the type scale differs, so the row count does.
-export function resolveAll(
-  layout: Layout,
-  measurements: Partial<Record<Band, Measurements>> = {},
-): Map<string, Placement> {
-  const byBand = BANDS.map(
-    (band) => [band, resolve(layout, band, measurements[band] ?? {})] as const,
-  );
+// every band derived up front so switching bands is a css swap, not a recompute
+export function deriveAll(layout: Layout): Map<string, Placement> {
+  const byBand = BANDS.map((band) => [band, derive(layout, band)] as const);
   const out = new Map<string, Placement>();
   for (const block of layout.blocks) {
     const a = byBand[0]?.[1].get(block.id);

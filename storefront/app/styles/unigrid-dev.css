@@ -40,13 +40,13 @@ body.u-show-grid .u-overlay {
   );
 }
 
-/* text past its authored span. flagged so the failure is visible, not silent */
+/* content clipped by its span. flagged so the loss is visible, not silent */
 .u-block.u-over {
   outline: 2px solid #d8261c;
   outline-offset: -2px;
 }
 .u-block.u-over::after {
-  content: 'needs ' attr(data-rows) ' rows';
+  content: 'clipped';
   position: absolute;
   inset-inline-end: 0;
   inset-block-end: 0;

@@ -1,4 +1,4 @@
-// grid maths, block model, resolver, serialisation, undo. zero deps
+// grid maths, block model, band derivation, serialisation, undo. zero deps
 
 export const UNIGRID_CORE = 'unigrid-core' as const;
 
@@ -38,13 +38,5 @@ export {
   LIMIT,
   type History,
 } from './history';
-export {
-  resolve,
-  resolveCells,
-  pushes,
-  ResolverDidNotConverge,
-  type Measurements,
-  type Resolved,
-} from './resolve';
-export {derive, cellFor} from './derive';
+export {derive, cellFor, type Resolved} from './derive';
 export {insertAfter} from './insert';
