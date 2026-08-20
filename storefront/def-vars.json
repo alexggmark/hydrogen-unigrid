@@ -1,0 +1,14 @@
+{
+  "d": {
+    "name": "Unigrid Layout",
+    "type": "unigrid_layout",
+    "access": {"storefront": "PUBLIC_READ"},
+    "capabilities": {"publishable": {"enabled": true}},
+    "fieldDefinitions": [
+      {"key": "target",    "name": "Target",    "type": "single_line_text_field"},
+      {"key": "version",   "name": "Version",   "type": "number_integer"},
+      {"key": "draft",     "name": "Draft",     "type": "json"},
+      {"key": "published", "name": "Published", "type": "json"}
+    ]
+  }
+}

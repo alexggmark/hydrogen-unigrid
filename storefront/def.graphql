@@ -1,0 +1,6 @@
+mutation CreateUnigridLayout($d: MetaobjectDefinitionCreateInput!) {
+  metaobjectDefinitionCreate(definition: $d) {
+    metaobjectDefinition { id type }
+    userErrors { field message }
+  }
+}

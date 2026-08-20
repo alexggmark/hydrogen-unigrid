@@ -215,11 +215,11 @@ export function decode(json: string): Layout | undefined {
       at[band] = cell;
     }
 
+    // switching this to failsafe version, if node instead of if !node return
     const children: Node[] = [];
     for (const c of Array.isArray(o.k) ? o.k : []) {
       const node = decodeNode(c);
-      if (!node) return undefined;
-      children.push(node);
+      if (node) children.push(node);
     }
 
     blocks.push({
