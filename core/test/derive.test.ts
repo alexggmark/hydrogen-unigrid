@@ -60,22 +60,76 @@ describe('derivation', () => {
     }
   });
 
-  it('stacks every derived block full width, in reading order', () => {
+  it('stacks band c full width, in reading order', () => {
     const layout = densePacked(rng(5), 12);
-    for (const band of ['b', 'c'] as Band[]) {
-      const cells = derive(layout, band);
-      const order = readingOrder(layout);
-      let previousEnd = 0;
-      for (const b of order) {
-        const c = cells.get(b.id);
-        expect(c).toBeDefined();
-        if (!c) continue;
-        expect(c.col).toBe(1);
-        expect(c.colSpan).toBe(COLUMNS[band]);
-        expect(c.row).toBeGreaterThanOrEqual(previousEnd);
-        previousEnd = c.row + c.rowSpan;
+    const cells = derive(layout, 'c');
+    let previousEnd = 0;
+    for (const b of readingOrder(layout)) {
+      const c = cells.get(b.id);
+      expect(c).toBeDefined();
+      if (!c) continue;
+      expect(c.col).toBe(1);
+      expect(c.colSpan).toBe(COLUMNS.c);
+      expect(c.row).toBeGreaterThanOrEqual(previousEnd);
+      previousEnd = c.row + c.rowSpan;
+    }
+  });
+
+  it('lays band b into two tracks, keeping wide blocks full width', () => {
+    const layout = densePacked(rng(5), 12);
+    const cells = derive(layout, 'b');
+    const half = COLUMNS.a / 2;
+    for (const b of layout.blocks) {
+      const c = cells.get(b.id);
+      expect(c).toBeDefined();
+      if (!c) continue;
+      if (b.at.a.colSpan > half) {
+        expect(c).toMatchObject({col: 1, colSpan: COLUMNS.b});
+      } else {
+        expect(c.colSpan).toBe(COLUMNS.b / 2);
+        expect([1, COLUMNS.b / 2 + 1]).toContain(c.col);
       }
     }
+  });
+
+  // the two bands were the same layout at two sizes before tracks existed
+  it('gives band b a different composition from band c', () => {
+    const mk = (id: string, col: number, colSpan: number, row: number): Block =>
+      emptyBlock(id, {a: {col, colSpan, row, rowSpan: 2}});
+    const layout: Layout = {
+      version: 1,
+      blocks: [mk('left', 1, 4, 1), mk('right', 5, 4, 1)],
+    };
+    expect(derive(layout, 'b').get('right')).toEqual({
+      col: 5,
+      colSpan: 4,
+      row: 1,
+      rowSpan: 2,
+    });
+    expect(derive(layout, 'c').get('right')).toEqual({
+      col: 1,
+      colSpan: 4,
+      row: 3,
+      rowSpan: 2,
+    });
+  });
+
+  it('fills the track beside a hand-placed block rather than reserving its rows', () => {
+    const mk = (id: string, col: number, colSpan: number, row: number): Block =>
+      emptyBlock(id, {a: {col, colSpan, row, rowSpan: 2}});
+    const pinned = mk('pinned', 1, 4, 1);
+    pinned.at.b = {col: 1, colSpan: 4, row: 1, rowSpan: 2};
+    const layout: Layout = {
+      version: 1,
+      blocks: [pinned, mk('next', 5, 4, 1)],
+    };
+    // beside the override, not below it
+    expect(derive(layout, 'b').get('next')).toEqual({
+      col: 5,
+      colSpan: 4,
+      row: 1,
+      rowSpan: 2,
+    });
   });
 
   it('never overlaps, with or without overrides', () => {
