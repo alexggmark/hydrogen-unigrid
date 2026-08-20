@@ -5,14 +5,16 @@
   "workspaces": [
     "core",
     "blocks",
-    "storefront"
+    "storefront",
+    "admin-app"
   ],
   "scripts": {
     "dev": "npm run dev --workspace storefront",
     "build": "npm run build --workspace storefront",
-    "lint": "eslint core && npm run lint --workspace storefront",
-    "typecheck": "tsc -p core --noEmit && tsc -p blocks --noEmit && npm run typecheck --workspace storefront",
-    "test": "vitest run"
+    "lint": "eslint core blocks && npm run lint --workspace storefront",
+    "typecheck": "tsc -p core --noEmit && tsc -p blocks --noEmit && npm run typecheck --workspace storefront && npm run typecheck --workspace admin-app",
+    "test": "vitest run",
+    "dev:admin": "npm run dev --workspace admin-app"
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",
