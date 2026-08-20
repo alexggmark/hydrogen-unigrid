@@ -74,7 +74,6 @@ export type RailProps = {
   dragging: NodeDrag | null;
   resync: number;
   error: string | null;
-  dirty: boolean;
   bytes: number;
   canUndo: boolean;
   canRedo: boolean;
@@ -86,7 +85,6 @@ export type RailProps = {
   onDelete: () => void;
   onUndo: () => void;
   onRedo: () => void;
-  onSave: () => void;
   onPickNode: (id: string | null) => void;
   onAddChild: (kind: ElementKind | 'group', parentId: string | null) => void;
   onPatchNode: (id: string, patch: Partial<Element> | Partial<Group>) => void;
@@ -417,7 +415,7 @@ export function Rail(props: RailProps) {
           unigrid
         </Heading>
         <Text size="1" color="gray">
-          editor spike
+          playground
         </Text>
       </Flex>
 
@@ -581,14 +579,15 @@ export function Rail(props: RailProps) {
               Redo
             </Button>
           </Flex>
-          <Flex gap="2" align="center" justify="between">
-            <Button size="1" onClick={props.onSave}>
-              {props.dirty ? 'Save •' : 'Save'}
-            </Button>
-            <Text size="1" color="gray">
-              {(props.bytes / 1024).toFixed(1)}kb / 128kb
-            </Text>
-          </Flex>
+          <Text size="1" color="gray">
+            Layout serialises to {(props.bytes / 1024).toFixed(1)}kb
+          </Text>
+          <Callout.Root size="1" color="gray">
+            <Callout.Text>
+              A playground. Edits live in memory and are lost on reload — nothing
+              is written to a store.
+            </Callout.Text>
+          </Callout.Root>
         </Section>
       </Box>
 

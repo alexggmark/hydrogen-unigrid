@@ -41,18 +41,16 @@ import {
   type ElementKind,
   type Node,
 } from '@unigrid/core';
-import {Grid, gridDevLinks} from '~/blocks/Grid';
-import {Block} from '~/blocks/Block';
+import {Block, Grid, deriveAll, overflowing, sameOverflow} from '@unigrid/blocks';
+import {DEV, gridDevLinks} from '~/blocks/grid-dev';
 import {HARNESS} from '~/blocks/harness';
-import {deriveAll} from '~/blocks/placement';
-import {overflowing, sameOverflow} from '~/blocks/overflow';
 import {DragHandles} from '~/editor/DragHandles';
 import {NEW_SPAN} from '~/editor/Palette';
 import {cellAt, gridUnits, moved, resized, snap, type Edge} from '~/editor/geometry';
 import {dropTarget, type NodeDrag} from '~/editor/Tree';
 import {Rail} from '~/editor/Rail';
 import radixStyles from '@radix-ui/themes/styles.css?url';
-import unigridStyles from '~/styles/unigrid.css?url';
+import unigridStyles from '@unigrid/blocks/unigrid.css?url';
 import demoStyles from '~/styles/unigrid-demo.css?url';
 import editorStyles from '~/styles/unigrid-editor.css?url';
 
@@ -126,7 +124,6 @@ export default function Editor() {
   const [selected, setSelected] = useState<string | null>(null);
   const [node, setNode] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState<string | null>(null);
   const [drag, setDrag] = useState<Drag | null>(null);
   const [preview, setPreview] = useState<Preview | null>(null);
   const [clipped, setClipped] = useState<Record<string, number>>({});
@@ -417,16 +414,6 @@ export default function Editor() {
     };
   }, []);
 
-  const onSave = () => {
-    setSaved(json);
-    // stub: the seam exists so the wire format is exercised from day one
-    const url = URL.createObjectURL(new Blob([json], {type: 'application/json'}));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'unigrid-layout.json';
-    a.click();
-    URL.revokeObjectURL(url);
-  };
 
   return (
     <DragDropProvider
@@ -438,7 +425,7 @@ export default function Editor() {
       <div className="e-shell">
         <div className="e-stage" ref={hostRef} data-band={band}>
           <div className="unigrid-demo">
-            <Grid probes>
+            <Grid probes dev={DEV}>
               {layout.blocks.map((b) => {
                 const p = at.get(b.id);
                 if (!p) return null;
@@ -490,7 +477,6 @@ export default function Editor() {
           dragging={nodeDrag}
           resync={resync}
           error={error}
-          dirty={saved !== json}
           bytes={bytes}
           canUndo={canUndo(hist)}
           canRedo={canRedo(hist)}
@@ -531,7 +517,6 @@ export default function Editor() {
           }}
           onUndo={() => setHist(undo)}
           onRedo={() => setHist(redo)}
-          onSave={onSave}
         />
       </div>
     </DragDropProvider>

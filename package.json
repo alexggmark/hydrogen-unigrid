@@ -4,13 +4,14 @@
   "type": "module",
   "workspaces": [
     "core",
+    "blocks",
     "storefront"
   ],
   "scripts": {
     "dev": "npm run dev --workspace storefront",
     "build": "npm run build --workspace storefront",
     "lint": "eslint core && npm run lint --workspace storefront",
-    "typecheck": "tsc -p core --noEmit && npm run typecheck --workspace storefront",
+    "typecheck": "tsc -p core --noEmit && tsc -p blocks --noEmit && npm run typecheck --workspace storefront",
     "test": "vitest run"
   },
   "devDependencies": {

@@ -1,9 +1,8 @@
 import type {LinksFunction} from 'react-router';
-import {Grid, gridDevLinks} from '~/blocks/Grid';
-import {Block} from '~/blocks/Block';
+import {Block, Grid, deriveAll} from '@unigrid/blocks';
+import {DEV, gridDevLinks} from '~/blocks/grid-dev';
 import {HARNESS} from '~/blocks/harness';
-import {deriveAll} from '~/blocks/placement';
-import unigridStyles from '~/styles/unigrid.css?url';
+import unigridStyles from '@unigrid/blocks/unigrid.css?url';
 import demoStyles from '~/styles/unigrid-demo.css?url';
 
 // read-only reference render. /editor is the same geometry with chrome on top.
@@ -21,7 +20,7 @@ export default function GridHarness() {
 
   return (
     <div className="unigrid-demo">
-      <Grid>
+      <Grid dev={DEV}>
         {HARNESS.blocks.map((block) => {
           const placement = at.get(block.id);
           if (!placement) return null;

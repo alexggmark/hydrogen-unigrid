@@ -1,5 +1,5 @@
 import type {Cell} from '@unigrid/core';
-import {gridUnits, type Units} from '~/blocks/units';
+import {gridUnits, type Units} from '@unigrid/blocks';
 
 export {gridUnits, type Units};
 

@@ -1,11 +1,10 @@
 import type {LinksFunction} from 'react-router';
 import {useLoaderData} from 'react-router';
 import type {Route} from './+types/_index';
-import {Grid, gridDevLinks} from '~/blocks/Grid';
-import {Block} from '~/blocks/Block';
-import {deriveAll} from '~/blocks/placement';
+import {Block, Grid, deriveAll} from '@unigrid/blocks';
+import {DEV, gridDevLinks} from '~/blocks/grid-dev';
 import {loadLayout} from '~/lib/layout';
-import unigridStyles from '~/styles/unigrid.css?url';
+import unigridStyles from '@unigrid/blocks/unigrid.css?url';
 import demoStyles from '~/styles/unigrid-demo.css?url';
 
 export const meta: Route.MetaFunction = () => [{title: 'unigrid'}];
@@ -29,7 +28,7 @@ export default function Home() {
   if (!stored) {
     return (
       <div className="unigrid-demo">
-        <Grid>
+        <Grid dev={DEV}>
           <Block
             block={{
               id: 'empty',
@@ -57,7 +56,7 @@ export default function Home() {
 
   return (
     <div className="unigrid-demo">
-      <Grid>
+      <Grid dev={DEV}>
         {stored.layout.blocks.map((block) => {
           const placement = at.get(block.id);
           return placement ? (
