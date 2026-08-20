@@ -93,6 +93,55 @@ export function moveNode(layout: Layout, nodeId: string, delta: number): Layout 
   );
 }
 
+// move a node to a parent at an index, reparenting if needed. parentId null is
+// the block itself. a group can only ever sit at the root, so a group aimed at
+// a group is refused here rather than represented.
+export function placeNode(
+  layout: Layout,
+  nodeId: string,
+  parentId: string | null,
+  index: number,
+): Layout {
+  const found = findNode(layout, nodeId);
+  if (!found) return layout;
+  const {block, node} = found;
+  if (parentId && isGroup(node)) return layout;
+  if (parentId === nodeId) return layout;
+
+  const stripped = removeNode(layout, nodeId).blocks.find((b) => b.id === block.id);
+  if (!stripped) return layout;
+
+  const at = (list: readonly unknown[]) =>
+    Math.max(0, Math.min(index, list.length));
+
+  const next: Block = parentId
+    ? {
+        ...stripped,
+        children: stripped.children.map((child) =>
+          child.id === parentId && isGroup(child)
+            ? {
+                ...child,
+                children: [
+                  ...child.children.slice(0, at(child.children)),
+                  node as Element,
+                  ...child.children.slice(at(child.children)),
+                ],
+              }
+            : child,
+        ),
+      }
+    : {
+        ...stripped,
+        children: [
+          ...stripped.children.slice(0, at(stripped.children)),
+          node,
+          ...stripped.children.slice(at(stripped.children)),
+        ],
+      };
+
+  return {...layout, blocks: layout.blocks.map((b) => (b.id === block.id ? next : b))};
+}
+
 export function patchNode(
   layout: Layout,
   nodeId: string,

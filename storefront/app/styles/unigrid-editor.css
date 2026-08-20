@@ -1,13 +1,27 @@
 /* editor chrome. px is fine here — the ban is on the grid layer. */
 
+/* pinned to the viewport rather than sized from body. an editor shell laid out
+   in normal flow inherits whatever width the page has, and anything that widens
+   the document pushes the rail off the right edge. inset:0 makes that
+   impossible: the shell is the viewport, and both panes scroll inside it. */
 .e-shell {
+  position: fixed;
+  inset: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  min-block-size: 100dvh;
+  /* rows explicit for the same reason columns are: an implicit `auto` row is
+     sized by its tallest pane, so a long rail would stretch the stage past the
+     viewport instead of letting either of them scroll */
+  grid-template-columns: minmax(0, 1fr) minmax(0, clamp(300px, 22vw, 380px));
+  grid-template-rows: minmax(0, 1fr);
+  overflow: hidden;
   background: #f4f4f2;
 }
 
+/* min-block-size:0 is what lets overflow engage — grid items floor at
+   min-content in the block axis too, not just the inline one */
 .e-stage {
+  min-inline-size: 0;
+  min-block-size: 0;
   overflow: auto;
   padding-block: 24px;
 }
@@ -23,24 +37,34 @@
 
 .e-rail {
   display: grid;
+  /* every track in here is minmax(0,…) on purpose. an implicit `auto` track
+     floors at min-content, which overflows the box no matter how narrow the
+     box is allowed to get — the rail cannot be sized from the outside alone. */
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr) auto;
+  min-inline-size: 0;
+  min-block-size: 0;
+  /* a pasted media url has no break opportunity, so it would set the rail's
+     min-content width on its own */
+  overflow-wrap: anywhere;
   border-inline-start: 1px solid #d8d8d4;
   background: #fff;
   font: 500 13px/1.45 ui-sans-serif, system-ui, sans-serif;
-  block-size: 100dvh;
-  position: sticky;
-  inset-block-start: 0;
 }
 
 /* minmax(0,1fr) above is what lets this scroll — a default `auto` row floor
    sizes to content and the overflow never engages */
 .e-scroll {
+  min-inline-size: 0;
+  overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
 
 .e-head {
   display: flex;
+  min-inline-size: 0;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: 8px;
   padding: 14px 16px;
@@ -53,6 +77,7 @@
 }
 
 .e-sec {
+  min-inline-size: 0;
   padding: 14px 16px;
   border-block-end: 1px solid #e8e8e4;
 }
@@ -72,12 +97,14 @@
   margin: 8px 0 0;
 }
 .e-foot {
+  min-inline-size: 0;
   padding: 12px 16px;
   margin-block-start: auto;
 }
 
 .e-tabs {
   display: grid;
+  grid-auto-columns: minmax(0, 1fr);
   grid-auto-flow: column;
   gap: 4px;
 }
@@ -114,6 +141,7 @@
   margin: 0;
   padding: 0;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 2px;
   max-block-size: 220px;
   overflow: auto;
@@ -126,17 +154,26 @@
   text-align: start;
   border-color: transparent;
 }
+.e-list button > span {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .e-list button[aria-pressed='true'] .e-dim {
   color: #cfcfca;
 }
 
+/* minmax(0,…) not 1fr: a bare 1fr floors at min-content, and a number input's
+   intrinsic width is ~150px, so two of them set the rail's width from inside */
 .e-fields {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 .e-fields label {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 4px;
 }
 .e-fields span {
@@ -148,6 +185,7 @@
 .e-fields input {
   font: inherit;
   inline-size: 100%;
+  min-inline-size: 0;
   padding: 6px 8px;
   border: 1px solid #d8d8d4;
   border-radius: 4px;
@@ -156,6 +194,8 @@
 
 .e-row {
   display: flex;
+  min-inline-size: 0;
+  flex-wrap: wrap;
   gap: 8px;
   align-items: center;
   margin-block-start: 10px;
@@ -180,11 +220,21 @@
 
 @media (width < 60rem) {
   .e-shell {
+    position: static;
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    min-block-size: 100dvh;
+    overflow: visible;
+  }
+  .e-stage {
+    min-block-size: auto;
+    overflow: visible;
   }
   .e-rail {
-    position: static;
-    max-block-size: none;
+    min-block-size: auto;
+  }
+  .e-scroll {
+    overflow-y: visible;
   }
 }
 
@@ -325,10 +375,8 @@
 
 .e-choice {
   display: grid;
-  grid-template-columns: 62px minmax(0, 1fr);
-  align-items: center;
-  gap: 8px;
-  margin-block-end: 6px;
+  gap: 4px;
+  margin-block-end: 10px;
 }
 .e-choice > span {
   font-size: 11px;
@@ -340,7 +388,7 @@
   gap: 2px;
 }
 .e-seg button {
-  flex: 1 1 auto;
+  flex: 1 1 0;
   min-inline-size: 0;
   padding: 4px 6px;
   font-size: 11px;
@@ -365,6 +413,7 @@
 .e-field input[type='text'],
 .e-field textarea {
   inline-size: 100%;
+  min-inline-size: 0;
   font: inherit;
   font-size: 12px;
   padding: 6px 8px;
@@ -375,11 +424,12 @@
 }
 .e-inline {
   display: grid;
-  grid-template-columns: 62px 40px auto;
+  grid-template-columns: 40px minmax(0, auto);
   align-items: center;
-  gap: 8px;
+  gap: 6px 8px;
 }
 .e-inline > span {
+  grid-column: 1 / -1;
   margin: 0;
 }
 .e-inline input[type='color'] {
@@ -406,6 +456,7 @@
 
 .e-toggle {
   display: flex;
+  min-inline-size: 0;
   align-items: center;
   gap: 8px;
   font-size: 12px;
@@ -419,23 +470,68 @@
   margin: 0 0 10px;
   padding: 0;
 }
-.e-tree li[data-depth='1'] {
-  padding-inline-start: 14px;
+.e-branch {
+  display: block;
 }
-.e-tree li {
+.e-tree li[data-depth] {
   display: flex;
+  min-inline-size: 0;
   align-items: center;
   gap: 4px;
+  margin-block-end: 2px;
+  border-radius: 3px;
+}
+.e-tree li[data-depth='1'] {
+  margin-inline-start: 14px;
+  border-inline-start: 1px solid #e0e0dc;
+  padding-inline-start: 6px;
+}
+.e-tree li[data-dragging] {
+  opacity: 0.4;
+}
+/* the rule is enforced in core either way; this is so it is visible at the
+   gesture rather than only after the drop does nothing */
+.e-tree li[data-invalid] {
+  outline: 2px solid #a1101a;
+  outline-offset: 1px;
+  background: #fdeceb;
+}
+.e-tree li[data-slot] {
+  padding: 6px 8px;
+  border: 1px dashed #d8d8d4;
+  font-size: 11px;
+}
+.e-grip {
+  flex: none;
+  cursor: grab;
+  padding: 5px 4px;
+  font-size: 12px;
+  line-height: 1;
+  color: #9a9a94;
+  border-color: transparent;
+  background: none;
+}
+.e-grip:active {
+  cursor: grabbing;
 }
 .e-node {
   flex: 1 1 auto;
   min-inline-size: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
   text-align: start;
   padding: 5px 8px;
   font-size: 12px;
+}
+.e-node > span {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.e-node > span:last-child {
+  flex: 1 1 auto;
+  font-size: 11px;
 }
 .e-node[aria-pressed='true'] {
   background: #111110;
@@ -444,6 +540,7 @@
 }
 .e-nudge {
   display: flex;
+  min-inline-size: 0;
   gap: 2px;
   flex: none;
 }

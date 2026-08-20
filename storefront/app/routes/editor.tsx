@@ -21,6 +21,7 @@ import {
   patchBlock,
   patchNode,
   place,
+  placeNode,
   redo,
   remove,
   removeNode,
@@ -41,6 +42,7 @@ import {overflowing, sameOverflow} from '~/blocks/overflow';
 import {DragHandles} from '~/editor/DragHandles';
 import {NEW_SPAN} from '~/editor/Palette';
 import {cellAt, gridUnits, moved, resized, snap, type Edge} from '~/editor/geometry';
+import {dropTarget, type NodeDrag} from '~/editor/Tree';
 import {Rail} from '~/editor/Rail';
 import unigridStyles from '~/styles/unigrid.css?url';
 import demoStyles from '~/styles/unigrid-demo.css?url';
@@ -67,7 +69,8 @@ const REASON: Record<string, string> = {
 type DragData =
   | {kind: 'move'; block: string}
   | {kind: 'resize'; block: string; edge: Edge}
-  | {kind: 'new'};
+  | {kind: 'new'}
+  | NodeDrag;
 
 type Drag =
   | {kind: 'move'; block: string; from: Cell}
@@ -107,6 +110,8 @@ export default function Editor() {
   const [drag, setDrag] = useState<Drag | null>(null);
   const [preview, setPreview] = useState<Preview | null>(null);
   const [clipped, setClipped] = useState<Record<string, number>>({});
+  // rail-tree drags are their own gesture: no ghost, no cell, no placement
+  const [nodeDrag, setNodeDrag] = useState<NodeDrag | null>(null);
 
   const layout = hist.present;
   const at = useMemo(() => deriveAll(layout), [layout]);
@@ -263,6 +268,7 @@ export default function Editor() {
   const onDragStart = (_event: unknown, manager: DragDropManager) => {
     const data = manager.dragOperation.source?.data as DragData | undefined;
     if (!data) return;
+    if (data.kind === 'node') return setNodeDrag(data);
     if (data.kind === 'new') return setDrag({kind: 'new'});
 
     const from = cellOf(data.block);
@@ -298,12 +304,28 @@ export default function Editor() {
     setPreview(previewOf(target, drag.block));
   };
 
-  const onDragEnd = (event: {canceled: boolean}) => {
+  const onDragEnd = (event: {canceled: boolean}, manager: DragDropManager) => {
     const current = drag;
     const target = preview;
+    const node = nodeDrag;
     afterDrag.current = true;
     setDrag(null);
     setPreview(null);
+    setNodeDrag(null);
+
+    if (node) {
+      if (event.canceled) return;
+      const to = dropTarget(manager);
+      if (!to) return;
+      // the tree shows this as invalid while dragging; core refuses it too
+      if (node.group && to.parent) {
+        return setError('a group cannot go inside a group');
+      }
+      setError(null);
+      edit(placeNode(layout, node.node, to.parent, to.index));
+      return;
+    }
+
     if (event.canceled || !current || !target) return;
     if (!target.ok) return setError(target.reason ?? 'that move is not allowed');
     if (current.kind === 'new') addAt(target.cell);
@@ -439,6 +461,7 @@ export default function Editor() {
           clipped={selected ? (clipped[selected] ?? 0) : 0}
           block={block}
           node={picked}
+          dragging={nodeDrag}
           error={error}
           dirty={saved !== json}
           bytes={bytes}

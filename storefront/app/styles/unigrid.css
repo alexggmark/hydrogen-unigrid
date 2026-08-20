@@ -101,9 +101,6 @@
 .u-block > * {
   margin: 0;
 }
-.u-block > * + * {
-  margin-block-start: calc(var(--u) * 0.9 * var(--f));
-}
 
 /* a rule on the element beats an inherited value, so name them explicitly */
 .u-grid :where(p, li, dd, dt, figcaption, blockquote, h1, h2, h3, h4, h5, h6) {

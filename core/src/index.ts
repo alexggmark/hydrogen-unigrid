@@ -29,6 +29,7 @@ export {
   moveNode,
   patchBlock,
   patchNode,
+  placeNode,
   removeNode,
   setFlex,
   type Found,

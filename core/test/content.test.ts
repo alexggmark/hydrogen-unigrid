@@ -5,6 +5,7 @@ import {
   moveNode,
   patchBlock,
   patchNode,
+  placeNode,
   removeNode,
   setFlex,
 } from '../src/content';
@@ -87,6 +88,42 @@ describe('content tree', () => {
     const l = patchBlock(base(), 'b', {invert: true, fill: {color: '#ff0000'}});
     expect(l.blocks[0]?.at.a).toEqual(base().blocks[0]?.at.a);
     expect(l.blocks[0]?.invert).toBe(true);
+  });
+
+  it('placeNode moves an element into a group at an index', () => {
+    let l = addNode(base(), 'b', null, group('g'));
+    l = addNode(l, 'b', 'g', el('inside'));
+    l = addNode(l, 'b', null, el('outside'));
+    const after = placeNode(l, 'outside', 'g', 0);
+    const g = after.blocks[0]?.children[0];
+    expect(g && isGroup(g) ? g.children.map((n) => n.id) : []).toEqual([
+      'outside',
+      'inside',
+    ]);
+    expect(after.blocks[0]?.children.map((n) => n.id)).toEqual(['g']);
+  });
+
+  it('placeNode lifts an element back out to the block root', () => {
+    let l = addNode(base(), 'b', null, group('g'));
+    l = addNode(l, 'b', 'g', el('inside'));
+    const after = placeNode(l, 'inside', null, 0);
+    expect(after.blocks[0]?.children.map((n) => n.id)).toEqual(['inside', 'g']);
+    const g = after.blocks[0]?.children[1];
+    expect(g && isGroup(g) ? g.children.length : -1).toBe(0);
+  });
+
+  it('placeNode refuses a group into a group and leaves the tree alone', () => {
+    let l = addNode(base(), 'b', null, group('g'));
+    l = addNode(l, 'b', null, group('g2'));
+    expect(placeNode(l, 'g2', 'g', 0)).toEqual(l);
+    expect(placeNode(l, 'g', 'g', 0)).toEqual(l);
+  });
+
+  it('placeNode clamps an index past the end rather than dropping the node', () => {
+    let l = base();
+    for (const id of ['a', 'b2']) l = addNode(l, 'b', null, el(id));
+    const after = placeNode(l, 'a', null, 99);
+    expect(after.blocks[0]?.children.map((n) => n.id)).toEqual(['b2', 'a']);
   });
 
   it('round-trips a populated tree through the wire format', () => {

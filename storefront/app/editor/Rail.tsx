@@ -14,6 +14,7 @@ import {
   type Layout,
 } from '@unigrid/core';
 import {Palette} from './Palette';
+import {Tree, type NodeDrag} from './Tree';
 
 // the customiser rail. chrome only — every decision it triggers is core's.
 
@@ -55,6 +56,7 @@ export type RailProps = {
   clipped: number;
   block: Block | undefined;
   node: Found | undefined;
+  dragging: NodeDrag | null;
   error: string | null;
   dirty: boolean;
   bytes: number;
@@ -172,49 +174,6 @@ function AddMenu({
         </button>
       ))}
     </div>
-  );
-}
-
-function NodeRow({
-  id,
-  label,
-  depth,
-  active,
-  props,
-}: {
-  id: string;
-  label: string;
-  depth: number;
-  active: boolean;
-  props: RailProps;
-}) {
-  return (
-    <li data-depth={depth}>
-      <button
-        type="button"
-        className="e-node"
-        aria-pressed={active}
-        onClick={() => props.onPickNode(active ? null : id)}
-      >
-        <span>{label}</span>
-      </button>
-      <span className="e-nudge">
-        <button type="button" onClick={() => props.onMoveNode(id, -1)} aria-label="Move up">
-          ↑
-        </button>
-        <button type="button" onClick={() => props.onMoveNode(id, 1)} aria-label="Move down">
-          ↓
-        </button>
-        <button
-          type="button"
-          className="e-danger"
-          onClick={() => props.onRemoveNode(id)}
-          aria-label="Remove"
-        >
-          ×
-        </button>
-      </span>
-    </li>
   );
 }
 
@@ -493,33 +452,14 @@ export function Rail(props: RailProps) {
               {block.children.length === 0 ? (
                 <p className="e-dim">Empty. Add an element below.</p>
               ) : (
-                <ul className="e-tree">
-                  {block.children.map((child) => (
-                    <li key={child.id}>
-                      <ul className="e-tree">
-                        <NodeRow
-                          id={child.id}
-                          label={LABEL[child.kind] ?? child.kind}
-                          depth={0}
-                          active={child.id === node?.node.id}
-                          props={props}
-                        />
-                        {isGroup(child)
-                          ? child.children.map((leaf) => (
-                              <NodeRow
-                                key={leaf.id}
-                                id={leaf.id}
-                                label={LABEL[leaf.kind] ?? leaf.kind}
-                                depth={1}
-                                active={leaf.id === node?.node.id}
-                                props={props}
-                              />
-                            ))
-                          : null}
-                      </ul>
-                    </li>
-                  ))}
-                </ul>
+                <Tree
+                  block={block}
+                  activeNode={node?.node.id ?? null}
+                  dragging={props.dragging}
+                  onPick={props.onPickNode}
+                  onMove={props.onMoveNode}
+                  onRemove={props.onRemoveNode}
+                />
               )}
               <AddMenu parentId={null} onAdd={props.onAddChild} />
             </section>

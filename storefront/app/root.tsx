@@ -144,6 +144,11 @@ function loadDeferredData({context}: Route.LoaderArgs) {
 
 export function Layout({children}: {children?: React.ReactNode}) {
   const nonce = useNonce();
+  // store chrome must not reach a bare route. app.css styles bare element
+  // selectors — `aside` is the cart drawer, and the editor rail is an aside.
+  const bare = useMatches().some(
+    (m) => (m.handle as {bare?: boolean} | undefined)?.bare,
+  );
 
   return (
     <html lang="en">
@@ -151,7 +156,7 @@ export function Layout({children}: {children?: React.ReactNode}) {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         <link rel="stylesheet" href={resetStyles}></link>
-        <link rel="stylesheet" href={appStyles}></link>
+        {bare ? null : <link rel="stylesheet" href={appStyles}></link>}
         <Meta />
         <Links />
       </head>
