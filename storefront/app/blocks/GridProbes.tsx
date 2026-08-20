@@ -1,5 +1,5 @@
-// one module, its neighbour, and a two-row block. everything the measurement
-// pass needs is the distance between these three, so no css value is parsed.
+// one module, its neighbour, and a two-row block — enough to derive col,
+// gutter and row from their positions alone
 export function GridProbes() {
   return (
     <>

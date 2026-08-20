@@ -72,8 +72,7 @@
   grid-column: var(--c) / span var(--cs);
   grid-row: var(--r) / span var(--rs);
   min-inline-size: 0;
-  /* the authored span is the size. content that exceeds it is clipped rather
-     than allowed to grow the box, which would move every block beneath it. */
+  /* the authored span is the size; content past it is clipped, never grown */
   overflow: hidden;
   padding: calc(var(--u) * 1);
 }
@@ -140,7 +139,7 @@
 }
 
 /* forced band. specificity beats the container queries, so any band can be
-   inspected at any width — within a band only scale changes, so this is honest. */
+   inspected at any width — within a band only scale changes. */
 [data-band='a'] .u-grid {
   --cols: 12;
   --f: 1;
@@ -173,8 +172,7 @@
   --rs: var(--rsc, var(--rsa));
 }
 
-/* measurement probes. laid out by the grid like anything else, which is the
-   whole point — they report what the browser did, not what the css asked for. */
+/* laid out by the grid like anything else, so they report what it actually did */
 .u-probe {
   visibility: hidden;
   pointer-events: none;

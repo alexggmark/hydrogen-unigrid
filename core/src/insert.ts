@@ -14,8 +14,7 @@ export function insertAfter(
   const col = anchor?.col ?? 1;
   const colSpan = anchor?.colSpan ?? COLUMNS[WIDEST];
 
-  // step past whatever is in the way rather than displace it. nothing an
-  // insertion does may move a block that was placed by hand.
+  // step past what is in the way; an insertion never moves a hand-placed block
   let row = anchor ? anchor.row + anchor.rowSpan : 1;
   for (;;) {
     const clash = layout.blocks.find((b) =>

@@ -2,8 +2,7 @@ import type {Band} from './bands';
 
 export type BlockType = 'text' | 'richText' | 'image' | 'product' | 'rule';
 
-// blocks hold references, never payloads. short text is the one thing small
-// enough to sit inline.
+// references, never payloads. short text is small enough to sit inline.
 export type ContentRef =
   | {kind: 'none'}
   | {kind: 'text'; value: string}
@@ -18,8 +17,7 @@ export type Cell = {
   rowSpan: number;
 };
 
-// presence is the override flag: an absent band is derived from the widest one,
-// so a derived placement cannot be stored and cannot go stale
+// presence is the override flag, so a derived placement can never go stale
 export type Placement = {a: Cell} & Partial<Record<Exclude<Band, 'a'>, Cell>>;
 
 export type Block = {

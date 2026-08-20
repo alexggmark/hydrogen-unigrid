@@ -2,9 +2,6 @@ import {useDraggable} from '@dnd-kit/react';
 import {Feedback} from '@dnd-kit/dom';
 import type {BlockType} from '@unigrid/core';
 
-// new blocks arrive by being dragged onto a module, so the first thing a block
-// ever gets is a real position — there is no default placement to argue about.
-
 const NO_FEEDBACK = [Feedback.configure({feedback: 'none'})];
 
 export const NEW_SPAN: Record<BlockType, {colSpan: number; rowSpan: number}> = {

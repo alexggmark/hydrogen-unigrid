@@ -1,7 +1,5 @@
 import {BANDS, derive, type Band, type Cell, type Layout} from '@unigrid/core';
 
-// bands b and c are optional here only so a caller can omit them; derivation
-// fills all three, so in practice every band arrives filled
 export type Placement = {a: Cell} & Partial<Record<Exclude<Band, 'a'>, Cell>>;
 
 const SHORT = {col: 'c', colSpan: 'cs', row: 'r', rowSpan: 'rs'} as const;

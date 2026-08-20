@@ -76,8 +76,7 @@ function decodeContent(w: unknown): ContentRef | undefined {
 export function encode(layout: Layout): string {
   const blocks: WireBlock[] = layout.blocks.map((b) => {
     const cells: WireCell[] = [encodeCell(b.at.a)];
-    // trailing absent bands drop off; a present band after an absent one needs
-    // a hole, which an empty array marks
+    // trailing absent bands drop off; an empty array marks an interior hole
     const rest: (WireCell | [])[] = [];
     for (const band of BANDS.slice(1) as Exclude<Band, 'a'>[]) {
       const cell = b.at[band];

@@ -7,8 +7,7 @@ import {deriveAll} from '~/blocks/placement';
 import unigridStyles from '~/styles/unigrid.css?url';
 import demoStyles from '~/styles/unigrid-demo.css?url';
 
-// read-only reference render of the authored layout. /editor is the same
-// geometry with chrome on top — never a second implementation.
+// read-only reference render. /editor is the same geometry with chrome on top.
 
 export const handle = {bare: true};
 

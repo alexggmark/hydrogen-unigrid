@@ -28,7 +28,6 @@ body.u-show-grid .u-overlay {
   }
 }
 
-/* global row lines — one css grid, not masonry */
 .u-overlay::after {
   content: '';
   position: absolute;
@@ -40,13 +39,13 @@ body.u-show-grid .u-overlay {
   );
 }
 
-/* content clipped by its span. flagged so the loss is visible, not silent */
+/* flagged so the loss is visible, not silent */
 .u-block.u-over {
   outline: 2px solid #d8261c;
   outline-offset: -2px;
 }
 .u-block.u-over::after {
-  content: 'clipped';
+  content: 'needs ' attr(data-short) ' more';
   position: absolute;
   inset-inline-end: 0;
   inset-block-end: 0;

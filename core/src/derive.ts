@@ -2,8 +2,6 @@ import {COLUMNS, WIDEST, type Band} from './bands';
 import {readingOrder} from './layout';
 import type {Cell, Layout} from './types';
 
-// the cells a band actually renders. blocks are clipped to their authored span,
-// so this is derivation and nothing else — no measurement, no displacement.
 export type Resolved = ReadonlyMap<string, Cell>;
 
 // a narrow band is the wide band's reading order, stacked full width. blocks
@@ -46,7 +44,6 @@ export function derive(layout: Layout, band: Band): Map<string, Cell> {
   return out;
 }
 
-// the cell a block occupies in a band once derivation has run
 export const cellFor = (
   layout: Layout,
   id: string,

@@ -1,7 +1,5 @@
 import type {Layout} from './types';
 
-// immutable stack. nothing is mutated, so undo restores the exact prior tree
-// rather than a reconstruction of it.
 export type History = {
   past: readonly Layout[];
   present: Layout;

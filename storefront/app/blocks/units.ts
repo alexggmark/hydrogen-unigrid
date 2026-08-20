@@ -1,11 +1,6 @@
-// grid geometry in px, measured off real elements.
-//
-// not from the custom properties: an unregistered custom property computes to
-// its own token stream, so --gutter comes back as the literal text
-// "calc(1cqw * 1.5)" and parseFloat gives NaN. that silently produced
-// NaN drag deltas, which then fail as bad spans. reading resolved css would fix
-// that but bets on how cqw lengths resolve in getComputedStyle. three hidden
-// probes bet on nothing: they are laid out by the same grid everything else is.
+// measured off hidden probes rather than read from css: an unregistered custom
+// property computes to its own token stream, so --gutter comes back as the
+// literal "calc(1cqw * 1.5)" and parseFloat gives NaN.
 
 export type Units = {col: number; row: number; gutter: number; cols: number};
 

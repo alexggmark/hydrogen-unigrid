@@ -21,15 +21,14 @@ export const validSpan = (cell: Cell): boolean =>
   cell.rowSpan >= 1 &&
   cell.row >= 1;
 
-// authored overlap. resolved overlap is the resolver's problem, not this one.
 export function overlaps(a: Cell, b: Cell): boolean {
   const colsMeet = a.col < b.col + b.colSpan && b.col < a.col + a.colSpan;
   const rowsMeet = a.row < b.row + b.rowSpan && b.row < a.row + a.rowSpan;
   return colsMeet && rowsMeet;
 }
 
-// the authored cell, or undefined where the band is still derived. derivation
-// is layout-wide (reading order, full span) so it cannot answer per block.
+// undefined where the band is still derived — derivation is layout-wide, so it
+// cannot answer for one block
 export const cellIn = (block: Block, band: Band): Cell | undefined =>
   band === WIDEST ? block.at.a : block.at[band];
 
@@ -78,8 +77,8 @@ export function place(
   };
 }
 
-// every authored band is checked, not just the widest: a block can arrive
-// carrying overrides, and each has to fit its own column count
+// every authored band, not just the widest: an arriving block can carry
+// overrides, and each has to fit its own column count
 export function add(layout: Layout, block: Block): Result<Layout> {
   for (const band of BANDS) {
     const cell = cellIn(block, band);
@@ -92,13 +91,11 @@ export function add(layout: Layout, block: Block): Result<Layout> {
   return {ok: true, value: {...layout, blocks: [...layout.blocks, block]}};
 }
 
-// delete is global: gone from the block set, gone from every band
 export const remove = (layout: Layout, id: string): Layout => ({
   ...layout,
   blocks: layout.blocks.filter((b) => b.id !== id),
 });
 
-// drop an override so the band derives again. never touches the widest band.
 export function resetToDerived(layout: Layout, id: string, band: Band): Layout {
   if (band === WIDEST) return layout;
   return {
@@ -112,7 +109,6 @@ export function resetToDerived(layout: Layout, id: string, band: Band): Layout {
   };
 }
 
-// reading order is defined on the widest band: row, then col, ties by id
 export const readingOrder = (layout: Layout): Block[] =>
   [...layout.blocks].sort(
     (x, y) =>

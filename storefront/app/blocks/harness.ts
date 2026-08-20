@@ -1,7 +1,6 @@
 import type {Layout} from '@unigrid/core';
 
-// the grid.html composition as real layout data. every band is authored here,
-// so what renders is the engine's output rather than css fallback.
+// the grid.html composition as layout data, every band authored
 export const HARNESS: Layout = {
   version: 1,
   blocks: [
@@ -10,8 +9,6 @@ export const HARNESS: Layout = {
       type: 'text',
       content: {kind: 'none'},
       at: {
-        // three rows, not two: the mega heading is two lines and nothing grows
-        // to cover an under-authored span any more
         a: {col: 1, colSpan: 8, row: 1, rowSpan: 3},
         b: {col: 1, colSpan: 8, row: 1, rowSpan: 3},
         c: {col: 1, colSpan: 4, row: 1, rowSpan: 3},

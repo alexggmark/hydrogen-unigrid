@@ -1,5 +1,4 @@
-/* colour only, no geometry. kept out of the grid layer so unigrid.css stays
-   provably px-free and carries nothing a real page would not need. */
+/* colour only, no geometry — keeps unigrid.css provably px-free */
 
 .unigrid-demo {
   background: #efece6;

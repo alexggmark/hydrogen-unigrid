@@ -8,9 +8,7 @@ import devStyles from '~/styles/unigrid-dev.css?url';
 export const gridDevLinks = (): LinkDescriptor[] =>
   import.meta.env.DEV ? [{rel: 'stylesheet', href: devStyles}] : [];
 
-// frame and grid are separate elements on purpose — see unigrid.css.
-// probes are instrumentation, so they ship only where something measures:
-// the dev hud, or the editor asking for them explicitly
+// frame and grid are separate elements on purpose — see unigrid.css
 export function Grid({
   children,
   probes,

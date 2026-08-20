@@ -3,21 +3,18 @@ import {gridUnits, type Units} from '~/blocks/units';
 
 export {gridUnits, type Units};
 
-// pixels in, whole modules out. the grid layer is the only thing that knows its
-// own size, so everything here reads it back off the dom rather than guessing.
+// pixels in, whole modules out
 
 export type Edge = 'n' | 's' | 'e' | 'w' | 'se';
 
-// round rather than floor: a drag past halfway should land on the next module,
-// which is what makes snapping feel like magnetism instead of truncation
+// round, not floor: a drag past halfway lands on the next module
 export const snap = (dx: number, dy: number, u: Units) => ({
   dCol: Math.round(dx / (u.col + u.gutter)),
   dRow: Math.round(dy / (u.row + u.gutter)),
 });
 
-// clamped to the band rather than allowed past it. an unclamped candidate draws
-// a ghost outside the track count, and css grid answers that by inventing
-// implicit columns — the whole composition narrows mid-drag.
+// a candidate past the track count makes css grid invent implicit columns, and
+// the whole composition narrows mid-drag
 const clampCol = (col: number, colSpan: number, cols: number): number =>
   Math.max(1, Math.min(col, cols - colSpan + 1));
 
@@ -32,8 +29,8 @@ export const moved = (
   row: Math.max(1, from.row + dRow),
 });
 
-// dragging a near edge moves the origin and shrinks the span by the same amount,
-// so the far edge stays put. clamped at one module rather than inverting.
+// a near edge moves the origin and shrinks the span by the same amount, so the
+// far edge stays put
 export function resized(
   from: Cell,
   edge: Edge,
@@ -62,8 +59,7 @@ export function resized(
   return next;
 }
 
-// for blocks arriving from the palette there is no origin to offset from, so the
-// pointer picks the module directly
+// palette blocks have no origin to offset from, so the pointer picks the module
 export function cellAt(
   grid: HTMLElement,
   x: number,

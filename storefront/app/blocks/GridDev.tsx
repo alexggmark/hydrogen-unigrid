@@ -1,6 +1,7 @@
 import {useEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
 import {gridUnits} from './units';
+import {overflowRows} from './overflow';
 
 // dev instrumentation: surfaces --u, flags any block whose content is clipped
 
@@ -41,11 +42,13 @@ export function GridDev() {
         type: parseFloat(getComputedStyle(grid).fontSize),
       });
 
+      // the editor draws its own badge; this would be a second voice on it
+      if (grid.closest('.e-stage')) return;
       for (const block of grid.querySelectorAll<HTMLElement>('.u-block')) {
-        block.classList.toggle(
-          'u-over',
-          block.scrollHeight > block.clientHeight + 1,
-        );
+        const short = overflowRows(block, units);
+        block.classList.toggle('u-over', short > 0);
+        if (short > 0) block.dataset.short = String(short);
+        else delete block.dataset.short;
       }
     };
 

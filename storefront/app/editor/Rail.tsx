@@ -16,6 +16,8 @@ export type RailProps = {
   selected: string | null;
   authored: Cell | undefined;
   editable: Cell | undefined;
+  // rows the selection needs to stop clipping
+  clipped: number;
   error: string | null;
   dirty: boolean;
   bytes: number;
@@ -24,6 +26,7 @@ export type RailProps = {
   onBand: (band: Band) => void;
   onSelect: (id: string | null) => void;
   onCell: (patch: Partial<Cell>) => void;
+  onFit: () => void;
   onReset: () => void;
   onDelete: () => void;
   onUndo: () => void;
@@ -32,7 +35,7 @@ export type RailProps = {
 };
 
 export function Rail(props: RailProps) {
-  const {layout, band, selected, authored, editable} = props;
+  const {layout, band, selected, authored, editable, clipped} = props;
   const derived = selected !== null && band !== WIDEST && !authored;
 
   return (
@@ -121,6 +124,16 @@ export function Rail(props: RailProps) {
                 </label>
               ))}
             </div>
+            {clipped > 0 ? (
+              <p className="e-warn">
+                Content is clipped — {clipped} more row
+                {clipped === 1 ? '' : 's'} would fit it. Nothing grows on its
+                own, so this is yours to change.
+                <button type="button" onClick={props.onFit}>
+                  Add {clipped} row{clipped === 1 ? '' : 's'}
+                </button>
+              </p>
+            ) : null}
             <div className="e-row">
               <button
                 type="button"

@@ -29,6 +29,7 @@ import {Block} from '~/blocks/Block';
 import {CHROME, CONTENT} from '~/blocks/demo';
 import {HARNESS} from '~/blocks/harness';
 import {deriveAll} from '~/blocks/placement';
+import {overflowing, sameOverflow} from '~/blocks/overflow';
 import {DragHandles} from '~/editor/DragHandles';
 import {NEW_SPAN} from '~/editor/Palette';
 import {cellAt, gridUnits, moved, resized, snap, type Edge} from '~/editor/geometry';
@@ -37,8 +38,7 @@ import unigridStyles from '~/styles/unigrid.css?url';
 import demoStyles from '~/styles/unigrid-demo.css?url';
 import editorStyles from '~/styles/unigrid-editor.css?url';
 
-// editing is in memory and save is a stub, which is the shape the real editor
-// has anyway — a save button commits, dragging never writes.
+// editing is in memory: a save button commits, dragging never writes
 
 export const handle = {bare: true};
 
@@ -61,8 +61,6 @@ type DragData =
   | {kind: 'resize'; block: string; edge: Edge}
   | {kind: 'new'; type: BlockType};
 
-// nothing is displaced by an edit, so the cell grabbed on screen is the cell
-// written back — no translation between the two
 type Drag =
   | {kind: 'move'; block: string; from: Cell}
   | {kind: 'resize'; block: string; edge: Edge; from: Cell}
@@ -85,6 +83,7 @@ export default function Editor() {
   const [saved, setSaved] = useState<string | null>(null);
   const [drag, setDrag] = useState<Drag | null>(null);
   const [preview, setPreview] = useState<Preview | null>(null);
+  const [clipped, setClipped] = useState<Record<string, number>>({});
 
   const layout = hist.present;
   const at = useMemo(() => deriveAll(layout), [layout]);
@@ -100,8 +99,7 @@ export default function Editor() {
   );
 
   const block = selected ? findBlock(layout, selected) : undefined;
-  // absent in a narrow band means the block is still derived there; editing it
-  // is what writes the override
+  // absent in a narrow band means derived; editing is what writes the override
   const authored = block ? cellIn(block, band) : undefined;
   const editable = authored ?? (selected ? cellOf(selected) : undefined);
 
@@ -124,6 +122,27 @@ export default function Editor() {
     else params.delete('sel');
     window.history.replaceState(null, '', `?${params.toString()}`);
   }, [band, selected]);
+
+  // re-read on every layout edit: a span change is what starts or stops clipping
+  useEffect(() => {
+    const grid = gridEl();
+    if (!grid) return;
+
+    const read = () => {
+      const u = gridUnits(grid);
+      if (!u) return;
+      const next = overflowing(grid, u);
+      setClipped((prev) => (sameOverflow(prev, next) ? prev : next));
+    };
+
+    read();
+    // the badge is absolutely positioned, so this cannot feed itself
+    const observer = new ResizeObserver(read);
+    observer.observe(grid);
+    // webfonts land after first paint and change every wrap
+    void document.fonts?.ready.then(read);
+    return () => observer.disconnect();
+  }, [layout, band]);
 
   const reasonOf = (r: {reason: string; with?: string}) =>
     r.reason === 'overlap'
@@ -151,8 +170,6 @@ export default function Editor() {
     [commitCell, editable, selected],
   );
 
-  // the ghost is exactly the cell that will be committed. core only says
-  // whether it is legal — it never answers with a different cell.
   const previewOf = useCallback(
     (candidate: Cell, id: string | null): Preview => {
       if (!id) {
@@ -187,8 +204,7 @@ export default function Editor() {
       return;
     }
 
-    // added from a narrow band: core decides the wide-band slot, this decides
-    // only the override that was actually dragged
+    // core decides the wide-band slot; this decides only the dragged override
     const before = [...layout.blocks]
       .map((b) => ({id: b.id, c: cellOf(b.id)}))
       .filter((b): b is {id: string; c: Cell} => Boolean(b.c))
@@ -207,9 +223,8 @@ export default function Editor() {
     setSelected(id);
   };
 
-  // read off the manager, not the event: the event carries a snapshot whose
-  // transform is only refreshed when the live getter is read, and drag feedback
-  // is off here, so nothing else would read it.
+  // read off the manager, not the event: the event's transform is a snapshot,
+  // refreshed only when the live getter is read, and feedback is off here
   const onDragStart = (_event: unknown, manager: DragDropManager) => {
     const data = manager.dragOperation.source?.data as DragData | undefined;
     if (!data) return;
@@ -341,6 +356,12 @@ export default function Editor() {
                     selected={b.id === selected}
                   >
                     {CONTENT[b.id] ?? <p className="u-micro">{b.type}</p>}
+                    {clipped[b.id] ? (
+                      <p className="e-clip">
+                        needs {clipped[b.id]} more row
+                        {clipped[b.id] === 1 ? '' : 's'}
+                      </p>
+                    ) : null}
                     <DragHandles id={b.id} selected={b.id === selected} />
                   </Block>
                 );
@@ -366,6 +387,7 @@ export default function Editor() {
           selected={selected}
           authored={authored}
           editable={editable}
+          clipped={selected ? (clipped[selected] ?? 0) : 0}
           error={error}
           dirty={saved !== json}
           bytes={bytes}
@@ -374,6 +396,11 @@ export default function Editor() {
           onBand={setBand}
           onSelect={setSelected}
           onCell={move}
+          onFit={() => {
+            if (!selected || !editable) return;
+            const short = clipped[selected] ?? 0;
+            if (short > 0) move({rowSpan: editable.rowSpan + short});
+          }}
           onReset={() => {
             if (!selected) return;
             setError(null);

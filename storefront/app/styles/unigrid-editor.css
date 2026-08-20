@@ -1,5 +1,4 @@
-/* editor chrome. px is fine here — the ban is on the grid layer, and this is
-   furniture around it, not composition. */
+/* editor chrome. px is fine here — the ban is on the grid layer. */
 
 .e-shell {
   display: grid;
@@ -13,8 +12,7 @@
   padding-block: 24px;
 }
 
-/* selection is an outline, never a border — a border would take layout space
-   and move the thing it is describing */
+/* outline, never a border: a border takes layout space and moves the block */
 .u-block[data-selected] {
   outline: 2px solid #0b57d0;
   outline-offset: 2px;
@@ -185,8 +183,7 @@
   }
 }
 
-/* drag surfaces. the move surface fills the block so the whole thing is the
-   handle; edges sit above it and win the pointer. */
+/* the move surface fills the block; edges sit above it and win the pointer */
 .e-move,
 .e-handle {
   position: absolute;
@@ -250,7 +247,44 @@
   cursor: nwse-resize;
 }
 
-/* where it will actually land — the resolver's answer, not the pointer's */
+/* amber, not red: the layout is legal, the content just does not fit it */
+.e-clip {
+  position: absolute;
+  inset-inline-end: 0;
+  inset-block-end: 0;
+  z-index: 2;
+  margin: 0;
+  pointer-events: none;
+  background: #8a5300;
+  color: #fff;
+  font: 700 10px/1 ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 6px;
+}
+/* the badge's presence is the signal, so Block needs no extra prop */
+.e-stage .u-block:has(.e-clip) {
+  outline: 2px dashed #8a5300;
+  outline-offset: -2px;
+}
+.e-stage .u-block[data-selected]:has(.e-clip) {
+  outline-style: solid;
+  outline-color: #0b57d0;
+}
+
+.e-warn {
+  margin: 10px 0 0;
+  font-size: 11px;
+  color: #6b4300;
+  background: #fdf3e2;
+  padding: 8px;
+  border-radius: 4px;
+}
+.e-warn button {
+  display: block;
+  margin-block-start: 8px;
+}
+
 .e-ghost {
   pointer-events: none;
   border: 2px solid #0b57d0;
