@@ -22,16 +22,21 @@
 }
 
 .e-rail {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   border-inline-start: 1px solid #d8d8d4;
   background: #fff;
   font: 500 13px/1.45 ui-sans-serif, system-ui, sans-serif;
-  max-block-size: 100dvh;
-  overflow: auto;
+  block-size: 100dvh;
   position: sticky;
   inset-block-start: 0;
+}
+
+/* minmax(0,1fr) above is what lets this scroll — a default `auto` row floor
+   sizes to content and the overflow never engages */
+.e-scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .e-head {
@@ -309,3 +314,141 @@
   opacity: 0.5;
 }
 
+
+.e-sec h3 {
+  margin: 14px 0 6px;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #6b6b66;
+}
+
+.e-choice {
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  margin-block-end: 6px;
+}
+.e-choice > span {
+  font-size: 11px;
+  color: #6b6b66;
+}
+.e-seg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+.e-seg button {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  padding: 4px 6px;
+  font-size: 11px;
+  text-transform: lowercase;
+}
+.e-seg button[aria-pressed='true'] {
+  background: #111110;
+  color: #fff;
+  border-color: #111110;
+}
+
+.e-field {
+  display: block;
+  margin-block-end: 8px;
+}
+.e-field > span {
+  display: block;
+  margin-block-end: 4px;
+  font-size: 11px;
+  color: #6b6b66;
+}
+.e-field input[type='text'],
+.e-field textarea {
+  inline-size: 100%;
+  font: inherit;
+  font-size: 12px;
+  padding: 6px 8px;
+  border: 1px solid #d8d8d4;
+  border-radius: 3px;
+  background: #fff;
+  resize: vertical;
+}
+.e-inline {
+  display: grid;
+  grid-template-columns: 62px 40px auto;
+  align-items: center;
+  gap: 8px;
+}
+.e-inline > span {
+  margin: 0;
+}
+.e-inline input[type='color'] {
+  inline-size: 40px;
+  block-size: 26px;
+  padding: 0;
+  border: 1px solid #d8d8d4;
+  background: none;
+}
+
+.e-range {
+  display: block;
+  margin-block-end: 8px;
+}
+.e-range > span {
+  display: block;
+  margin-block-end: 2px;
+  font-size: 11px;
+  color: #6b6b66;
+}
+.e-range input {
+  inline-size: 100%;
+}
+
+.e-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  margin-block-start: 10px;
+}
+
+/* the content tree. indent is the only thing that says a row is in a group,
+   so it has to survive the row being the full width of the rail. */
+.e-tree {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+}
+.e-tree li[data-depth='1'] {
+  padding-inline-start: 14px;
+}
+.e-tree li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.e-node {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  text-align: start;
+  padding: 5px 8px;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.e-node[aria-pressed='true'] {
+  background: #111110;
+  color: #fff;
+  border-color: #111110;
+}
+.e-nudge {
+  display: flex;
+  gap: 2px;
+  flex: none;
+}
+.e-nudge button {
+  padding: 4px 6px;
+  font-size: 11px;
+  line-height: 1;
+}

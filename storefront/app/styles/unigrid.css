@@ -52,10 +52,14 @@
 }
 
 .u-grid {
-  --t-mega: calc(var(--u) * 7.6 * var(--f));
-  --t-h1: calc(var(--u) * 3.4 * var(--f));
-  --t-h2: calc(var(--u) * 1.9 * var(--f));
-  --t-body: calc(var(--u) * 1.25 * var(--f));
+  --t-h1: calc(var(--u) * 5.2 * var(--f));
+  --t-h2: calc(var(--u) * 3.4 * var(--f));
+  --t-h3: calc(var(--u) * 2.4 * var(--f));
+  --t-h4: calc(var(--u) * 1.7 * var(--f));
+  --t-h5: calc(var(--u) * 1.25 * var(--f));
+  --t-lg: calc(var(--u) * 1.7 * var(--f));
+  --t-sm: calc(var(--u) * 1.15 * var(--f));
+  --t-body: var(--t-sm);
   --t-micro: calc(var(--u) * 0.85 * var(--f));
   font-size: var(--t-body);
   line-height: 1.42;
@@ -69,6 +73,7 @@
   --cs: var(--csa);
   --r: var(--ra);
   --rs: var(--rsa);
+  background: var(--fill, transparent);
   grid-column: var(--c) / span var(--cs);
   grid-row: var(--r) / span var(--rs);
   min-inline-size: 0;
@@ -104,35 +109,118 @@
 .u-grid :where(p, li, dd, dt, figcaption, blockquote, h1, h2, h3, h4, h5, h6) {
   font-size: inherit;
   line-height: inherit;
-}
-
-.u-grid h1,
-.u-grid h2,
-.u-grid h3 {
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.02;
+  margin: 0;
 }
 .u-grid p {
   max-inline-size: 62ch;
 }
 
-.u-mega {
-  font-size: var(--t-mega);
-  line-height: 0.86;
+.u-hl {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+}
+.u-hl-1 {
+  font-size: var(--t-h1);
+  line-height: 0.9;
   letter-spacing: -0.04em;
 }
-.u-h1 {
-  font-size: var(--t-h1);
-}
-.u-h2 {
+.u-hl-2 {
   font-size: var(--t-h2);
+}
+.u-hl-3 {
+  font-size: var(--t-h3);
+}
+.u-hl-4 {
+  font-size: var(--t-h4);
+}
+.u-hl-5 {
+  font-size: var(--t-h5);
+}
+.u-text-lg {
+  font-size: var(--t-lg);
+}
+.u-text-sm {
+  font-size: var(--t-sm);
+}
+.u-lines {
+  white-space: pre-line;
+}
+.u-text p + p {
+  margin-block-start: calc(var(--u) * 0.9 * var(--f));
 }
 .u-micro {
   font-size: var(--t-micro);
   text-transform: uppercase;
   letter-spacing: 0.14em;
   font-weight: 700;
+}
+
+/* ink and paper are a pair, so invert swaps them and every element inside
+   follows without knowing it happened */
+.u-block {
+  --ink: #111110;
+  --paper: #fbfbf9;
+  color: var(--ink);
+}
+.u-block[data-invert] {
+  --ink: #fbfbf9;
+  --paper: #111110;
+}
+
+.u-btn {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  font-size: var(--t-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 700;
+  padding: calc(var(--u) * 0.7) calc(var(--u) * 1.4);
+  border: 1px solid var(--ink);
+}
+.u-btn[data-variant='primary'] {
+  background: var(--ink);
+  color: var(--paper);
+}
+.u-btn[data-variant='secondary'] {
+  background: transparent;
+  color: var(--ink);
+}
+
+/* background and tint fill the block behind the content, so neither is content */
+.u-bg {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+.u-tint {
+  background: var(--tint);
+  opacity: var(--tint-a);
+}
+
+/* the block's one measured child. min-height rather than height, so it fills
+   the span for justify-content but still reports its true height when it
+   overruns — which is what the clipping badge reads. */
+.u-flow {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: var(--fd, column);
+  justify-content: var(--jc, flex-start);
+  align-items: var(--ai, stretch);
+  gap: calc(var(--u) * var(--gap, 1));
+  min-block-size: 100%;
+}
+.u-group {
+  min-block-size: 0;
+}
+.u-el,
+.u-group {
+  min-inline-size: 0;
 }
 .u-dim {
   opacity: 0.55;

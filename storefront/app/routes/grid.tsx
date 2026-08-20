@@ -1,7 +1,6 @@
 import type {LinksFunction} from 'react-router';
 import {Grid, gridDevLinks} from '~/blocks/Grid';
 import {Block} from '~/blocks/Block';
-import {CHROME, CONTENT} from '~/blocks/demo';
 import {HARNESS} from '~/blocks/harness';
 import {deriveAll} from '~/blocks/placement';
 import unigridStyles from '~/styles/unigrid.css?url';
@@ -25,18 +24,8 @@ export default function GridHarness() {
       <Grid>
         {HARNESS.blocks.map((block) => {
           const placement = at.get(block.id);
-          const chrome = CHROME[block.id];
-          if (!placement || !chrome) return null;
-          return (
-            <Block
-              key={block.id}
-              at={placement}
-              as={chrome.as}
-              className={chrome.className}
-            >
-              {CONTENT[block.id]}
-            </Block>
-          );
+          if (!placement) return null;
+          return <Block key={block.id} block={block} at={placement} />;
         })}
       </Grid>
     </div>

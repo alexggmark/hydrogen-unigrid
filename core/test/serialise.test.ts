@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import {decode, encode} from '../src/serialise';
-import {emptyLayout} from '../src/types';
+import {emptyBlock, emptyLayout} from '../src/types';
 import {layout, rng} from './random';
 
 describe('serialisation', () => {
@@ -21,9 +21,7 @@ describe('serialisation', () => {
       version: 1,
       blocks: [
         {
-          id: 'x',
-          type: 'text' as const,
-          content: {kind: 'none' as const},
+          ...emptyBlock('x', {a: {col: 1, colSpan: 2, row: 1, rowSpan: 1}}),
           at: {
             a: {col: 1, colSpan: 2, row: 1, rowSpan: 1},
             c: {col: 1, colSpan: 4, row: 9, rowSpan: 2},
@@ -40,12 +38,7 @@ describe('serialisation', () => {
     const one = {
       version: 1,
       blocks: [
-        {
-          id: 'x',
-          type: 'rule' as const,
-          content: {kind: 'none' as const},
-          at: {a: {col: 3, colSpan: 1, row: 7, rowSpan: 1}},
-        },
+        emptyBlock('x', {a: {col: 3, colSpan: 1, row: 7, rowSpan: 1}}),
       ],
     };
     expect(encode(one)).toContain('[3,7]');

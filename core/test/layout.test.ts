@@ -11,6 +11,7 @@ import {
   remove,
   resetToDerived,
 } from '../src/layout';
+import {emptyBlock} from '../src/types';
 import {emptyLayout, type Layout} from '../src/types';
 import {block, cell, int, rng} from './random';
 
@@ -103,17 +104,8 @@ describe('placement', () => {
   });
 
   it('reports which block a rejected drop hit', () => {
-    const one = {
-      id: 'one',
-      type: 'rule' as const,
-      content: {kind: 'none' as const},
-      at: {a: {col: 1, colSpan: 4, row: 1, rowSpan: 2}},
-    };
-    const two = {
-      ...one,
-      id: 'two',
-      at: {a: {col: 6, colSpan: 2, row: 1, rowSpan: 1}},
-    };
+    const one = emptyBlock('one', {a: {col: 1, colSpan: 4, row: 1, rowSpan: 2}});
+    const two = emptyBlock('two', {a: {col: 6, colSpan: 2, row: 1, rowSpan: 1}});
     let layout = emptyLayout();
     for (const b of [one, two]) {
       const r = add(layout, b);
@@ -157,9 +149,7 @@ describe('bands', () => {
       version: 1,
       blocks: [
         {
-          id: 'x',
-          type: 'text',
-          content: {kind: 'none'},
+          ...emptyBlock('x', {a: {col: 1, colSpan: 2, row: 1, rowSpan: 1}}),
           at: {
             a: {col: 1, colSpan: 2, row: 1, rowSpan: 1},
             c: {col: 1, colSpan: 4, row: 9, rowSpan: 3},
@@ -177,12 +167,7 @@ describe('bands', () => {
     const start: Layout = {
       version: 1,
       blocks: [
-        {
-          id: 'x',
-          type: 'text',
-          content: {kind: 'none'},
-          at: {a: {col: 1, colSpan: 2, row: 1, rowSpan: 1}},
-        },
+        emptyBlock('x', {a: {col: 1, colSpan: 2, row: 1, rowSpan: 1}}),
       ],
     };
     expect(resetToDerived(start, 'x', WIDEST)).toBe(start);
@@ -205,10 +190,7 @@ describe('bands', () => {
 describe('reading order', () => {
   it('sorts by row, then column, then id', () => {
     const mk = (id: string, col: number, row: number) => ({
-      id,
-      type: 'rule' as const,
-      content: {kind: 'none' as const},
-      at: {a: {col, colSpan: 1, row, rowSpan: 1}},
+      ...emptyBlock(id, {a: {col, colSpan: 1, row, rowSpan: 1}}),
     });
     const layout: Layout = {
       version: 1,

@@ -4,14 +4,35 @@ export const UNIGRID_CORE = 'unigrid-core' as const;
 
 export {BANDS, COLUMNS, WIDEST, isBand, type Band} from './bands';
 export {
+  DEFAULT_FLEX,
+  emptyBlock,
   emptyLayout,
+  isGroup,
   type Block,
-  type BlockType,
+  type ButtonVariant,
   type Cell,
-  type ContentRef,
+  type Element,
+  type ElementKind,
+  type Fill,
+  type Flex,
+  type Group,
+  type HeadingLevel,
   type Layout,
+  type Media,
+  type Node,
   type Placement,
+  type TextSize,
 } from './types';
+export {
+  addNode,
+  findNode,
+  moveNode,
+  patchBlock,
+  patchNode,
+  removeNode,
+  setFlex,
+  type Found,
+} from './content';
 export {
   add,
   cellIn,

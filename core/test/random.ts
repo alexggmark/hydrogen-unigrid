@@ -1,5 +1,5 @@
 import {COLUMNS, type Band} from '../src/bands';
-import type {Block, BlockType, Cell, ContentRef, Layout} from '../src/types';
+import {emptyBlock, type Block, type Cell, type Flex, type Layout, type Node} from '../src/types';
 
 // mulberry32. seeded so any failing case is reproducible from its seed alone.
 export function rng(seed: number): () => number {
@@ -15,8 +15,6 @@ export function rng(seed: number): () => number {
 export const int = (r: () => number, lo: number, hi: number): number =>
   lo + Math.floor(r() * (hi - lo + 1));
 
-const TYPES: BlockType[] = ['text', 'richText', 'image', 'product', 'rule'];
-
 export function cell(r: () => number, band: Band): Cell {
   const cols = COLUMNS[band];
   const colSpan = int(r, 1, cols);
@@ -28,14 +26,46 @@ export function cell(r: () => number, band: Band): Cell {
   };
 }
 
-export function content(r: () => number): ContentRef {
-  const pick = int(r, 0, 4);
-  const s = `v${int(r, 0, 9999)}`;
-  if (pick === 0) return {kind: 'none'};
-  if (pick === 1) return {kind: 'text', value: `text ${s} — ünïcode "quotes"`};
-  if (pick === 2) return {kind: 'richText', id: `gid://meta/${s}`};
-  if (pick === 3) return {kind: 'image', gid: `gid://shopify/MediaImage/${s}`};
-  return {kind: 'product', handle: `handle-${s}`};
+export function flex(r: () => number): Flex {
+  return {
+    direction: r() < 0.5 ? 'row' : 'column',
+    justify: (['start', 'center', 'end', 'between'] as const)[int(r, 0, 3)] ?? 'start',
+    align: (['start', 'center', 'end', 'stretch'] as const)[int(r, 0, 3)] ?? 'stretch',
+    gap: int(r, 0, 6),
+  };
+}
+
+export function element(r: () => number, id: string): Extract<Node, {kind: 'headline' | 'text' | 'richText' | 'button'}> {
+  const s = `v${int(r, 0, 9999)} — ünïcode "quotes"`;
+  const pick = int(r, 0, 3);
+  if (pick === 0) {
+    return {id, kind: 'headline', level: int(r, 1, 5) as 1 | 2 | 3 | 4 | 5, value: s};
+  }
+  if (pick === 1) return {id, kind: 'text', size: r() < 0.5 ? 'lg' : 'sm', value: s};
+  if (pick === 2) return {id, kind: 'richText', size: r() < 0.5 ? 'lg' : 'sm', value: s};
+  return {
+    id,
+    kind: 'button',
+    variant: r() < 0.5 ? 'primary' : 'secondary',
+    label: s,
+    href: r() < 0.5 ? `/x/${int(r, 0, 99)}` : '',
+  };
+}
+
+export function children(r: () => number, id: string): Node[] {
+  return Array.from({length: int(r, 0, 3)}, (_, i) => {
+    if (r() < 0.3) {
+      return {
+        id: `${id}-g${i}`,
+        kind: 'group' as const,
+        flex: flex(r),
+        children: Array.from({length: int(r, 0, 2)}, (_, j) =>
+          element(r, `${id}-g${i}-e${j}`),
+        ),
+      };
+    }
+    return element(r, `${id}-e${i}`);
+  });
 }
 
 export function block(r: () => number, id: string): Block {
@@ -43,10 +73,20 @@ export function block(r: () => number, id: string): Block {
   if (r() < 0.5) at.b = cell(r, 'b');
   if (r() < 0.5) at.c = cell(r, 'c');
   return {
-    id,
-    type: TYPES[int(r, 0, TYPES.length - 1)] as BlockType,
-    content: content(r),
-    at,
+    ...emptyBlock(id, at),
+    fill:
+      r() < 0.5
+        ? {}
+        : {
+            color: `#${int(r, 0, 0xffffff).toString(16).padStart(6, '0')}`,
+            ...(r() < 0.5
+              ? {media: {kind: r() < 0.5 ? 'image' : 'video', src: `gid://m/${int(r, 0, 999)}`} as const}
+              : {}),
+            ...(r() < 0.5 ? {overlay: {color: '#000000', opacity: int(r, 0, 100) / 100}} : {}),
+          },
+    flex: flex(r),
+    invert: r() < 0.5,
+    children: children(r, id),
   };
 }
 
@@ -73,12 +113,7 @@ export function densePacked(r: () => number, count: number): Layout {
     row += int(r, 0, 3);
     const rowSpan = int(r, 1, 5);
     for (let c = col; c < col + colSpan; c++) nextFree[c] = row + rowSpan;
-    blocks.push({
-      id: `b${i}`,
-      type: 'text',
-      content: {kind: 'none'},
-      at: {a: {col, colSpan, row, rowSpan}},
-    });
+    blocks.push(emptyBlock(`b${i}`, {a: {col, colSpan, row, rowSpan}}));
   }
   return {version: 1, blocks};
 }

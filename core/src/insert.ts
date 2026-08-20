@@ -1,12 +1,12 @@
 import {COLUMNS, WIDEST} from './bands';
 import {overlaps} from './layout';
-import type {Block, Cell, Layout} from './types';
+import {emptyBlock, type Block, type Cell, type Layout} from './types';
 
 // a block added from a narrow band lands in the wide band directly below its
 // predecessor there, inheriting that predecessor's column and span
 export function insertAfter(
   layout: Layout,
-  block: Omit<Block, 'at'> & {rowSpan?: number},
+  block: {id: string; rowSpan?: number},
   predecessorId: string,
 ): Layout {
   const anchor = layout.blocks.find((b) => b.id === predecessorId)?.at.a;
@@ -26,12 +26,7 @@ export function insertAfter(
   }
 
   const cell: Cell = {col, colSpan, row, rowSpan};
-  const inserted: Block = {
-    id: block.id,
-    type: block.type,
-    content: block.content,
-    at: {a: cell},
-  };
+  const inserted: Block = emptyBlock(block.id, {a: cell});
 
   return {...layout, blocks: [...layout.blocks, inserted]};
 }

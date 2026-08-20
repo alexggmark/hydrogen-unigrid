@@ -2,23 +2,17 @@ import type {Units} from './units';
 
 const SLACK = 1;
 
-// editor chrome lives inside the block and the resize handles overhang its
-// edges on purpose, so scrollHeight measures the handles rather than the text
-const isChrome = (el: Element): boolean =>
-  el instanceof HTMLElement && el.dataset.chrome !== undefined;
-
+// measure the one content wrapper, not the block. background, tint, handles and
+// the badge are all children too, and the handles overhang the edge on purpose.
 export function overflowRows(block: HTMLElement, u: Units): number {
-  const content = [...block.children].filter((el) => !isChrome(el));
-  if (!content.length) return 0;
+  const flow = block.querySelector<HTMLElement>(':scope > .u-flow');
+  if (!flow) return 0;
 
-  // rects survive the clip, so an already-hidden child still reports its height
   const box = block.getBoundingClientRect();
   const padEnd = parseFloat(getComputedStyle(block).paddingBlockEnd) || 0;
-  const reach = Math.max(
-    ...content.map((el) => el.getBoundingClientRect().bottom - box.top),
-  );
+  // rects survive the clip, so already-hidden content still reports its height
+  const hidden = flow.getBoundingClientRect().bottom + padEnd - box.bottom;
 
-  const hidden = reach + padEnd - box.height;
   return hidden <= SLACK ? 0 : Math.ceil(hidden / (u.row + u.gutter));
 }
 

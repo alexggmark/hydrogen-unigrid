@@ -4,29 +4,37 @@ import {DragDropProvider} from '@dnd-kit/react';
 import type {DragDropManager} from '@dnd-kit/dom';
 import {
   add,
+  addNode,
   cellIn,
   commit,
   canRedo,
   canUndo,
+  emptyBlock,
   encode,
   findBlock,
+  findNode,
   history,
   insertAfter,
   isBand,
+  moveNode,
   overlaps,
+  patchBlock,
+  patchNode,
   place,
   redo,
   remove,
+  removeNode,
   resetToDerived,
+  setFlex,
   undo,
   WIDEST,
   type Band,
-  type BlockType,
   type Cell,
+  type ElementKind,
+  type Node,
 } from '@unigrid/core';
 import {Grid, gridDevLinks} from '~/blocks/Grid';
 import {Block} from '~/blocks/Block';
-import {CHROME, CONTENT} from '~/blocks/demo';
 import {HARNESS} from '~/blocks/harness';
 import {deriveAll} from '~/blocks/placement';
 import {overflowing, sameOverflow} from '~/blocks/overflow';
@@ -59,19 +67,32 @@ const REASON: Record<string, string> = {
 type DragData =
   | {kind: 'move'; block: string}
   | {kind: 'resize'; block: string; edge: Edge}
-  | {kind: 'new'; type: BlockType};
+  | {kind: 'new'};
 
 type Drag =
   | {kind: 'move'; block: string; from: Cell}
   | {kind: 'resize'; block: string; edge: Edge; from: Cell}
-  | {kind: 'new'; type: BlockType};
+  | {kind: 'new'};
 
 type Preview = {cell: Cell; ok: boolean; reason?: string};
 
-const nextId = (blocks: {id: string}[], type: BlockType): string => {
+const nextId = (taken: (id: string) => boolean, prefix: string): string => {
   let n = 1;
-  while (blocks.some((b) => b.id === `${type}-${n}`)) n += 1;
-  return `${type}-${n}`;
+  while (taken(`${prefix}-${n}`)) n += 1;
+  return `${prefix}-${n}`;
+};
+
+const NEW_NODE: Record<ElementKind | 'group', (id: string) => Node> = {
+  headline: (id) => ({id, kind: 'headline', level: 2, value: 'Headline'}),
+  text: (id) => ({id, kind: 'text', size: 'sm', value: 'Body text.'}),
+  richText: (id) => ({id, kind: 'richText', size: 'sm', value: 'First line.\nSecond line.'}),
+  button: (id) => ({id, kind: 'button', variant: 'primary', label: 'Button', href: '#'}),
+  group: (id) => ({
+    id,
+    kind: 'group',
+    flex: {direction: 'row', justify: 'start', align: 'center', gap: 1},
+    children: [],
+  }),
 };
 
 export default function Editor() {
@@ -80,6 +101,7 @@ export default function Editor() {
   const [hist, setHist] = useState(() => history(HARNESS));
   const [band, setBand] = useState<Band>(WIDEST);
   const [selected, setSelected] = useState<string | null>(null);
+  const [node, setNode] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
   const [drag, setDrag] = useState<Drag | null>(null);
@@ -99,6 +121,7 @@ export default function Editor() {
     [at, band],
   );
 
+  const picked = node ? findNode(layout, node) : undefined;
   const block = selected ? findBlock(layout, selected) : undefined;
   // absent in a narrow band means derived; editing is what writes the override
   const authored = block ? cellIn(block, band) : undefined;
@@ -192,12 +215,11 @@ export default function Editor() {
     [band, cellOf, layout],
   );
 
-  const addAt = (type: BlockType, cell: Cell) => {
-    const id = nextId(layout.blocks, type);
-    const made = {id, type, content: {kind: 'none'} as const};
+  const addAt = (cell: Cell) => {
+    const id = nextId((x) => layout.blocks.some((b) => b.id === x), 'block');
 
     if (band === WIDEST) {
-      const result = add(layout, {...made, at: {a: cell}});
+      const result = add(layout, emptyBlock(id, {a: cell}));
       if (!result.ok) return setError(reasonOf(result));
       setError(null);
       setHist((h) => commit(h, result.value));
@@ -213,15 +235,27 @@ export default function Editor() {
       .sort((x, y) => x.c.row - y.c.row || x.c.col - y.c.col)
       .at(-1);
 
-    const seeded = insertAfter(
-      layout,
-      {...made, rowSpan: cell.rowSpan},
-      before?.id ?? '',
-    );
+    const seeded = insertAfter(layout, {id, rowSpan: cell.rowSpan}, before?.id ?? '');
     const result = place(seeded, id, band, cell);
     setError(result.ok ? null : reasonOf(result));
     setHist((h) => commit(h, result.ok ? result.value : seeded));
     setSelected(id);
+  };
+
+  // content edits never touch placement, so they cannot fail the way a drop can
+  const edit = useCallback(
+    (next: typeof layout) => {
+      setError(null);
+      setHist((h) => commit(h, next));
+    },
+    [],
+  );
+
+  const addChild = (kind: ElementKind | 'group', parentId: string | null) => {
+    if (!selected) return;
+    const id = nextId((x) => Boolean(findNode(layout, x)), kind);
+    edit(addNode(layout, selected, parentId, NEW_NODE[kind](id)));
+    setNode(id);
   };
 
   // read off the manager, not the event: the event's transform is a snapshot,
@@ -229,7 +263,7 @@ export default function Editor() {
   const onDragStart = (_event: unknown, manager: DragDropManager) => {
     const data = manager.dragOperation.source?.data as DragData | undefined;
     if (!data) return;
-    if (data.kind === 'new') return setDrag({kind: 'new', type: data.type});
+    if (data.kind === 'new') return setDrag({kind: 'new'});
 
     const from = cellOf(data.block);
     if (!from) return;
@@ -251,9 +285,8 @@ export default function Editor() {
 
     if (drag.kind === 'new') {
       const {x, y} = operation.position.current;
-      const span = NEW_SPAN[drag.type];
-      const spot = cellAt(grid, x, y, u, span.colSpan);
-      setPreview(previewOf({...spot, ...span}, null));
+      const spot = cellAt(grid, x, y, u, NEW_SPAN.colSpan);
+      setPreview(previewOf({...spot, ...NEW_SPAN}, null));
       return;
     }
 
@@ -273,7 +306,7 @@ export default function Editor() {
     setPreview(null);
     if (event.canceled || !current || !target) return;
     if (!target.ok) return setError(target.reason ?? 'that move is not allowed');
-    if (current.kind === 'new') addAt(current.type, target.cell);
+    if (current.kind === 'new') addAt(target.cell);
     else commitCell(current.block, target.cell);
   };
 
@@ -361,25 +394,25 @@ export default function Editor() {
               {layout.blocks.map((b) => {
                 const p = at.get(b.id);
                 if (!p) return null;
-                const chrome = CHROME[b.id] ?? {className: 'b-plain b-rule'};
                 return (
                   <Block
                     key={b.id}
+                    block={b}
                     at={p}
-                    as={chrome.as}
-                    className={chrome.className}
                     blockId={b.id}
                     selected={b.id === selected}
-                  >
-                    {CONTENT[b.id] ?? <p className="u-micro">{b.type}</p>}
-                    {clipped[b.id] ? (
-                      <p className="e-clip" data-chrome="">
-                        needs {clipped[b.id]} more row
-                        {clipped[b.id] === 1 ? '' : 's'}
-                      </p>
-                    ) : null}
-                    <DragHandles id={b.id} selected={b.id === selected} />
-                  </Block>
+                    chrome={
+                      <>
+                        {clipped[b.id] ? (
+                          <p className="e-clip">
+                            needs {clipped[b.id]} more row
+                            {clipped[b.id] === 1 ? '' : 's'}
+                          </p>
+                        ) : null}
+                        <DragHandles id={b.id} selected={b.id === selected} />
+                      </>
+                    }
+                  />
                 );
               })}
               {preview ? (
@@ -404,14 +437,31 @@ export default function Editor() {
           authored={authored}
           editable={editable}
           clipped={selected ? (clipped[selected] ?? 0) : 0}
+          block={block}
+          node={picked}
           error={error}
           dirty={saved !== json}
           bytes={bytes}
           canUndo={canUndo(hist)}
           canRedo={canRedo(hist)}
           onBand={setBand}
-          onSelect={setSelected}
+          onSelect={(id) => {
+            setSelected(id);
+            setNode(null);
+          }}
           onCell={move}
+          onPickNode={setNode}
+          onAddChild={addChild}
+          onPatchNode={(id, patch) => edit(patchNode(layout, id, patch))}
+          onMoveNode={(id, delta) => edit(moveNode(layout, id, delta))}
+          onRemoveNode={(id) => {
+            edit(removeNode(layout, id));
+            if (node === id) setNode(null);
+          }}
+          onPatchBlock={(patch) => {
+            if (selected) edit(patchBlock(layout, selected, patch));
+          }}
+          onFlex={(id, patch) => edit(setFlex(layout, id, patch))}
           onFit={() => {
             if (!selected || !editable) return;
             const short = clipped[selected] ?? 0;
@@ -427,6 +477,7 @@ export default function Editor() {
             setError(null);
             setHist((h) => commit(h, remove(layout, selected)));
             setSelected(null);
+            setNode(null);
           }}
           onUndo={() => setHist(undo)}
           onRedo={() => setHist(redo)}

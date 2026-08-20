@@ -1,30 +1,30 @@
 import {BANDS, type Band} from './bands';
-import type {Block, BlockType, Cell, ContentRef, Layout} from './types';
+import {DEFAULT_FLEX} from './types';
+import type {
+  Block,
+  ButtonVariant,
+  Cell,
+  Element,
+  Fill,
+  Flex,
+  Group,
+  HeadingLevel,
+  Layout,
+  Media,
+  Node,
+  TextSize,
+} from './types';
 
-// wire format is positional and drops defaults. the storefront json metafield
-// caps at 128kb, so nothing derivable is written.
+// short keys, defaults omitted, nothing derivable written. the storefront json
+// metafield caps at 128kb.
 //
-//   [version, [block, ...]]
-//   block = [id, type, content, cellA, cellB?, cellC?]
-//   cell  = [col, row] | [col, row, colSpan] | [col, row, colSpan, rowSpan]
+//   {v, b:[block]}
+//   block   = {i, a:cell, b?:cell, c?:cell, f?:fill, x?:flex, n?:1, k?:[node]}
+//   cell    = [col, row] | [col, row, colSpan] | [col, row, colSpan, rowSpan]
+//   node    = {i, k:'h'|'t'|'x'|'b'|'g', ...}
+//   fill    = {c?:hex, m?:[kind, src], o?:[hex, opacity]}
 
-const TYPE_CODE: Record<BlockType, string> = {
-  text: 't',
-  richText: 'x',
-  image: 'i',
-  product: 'p',
-  rule: 'l',
-};
-const TYPE_OF = Object.fromEntries(
-  Object.entries(TYPE_CODE).map(([k, v]) => [v, k as BlockType]),
-) as Record<string, BlockType>;
-
-type WireCell = number[];
-type WireContent = 0 | [string, string];
-type WireBlock = [string, string, WireContent, ...WireCell[]];
-type Wire = [number, WireBlock[]];
-
-const encodeCell = (c: Cell): WireCell =>
+const encodeCell = (c: Cell): number[] =>
   c.rowSpan !== 1
     ? [c.col, c.row, c.colSpan, c.rowSpan]
     : c.colSpan !== 1
@@ -39,59 +39,154 @@ function decodeCell(w: unknown): Cell | undefined {
   return {col, row, colSpan, rowSpan};
 }
 
-const encodeContent = (c: ContentRef): WireContent => {
-  switch (c.kind) {
-    case 'none':
-      return 0;
-    case 'text':
-      return ['t', c.value];
-    case 'richText':
-      return ['x', c.id];
-    case 'image':
-      return ['i', c.gid];
-    case 'product':
-      return ['p', c.handle];
-  }
-};
+type Obj = Record<string, unknown>;
+const obj = (w: unknown): Obj | undefined =>
+  typeof w === 'object' && w !== null && !Array.isArray(w) ? (w as Obj) : undefined;
+const str = (w: unknown): string | undefined =>
+  typeof w === 'string' ? w : undefined;
 
-function decodeContent(w: unknown): ContentRef | undefined {
-  if (w === 0) return {kind: 'none'};
-  if (!Array.isArray(w) || w.length !== 2) return undefined;
-  const [tag, value] = w as [unknown, unknown];
-  if (typeof value !== 'string') return undefined;
-  switch (tag) {
+function encodeFlex(f: Flex): Obj | undefined {
+  const out: Obj = {};
+  if (f.direction !== DEFAULT_FLEX.direction) out.d = f.direction;
+  if (f.justify !== DEFAULT_FLEX.justify) out.j = f.justify;
+  if (f.align !== DEFAULT_FLEX.align) out.a = f.align;
+  if (f.gap !== DEFAULT_FLEX.gap) out.g = f.gap;
+  return Object.keys(out).length ? out : undefined;
+}
+
+const DIRECTIONS = ['row', 'column'] as const;
+const JUSTIFY = ['start', 'center', 'end', 'between'] as const;
+const ALIGN = ['start', 'center', 'end', 'stretch'] as const;
+
+const oneOf = <T extends string>(
+  w: unknown,
+  allowed: readonly T[],
+  fallback: T,
+): T => (allowed.includes(w as T) ? (w as T) : fallback);
+
+function decodeFlex(w: unknown): Flex {
+  const o = obj(w);
+  if (!o) return {...DEFAULT_FLEX};
+  return {
+    direction: oneOf(o.d, DIRECTIONS, DEFAULT_FLEX.direction),
+    justify: oneOf(o.j, JUSTIFY, DEFAULT_FLEX.justify),
+    align: oneOf(o.a, ALIGN, DEFAULT_FLEX.align),
+    gap: typeof o.g === 'number' && Number.isFinite(o.g) ? o.g : DEFAULT_FLEX.gap,
+  };
+}
+
+function encodeFill(f: Fill): Obj | undefined {
+  const out: Obj = {};
+  if (f.color) out.c = f.color;
+  if (f.media) out.m = [f.media.kind === 'video' ? 'v' : 'i', f.media.src];
+  if (f.overlay) out.o = [f.overlay.color, f.overlay.opacity];
+  return Object.keys(out).length ? out : undefined;
+}
+
+function decodeFill(w: unknown): Fill {
+  const o = obj(w);
+  if (!o) return {};
+  const out: Fill = {};
+  const color = str(o.c);
+  if (color) out.color = color;
+  if (Array.isArray(o.m) && o.m.length === 2) {
+    const src = str(o.m[1]);
+    if (src) out.media = {kind: o.m[0] === 'v' ? 'video' : 'image', src} as Media;
+  }
+  if (Array.isArray(o.o) && o.o.length === 2) {
+    const color2 = str(o.o[0]);
+    const opacity = o.o[1];
+    if (color2 && typeof opacity === 'number') {
+      out.overlay = {color: color2, opacity};
+    }
+  }
+  return out;
+}
+
+function encodeNode(n: Node): Obj {
+  switch (n.kind) {
+    case 'group': {
+      const flex = encodeFlex(n.flex);
+      return {
+        i: n.id,
+        k: 'g',
+        ...(flex ? {x: flex} : {}),
+        c: n.children.map(encodeNode),
+      };
+    }
+    case 'headline':
+      return {i: n.id, k: 'h', ...(n.level !== 2 ? {l: n.level} : {}), v: n.value};
+    case 'text':
+      return {i: n.id, k: 't', ...(n.size !== 'sm' ? {s: n.size} : {}), v: n.value};
+    case 'richText':
+      return {i: n.id, k: 'x', ...(n.size !== 'sm' ? {s: n.size} : {}), v: n.value};
+    case 'button':
+      return {
+        i: n.id,
+        k: 'b',
+        ...(n.variant !== 'primary' ? {p: n.variant} : {}),
+        v: n.label,
+        ...(n.href ? {h: n.href} : {}),
+      };
+  }
+}
+
+const LEVELS: HeadingLevel[] = [1, 2, 3, 4, 5];
+
+function decodeNode(w: unknown): Node | undefined {
+  const o = obj(w);
+  if (!o) return undefined;
+  const id = str(o.i);
+  if (!id) return undefined;
+  const size: TextSize = o.s === 'lg' ? 'lg' : 'sm';
+  const value = str(o.v) ?? '';
+
+  switch (o.k) {
+    case 'g': {
+      const raw = Array.isArray(o.c) ? o.c : [];
+      const children: Element[] = [];
+      for (const c of raw) {
+        const node = decodeNode(c);
+        // a group holds elements only; a nested group is dropped, not represented
+        if (node && node.kind !== 'group') children.push(node);
+      }
+      return {id, kind: 'group', flex: decodeFlex(o.x), children} satisfies Group;
+    }
+    case 'h': {
+      const level = LEVELS.includes(o.l as HeadingLevel)
+        ? (o.l as HeadingLevel)
+        : 2;
+      return {id, kind: 'headline', level, value};
+    }
     case 't':
-      return {kind: 'text', value};
+      return {id, kind: 'text', size, value};
     case 'x':
-      return {kind: 'richText', id: value};
-    case 'i':
-      return {kind: 'image', gid: value};
-    case 'p':
-      return {kind: 'product', handle: value};
+      return {id, kind: 'richText', size, value};
+    case 'b': {
+      const variant: ButtonVariant = o.p === 'secondary' ? 'secondary' : 'primary';
+      return {id, kind: 'button', variant, label: value, href: str(o.h) ?? ''};
+    }
     default:
       return undefined;
   }
 }
 
 export function encode(layout: Layout): string {
-  const blocks: WireBlock[] = layout.blocks.map((b) => {
-    const cells: WireCell[] = [encodeCell(b.at.a)];
-    // trailing absent bands drop off; an empty array marks an interior hole
-    const rest: (WireCell | [])[] = [];
+  const blocks = layout.blocks.map((b) => {
+    const out: Obj = {i: b.id, a: encodeCell(b.at.a)};
     for (const band of BANDS.slice(1) as Exclude<Band, 'a'>[]) {
       const cell = b.at[band];
-      rest.push(cell ? encodeCell(cell) : []);
+      if (cell) out[band] = encodeCell(cell);
     }
-    while (rest.length && rest[rest.length - 1]?.length === 0) rest.pop();
-    return [
-      b.id,
-      TYPE_CODE[b.type],
-      encodeContent(b.content),
-      ...cells,
-      ...(rest as WireCell[]),
-    ];
+    const fill = encodeFill(b.fill);
+    if (fill) out.f = fill;
+    const flex = encodeFlex(b.flex);
+    if (flex) out.x = flex;
+    if (b.invert) out.n = 1;
+    if (b.children.length) out.k = b.children.map(encodeNode);
+    return out;
   });
-  return JSON.stringify([layout.version, blocks] satisfies Wire);
+  return JSON.stringify({v: layout.version, b: blocks});
 }
 
 export function decode(json: string): Layout | undefined {
@@ -101,34 +196,40 @@ export function decode(json: string): Layout | undefined {
   } catch {
     return undefined;
   }
-  if (!Array.isArray(raw) || raw.length !== 2) return undefined;
-  const [version, wireBlocks] = raw as [unknown, unknown];
-  if (!Number.isInteger(version) || !Array.isArray(wireBlocks))
-    return undefined;
+  const top = obj(raw);
+  if (!top || !Number.isInteger(top.v) || !Array.isArray(top.b)) return undefined;
 
   const blocks: Block[] = [];
-  for (const w of wireBlocks) {
-    if (!Array.isArray(w) || w.length < 4) return undefined;
-    const [id, code, content, ...cells] = w as unknown[];
-    if (typeof id !== 'string' || typeof code !== 'string') return undefined;
-    const type = TYPE_OF[code];
-    const ref = decodeContent(content);
-    if (!type || !ref) return undefined;
+  for (const w of top.b) {
+    const o = obj(w);
+    if (!o) return undefined;
+    const id = str(o.i);
+    const a = decodeCell(o.a);
+    if (!id || !a) return undefined;
 
-    const a = decodeCell(cells[0]);
-    if (!a) return undefined;
     const at: Block['at'] = {a};
-    for (const [i, band] of (
-      BANDS.slice(1) as Exclude<Band, 'a'>[]
-    ).entries()) {
-      const slot = cells[i + 1];
-      if (slot === undefined) continue;
-      if (Array.isArray(slot) && slot.length === 0) continue;
-      const cell = decodeCell(slot);
+    for (const band of BANDS.slice(1) as Exclude<Band, 'a'>[]) {
+      if (o[band] === undefined) continue;
+      const cell = decodeCell(o[band]);
       if (!cell) return undefined;
       at[band] = cell;
     }
-    blocks.push({id, type, content: ref, at});
+
+    const children: Node[] = [];
+    for (const c of Array.isArray(o.k) ? o.k : []) {
+      const node = decodeNode(c);
+      if (!node) return undefined;
+      children.push(node);
+    }
+
+    blocks.push({
+      id,
+      at,
+      fill: decodeFill(o.f),
+      flex: decodeFlex(o.x),
+      invert: o.n === 1,
+      children,
+    });
   }
-  return {version: version as number, blocks};
+  return {version: top.v as number, blocks};
 }

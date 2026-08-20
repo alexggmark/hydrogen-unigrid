@@ -3,7 +3,7 @@ import {BANDS, COLUMNS, WIDEST, type Band} from '../src/bands';
 import {derive} from '../src/derive';
 import {insertAfter} from '../src/insert';
 import {overlaps, readingOrder, resetToDerived} from '../src/layout';
-import type {Block, Cell, Layout} from '../src/types';
+import {emptyBlock, type Block, type Cell, type Layout} from '../src/types';
 import {densePacked, int, rng} from './random';
 
 const clean = (cells: Iterable<Cell>): boolean => {
@@ -117,12 +117,8 @@ describe('derivation', () => {
   });
 
   it('flows derived blocks around a hand-placed one', () => {
-    const mk = (id: string, row: number, rowSpan: number): Block => ({
-      id,
-      type: 'text',
-      content: {kind: 'none'},
-      at: {a: {col: 1, colSpan: 4, row, rowSpan}},
-    });
+    const mk = (id: string, row: number, rowSpan: number): Block =>
+      emptyBlock(id, {a: {col: 1, colSpan: 4, row, rowSpan}});
     const pinned = mk('pinned', 3, 1);
     pinned.at.c = {col: 1, colSpan: 4, row: 1, rowSpan: 3};
     const layout: Layout = {
@@ -206,23 +202,14 @@ describe('every band', () => {
 });
 
 describe('insert from a narrow band', () => {
-  const mk = (
-    id: string,
-    col: number,
-    colSpan: number,
-    row: number,
-  ): Block => ({
-    id,
-    type: 'text',
-    content: {kind: 'none'},
-    at: {a: {col, colSpan, row, rowSpan: 2}},
-  });
+  const mk = (id: string, col: number, colSpan: number, row: number): Block =>
+    emptyBlock(id, {a: {col, colSpan, row, rowSpan: 2}});
 
   it('inherits the predecessor column and span, directly below it', () => {
     const layout: Layout = {version: 1, blocks: [mk('pred', 5, 3, 4)]};
     const after = insertAfter(
       layout,
-      {id: 'new', type: 'text', content: {kind: 'none'}, rowSpan: 2},
+      {id: 'new', rowSpan: 2},
       'pred',
     );
     expect(after.blocks.find((b) => b.id === 'new')?.at.a).toEqual({
@@ -244,7 +231,7 @@ describe('insert from a narrow band', () => {
     };
     const after = insertAfter(
       layout,
-      {id: 'new', type: 'text', content: {kind: 'none'}, rowSpan: 2},
+      {id: 'new', rowSpan: 2},
       'pred',
     );
     // `under` occupies rows 3-4, so the newcomer starts below it and nothing moves
@@ -260,7 +247,7 @@ describe('insert from a narrow band', () => {
       if (!pred) continue;
       const after = insertAfter(
         layout,
-        {id: 'new', type: 'text', content: {kind: 'none'}, rowSpan: 2},
+        {id: 'new', rowSpan: 2},
         pred.id,
       );
       expect(clean(after.blocks.map((b) => b.at.a)), `seed ${seed}`).toBe(true);
