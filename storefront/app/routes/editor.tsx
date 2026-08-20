@@ -76,6 +76,7 @@ const nextId = (blocks: {id: string}[], type: BlockType): string => {
 
 export default function Editor() {
   const hostRef = useRef<HTMLDivElement>(null);
+  const afterDrag = useRef(false);
   const [hist, setHist] = useState(() => history(HARNESS));
   const [band, setBand] = useState<Band>(WIDEST);
   const [selected, setSelected] = useState<string | null>(null);
@@ -267,6 +268,7 @@ export default function Editor() {
   const onDragEnd = (event: {canceled: boolean}) => {
     const current = drag;
     const target = preview;
+    afterDrag.current = true;
     setDrag(null);
     setPreview(null);
     if (event.canceled || !current || !target) return;
@@ -310,15 +312,29 @@ export default function Editor() {
     return () => window.removeEventListener('keydown', onKey);
   }, [drag, editable, move, selected]);
 
+  // a drag released outside the block fires its click on a common ancestor, so
+  // selecting from that would clear the selection the drag was acting on.
+  // cleared on pointerdown too, or a keyboard drag would strand the flag.
   useEffect(() => {
     const stage = hostRef.current;
     if (!stage) return;
+    const onDown = () => {
+      afterDrag.current = false;
+    };
     const onClick = (e: MouseEvent) => {
+      if (afterDrag.current) {
+        afterDrag.current = false;
+        return;
+      }
       const hit = (e.target as HTMLElement).closest<HTMLElement>('[data-block]');
       setSelected(hit?.dataset.block ?? null);
     };
+    stage.addEventListener('pointerdown', onDown);
     stage.addEventListener('click', onClick);
-    return () => stage.removeEventListener('click', onClick);
+    return () => {
+      stage.removeEventListener('pointerdown', onDown);
+      stage.removeEventListener('click', onClick);
+    };
   }, []);
 
   const onSave = () => {
@@ -357,7 +373,7 @@ export default function Editor() {
                   >
                     {CONTENT[b.id] ?? <p className="u-micro">{b.type}</p>}
                     {clipped[b.id] ? (
-                      <p className="e-clip">
+                      <p className="e-clip" data-chrome="">
                         needs {clipped[b.id]} more row
                         {clipped[b.id] === 1 ? '' : 's'}
                       </p>

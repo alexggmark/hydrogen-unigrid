@@ -2,10 +2,24 @@ import type {Units} from './units';
 
 const SLACK = 1;
 
+// editor chrome lives inside the block and the resize handles overhang its
+// edges on purpose, so scrollHeight measures the handles rather than the text
+const isChrome = (el: Element): boolean =>
+  el instanceof HTMLElement && el.dataset.chrome !== undefined;
+
 export function overflowRows(block: HTMLElement, u: Units): number {
-  const hidden = block.scrollHeight - block.clientHeight;
-  if (hidden <= SLACK) return 0;
-  return Math.ceil(hidden / (u.row + u.gutter));
+  const content = [...block.children].filter((el) => !isChrome(el));
+  if (!content.length) return 0;
+
+  // rects survive the clip, so an already-hidden child still reports its height
+  const box = block.getBoundingClientRect();
+  const padEnd = parseFloat(getComputedStyle(block).paddingBlockEnd) || 0;
+  const reach = Math.max(
+    ...content.map((el) => el.getBoundingClientRect().bottom - box.top),
+  );
+
+  const hidden = reach + padEnd - box.height;
+  return hidden <= SLACK ? 0 : Math.ceil(hidden / (u.row + u.gutter));
 }
 
 // every identified block currently losing content, keyed by id

@@ -24,6 +24,7 @@ function Handle({id, edge, label}: {id: string; edge: Edge; label: string}) {
       ref={ref}
       type="button"
       className={`e-handle e-handle-${edge}`}
+      data-chrome=""
       aria-label={`Resize ${label} of ${id}`}
     />
   );
@@ -42,6 +43,7 @@ export function DragHandles({id, selected}: {id: string; selected: boolean}) {
         ref={ref}
         type="button"
         className="e-move"
+        data-chrome=""
         aria-label={`Move ${id}`}
       />
       {selected
