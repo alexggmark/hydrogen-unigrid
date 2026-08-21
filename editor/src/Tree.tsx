@@ -1,4 +1,3 @@
-import {Fragment} from 'react';
 import {isSortable, useSortable} from '@dnd-kit/react/sortable';
 import type {DragDropManager} from '@dnd-kit/dom';
 import {Badge, Button, Flex, IconButton, Text} from '@radix-ui/themes';

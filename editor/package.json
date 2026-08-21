@@ -1,0 +1,22 @@
+{
+  "name": "@unigrid/editor",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./editor.css": "./src/editor.css"
+  },
+  "dependencies": {
+    "@dnd-kit/dom": "^0.5.0",
+    "@dnd-kit/react": "^0.5.0",
+    "@radix-ui/themes": "^3.3.0",
+    "@unigrid/blocks": "*",
+    "@unigrid/core": "*"
+  },
+  "peerDependencies": {
+    "react": "^18.3.1"
+  }
+}

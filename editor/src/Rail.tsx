@@ -73,6 +73,9 @@ export type RailProps = {
   node: Found | undefined;
   dragging: NodeDrag | null;
   resync: number;
+  // absent in the playground, present in the admin app
+  onSave?: () => void;
+  saving?: boolean;
   error: string | null;
   bytes: number;
   canUndo: boolean;
@@ -582,12 +585,18 @@ export function Rail(props: RailProps) {
           <Text size="1" color="gray">
             Layout serialises to {(props.bytes / 1024).toFixed(1)}kb
           </Text>
-          <Callout.Root size="1" color="gray">
-            <Callout.Text>
-              A playground. Edits live in memory and are lost on reload — nothing
-              is written to a store.
-            </Callout.Text>
-          </Callout.Root>
+          {props.onSave ? (
+            <Button size="1" onClick={props.onSave} loading={props.saving}>
+              Save draft
+            </Button>
+          ) : (
+            <Callout.Root size="1" color="gray">
+              <Callout.Text>
+                A playground. Edits live in memory and are lost on reload —
+                nothing is written to a store.
+              </Callout.Text>
+            </Callout.Root>
+          )}
         </Section>
       </Box>
 
