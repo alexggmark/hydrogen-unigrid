@@ -17,11 +17,14 @@ import {
 } from '@radix-ui/themes';
 import {
   BANDS,
+  isSlot,
+  SLOTS,
   isGroup,
   WIDEST,
   type Band,
   type Block,
   type Cell,
+  type Colour,
   type Element,
   type ElementKind,
   type Fill,
@@ -29,6 +32,7 @@ import {
   type Found,
   type Group,
   type Layout,
+  type Palette as ThemePalette,
 } from '@unigrid/core';
 import {Palette} from './Palette';
 import {Tree, type NodeDrag} from './Tree';
@@ -73,6 +77,7 @@ export type RailProps = {
   node: Found | undefined;
   dragging: NodeDrag | null;
   resync: number;
+  palette: ThemePalette;
   // absent in the playground, present in the admin app
   onSave?: () => void;
   onPublish?: () => void;
@@ -297,6 +302,41 @@ function Inspector({found, props}: {found: Found; props: RailProps}) {
   );
 }
 
+function Swatches({
+  value,
+  palette,
+  onPick,
+}: {
+  value: Colour | undefined;
+  palette: ThemePalette;
+  onPick: (next: Colour) => void;
+}) {
+  return (
+    <Flex gap="2" align="center" wrap="wrap">
+      {SLOTS.map((slot) => (
+        <button
+          key={slot}
+          type="button"
+          className="e-roundel"
+          aria-label={`Theme colour ${slot}`}
+          aria-pressed={value && isSlot(value) && value.slot === slot}
+          style={{background: palette[slot]}}
+          onClick={() => onPick({slot})}
+        />
+      ))}
+      {/* typing a hex leaves the palette behind, which is the point of having
+          both — the roundel is a link to the theme, the field is a one-off */}
+      <input
+        className="e-swatch"
+        type="color"
+        aria-label="Custom colour"
+        value={value && !isSlot(value) ? value.hex : '#ffffff'}
+        onChange={(e) => onPick({hex: e.target.value})}
+      />
+    </Flex>
+  );
+}
+
 function Appearance({block, props}: {block: Block; props: RailProps}) {
   const fill = block.fill;
   const setFill = (patch: Partial<Fill>) =>
@@ -305,13 +345,11 @@ function Appearance({block, props}: {block: Block; props: RailProps}) {
   return (
     <>
       <Field label="Background">
-        <Flex gap="2" align="center">
-          <input
-            className="e-swatch"
-            type="color"
-            aria-label="Background colour"
-            value={fill.color ?? '#ffffff'}
-            onChange={(e) => setFill({color: e.target.value})}
+        <Flex gap="2" align="center" wrap="wrap">
+          <Swatches
+            value={fill.color}
+            palette={props.palette}
+            onPick={(color) => setFill({color})}
           />
           <Button size="1" variant="soft" onClick={() => setFill({color: undefined})}>
             Clear
@@ -336,26 +374,15 @@ function Appearance({block, props}: {block: Block; props: RailProps}) {
       </Field>
 
       <Field label="Overlay">
-        <Flex gap="2" align="center">
-          <input
-            className="e-swatch"
-            type="color"
-            aria-label="Overlay colour"
-            value={fill.overlay?.color ?? '#000000'}
-            onChange={(e) =>
-              setFill({
-                overlay: {
-                  color: e.target.value,
-                  opacity: fill.overlay?.opacity ?? 0.4,
-                },
-              })
+        <Flex gap="2" align="center" wrap="wrap">
+          <Swatches
+            value={fill.overlay?.color}
+            palette={props.palette}
+            onPick={(color) =>
+              setFill({overlay: {color, opacity: fill.overlay?.opacity ?? 0.4}})
             }
           />
-          <Button
-            size="1"
-            variant="soft"
-            onClick={() => setFill({overlay: undefined})}
-          >
+          <Button size="1" variant="soft" onClick={() => setFill({overlay: undefined})}>
             Clear
           </Button>
         </Flex>
@@ -372,7 +399,7 @@ function Appearance({block, props}: {block: Block; props: RailProps}) {
             onValueChange={([v]) =>
               setFill({
                 overlay: {
-                  color: fill.overlay?.color ?? '#000000',
+                  color: fill.overlay?.color ?? {hex: '#000000'},
                   opacity: (v ?? 0) / 100,
                 },
               })

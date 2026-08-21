@@ -1,5 +1,14 @@
 import {COLUMNS, type Band} from '../src/bands';
-import {emptyBlock, type Block, type Cell, type Flex, type Layout, type Node} from '../src/types';
+import {
+  emptyBlock,
+  type Block,
+  type Cell,
+  type Colour,
+  type Flex,
+  type Layout,
+  type Node,
+  type Slot,
+} from '../src/types';
 
 // mulberry32. seeded so any failing case is reproducible from its seed alone.
 export function rng(seed: number): () => number {
@@ -25,6 +34,11 @@ export function cell(r: () => number, band: Band): Cell {
     rowSpan: int(r, 1, 6),
   };
 }
+
+const colour = (n: number): Colour =>
+  n % 2 === 0
+    ? {slot: ((n % 5) + 1) as Slot}
+    : {hex: `#${n.toString(16).padStart(6, '0')}`};
 
 export function flex(r: () => number): Flex {
   return {
@@ -78,11 +92,15 @@ export function block(r: () => number, id: string): Block {
       r() < 0.5
         ? {}
         : {
-            color: `#${int(r, 0, 0xffffff).toString(16).padStart(6, '0')}`,
+            // one draw, split two ways. an extra r() here shifts every value
+            // after it, and seeded layouts are fixtures other tests rely on.
+            color: colour(int(r, 0, 0xffffff)),
             ...(r() < 0.5
               ? {media: {kind: r() < 0.5 ? 'image' : 'video', src: `gid://m/${int(r, 0, 999)}`} as const}
               : {}),
-            ...(r() < 0.5 ? {overlay: {color: '#000000', opacity: int(r, 0, 100) / 100}} : {}),
+            ...(r() < 0.5
+              ? {overlay: {color: {hex: '#000000'}, opacity: int(r, 0, 100) / 100}}
+              : {}),
           },
     flex: flex(r),
     invert: r() < 0.5,

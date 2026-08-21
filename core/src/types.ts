@@ -39,10 +39,29 @@ export type Node = Element | Group;
 
 export type Media = {kind: 'image' | 'video'; src: string};
 
+export const SLOTS = [1, 2, 3, 4, 5] as const;
+export type Slot = (typeof SLOTS)[number];
+
+// a slot, not a hex. storing the colour would make the palette unreachable —
+// changing it later could not find the blocks already using it.
+export type Colour = {slot: Slot} | {hex: string};
+
+export const isSlot = (c: Colour): c is {slot: Slot} => 'slot' in c;
+
+export type Palette = Record<Slot, string>;
+
+export const DEFAULT_PALETTE: Palette = {
+  1: '#111110',
+  2: '#fbfbf9',
+  3: '#d8261c',
+  4: '#1b3fa0',
+  5: '#f2c200',
+};
+
 export type Fill = {
-  color?: string;
+  color?: Colour;
   media?: Media;
-  overlay?: {color: string; opacity: number};
+  overlay?: {color: Colour; opacity: number};
 };
 
 export type Block = {

@@ -2,7 +2,7 @@
 // the admin app is not a hydrogen app and an <Image> here would break its build.
 
 export {Block, type BlockProps} from './Block';
-export {Nodes, flexVars, textAlign} from './elements';
+export {Nodes, flexVars, paint, paletteVars, textAlign} from './elements';
 export {Grid} from './Grid';
 export {GridDev} from './GridDev';
 export {GridProbes} from './GridProbes';

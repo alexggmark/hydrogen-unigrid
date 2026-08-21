@@ -66,7 +66,7 @@ export const HARNESS: Layout = {
         c: {col: 1, colSpan: 4, row: 4, rowSpan: 5},
       },
       {
-        fill: {color: '#d8261c'},
+        fill: {color: {slot: 3}},
         invert: true,
         flex: flex({justify: 'between', gap: 2}),
         children: [
@@ -119,8 +119,8 @@ export const HARNESS: Layout = {
       },
       {
         fill: {
-          color: '#1b3fa0',
-          overlay: {color: '#000000', opacity: 0.35},
+          color: {slot: 4},
+          overlay: {color: {hex: '#000000'}, opacity: 0.35},
         },
         invert: true,
         flex: flex({justify: 'center', align: 'center', gap: 1}),
@@ -139,7 +139,7 @@ export const HARNESS: Layout = {
         c: {col: 1, colSpan: 4, row: 19, rowSpan: 2},
       },
       {
-        fill: {color: '#111110'},
+        fill: {color: {slot: 1}},
         invert: true,
         flex: flex({direction: 'row', justify: 'between', align: 'center'}),
         children: [

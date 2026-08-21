@@ -1,5 +1,22 @@
 import type {CSSProperties} from 'react';
-import {isGroup, type Element, type Flex, type Node} from '@unigrid/core';
+import {
+  isGroup,
+  isSlot,
+  SLOTS,
+  type Colour,
+  type Element,
+  type Flex,
+  type Node,
+  type Palette,
+} from '@unigrid/core';
+
+// a slot resolves to a variable, not a value, so changing the palette moves
+// every block using it — including ones already published.
+export const paint = (c: Colour): string =>
+  isSlot(c) ? `var(--theme-${c.slot})` : c.hex;
+
+export const paletteVars = (palette: Palette): Record<string, string> =>
+  Object.fromEntries(SLOTS.map((slot) => [`--theme-${slot}`, palette[slot]]));
 
 const JUSTIFY: Record<Flex['justify'], string> = {
   start: 'flex-start',

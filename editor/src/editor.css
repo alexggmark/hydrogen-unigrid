@@ -251,3 +251,17 @@
 .e-foot {
   border-color: var(--gray-a5);
 }
+
+/* a link to the theme, not a colour. the ring shows which slot is in use. */
+.e-roundel {
+  inline-size: 20px;
+  block-size: 20px;
+  padding: 0;
+  border: 1px solid var(--gray-a7);
+  border-radius: 50%;
+  cursor: pointer;
+}
+.e-roundel[aria-pressed='true'] {
+  outline: 2px solid var(--accent-9);
+  outline-offset: 2px;
+}

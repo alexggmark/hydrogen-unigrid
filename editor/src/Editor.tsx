@@ -46,7 +46,7 @@ import {NEW_SPAN} from './Palette';
 import {cellAt, gridUnits, moved, resized, snap, type Edge} from './geometry';
 import {dropTarget, type NodeDrag} from './Tree';
 import {Rail} from './Rail';
-import type {Layout} from '@unigrid/core';
+import {DEFAULT_PALETTE, type Layout, type Palette} from '@unigrid/core';
 
 
 const REASON: Record<string, string> = {
@@ -108,6 +108,7 @@ export type EditorProps = {
   onPublish?: () => void;
   busy?: boolean;
   version?: number;
+  palette?: Palette;
   // draft differs from published. the editor cannot work this out for itself:
   // what it holds is the last save, not what is live.
   unpublished?: boolean;
@@ -121,6 +122,7 @@ export function Editor({
   onPublish,
   busy,
   version,
+  palette = DEFAULT_PALETTE,
   unpublished,
   error: outerError,
 }: EditorProps) {
@@ -432,7 +434,7 @@ export function Editor({
       <div className="e-shell">
         <div className="e-stage" ref={hostRef} data-band={band}>
           <div className="e-canvas">
-            <Grid probes dev={dev}>
+            <Grid probes dev={dev} palette={palette}>
               {layout.blocks.map((b) => {
                 const p = at.get(b.id);
                 if (!p) return null;
@@ -488,6 +490,7 @@ export function Editor({
           version={version}
           unpublished={unpublished}
           resync={resync}
+          palette={palette}
           error={outerError ?? error}
           bytes={bytes}
           canUndo={canUndo(hist)}

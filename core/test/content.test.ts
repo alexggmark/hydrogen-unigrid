@@ -85,7 +85,7 @@ describe('content tree', () => {
   });
 
   it('patchBlock leaves the placement alone', () => {
-    const l = patchBlock(base(), 'b', {invert: true, fill: {color: '#ff0000'}});
+    const l = patchBlock(base(), 'b', {invert: true, fill: {color: {hex: '#ff0000'}}});
     expect(l.blocks[0]?.at.a).toEqual(base().blocks[0]?.at.a);
     expect(l.blocks[0]?.invert).toBe(true);
   });

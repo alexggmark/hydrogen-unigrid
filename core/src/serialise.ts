@@ -1,7 +1,9 @@
 import {BANDS, type Band} from './bands';
 import {DEFAULT_FLEX} from './types';
+import {isSlot, SLOTS} from './types';
 import type {
   Block,
+  Colour,
   ButtonVariant,
   Cell,
   Element,
@@ -11,6 +13,7 @@ import type {
   HeadingLevel,
   Layout,
   Media,
+  Slot,
   Node,
   TextSize,
 } from './types';
@@ -75,11 +78,21 @@ function decodeFlex(w: unknown): Flex {
   };
 }
 
+// a number is a palette slot, a string is a literal hex. no tag needed, and
+// the two can never be confused for each other.
+const encodeColour = (c: Colour): number | string =>
+  isSlot(c) ? c.slot : c.hex;
+
+function decodeColour(w: unknown): Colour | undefined {
+  if (typeof w === 'string' && w) return {hex: w};
+  return SLOTS.includes(w as Slot) ? {slot: w as Slot} : undefined;
+}
+
 function encodeFill(f: Fill): Obj | undefined {
   const out: Obj = {};
-  if (f.color) out.c = f.color;
+  if (f.color) out.c = encodeColour(f.color);
   if (f.media) out.m = [f.media.kind === 'video' ? 'v' : 'i', f.media.src];
-  if (f.overlay) out.o = [f.overlay.color, f.overlay.opacity];
+  if (f.overlay) out.o = [encodeColour(f.overlay.color), f.overlay.opacity];
   return Object.keys(out).length ? out : undefined;
 }
 
@@ -87,14 +100,14 @@ function decodeFill(w: unknown): Fill {
   const o = obj(w);
   if (!o) return {};
   const out: Fill = {};
-  const color = str(o.c);
+  const color = decodeColour(o.c);
   if (color) out.color = color;
   if (Array.isArray(o.m) && o.m.length === 2) {
     const src = str(o.m[1]);
     if (src) out.media = {kind: o.m[0] === 'v' ? 'video' : 'image', src} as Media;
   }
   if (Array.isArray(o.o) && o.o.length === 2) {
-    const color2 = str(o.o[0]);
+    const color2 = decodeColour(o.o[0]);
     const opacity = o.o[1];
     if (color2 && typeof opacity === 'number') {
       out.overlay = {color: color2, opacity};

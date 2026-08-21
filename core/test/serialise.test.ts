@@ -134,7 +134,7 @@ describe('wire size', () => {
         b: {col: (i % 2) * 4 + 1, colSpan: 4, row: i * 4 + 1, rowSpan: 4},
         c: {col: 1, colSpan: 4, row: i * 5 + 1, rowSpan: 5},
       }),
-      fill: {color: '#112233', overlay: {color: '#000000', opacity: 0.35}},
+      fill: {color: {slot: 3}, overlay: {color: {hex: '#000000'}, opacity: 0.35}},
       invert: i % 2 === 0,
       flex: {direction: 'column', justify: 'between', align: 'stretch', gap: 2},
       children: elements(`block-${i}`, per),
@@ -158,5 +158,38 @@ describe('wire size', () => {
       blocks: [emptyBlock('x', {a: {col: 1, colSpan: 1, row: 1, rowSpan: 1}})],
     };
     expect(encode(bare)).toBe('{"v":1,"b":[{"i":"x","a":[1,1]}]}');
+  });
+});
+
+describe('theme colours', () => {
+  const withFill = (fill: Layout['blocks'][number]['fill']): Layout => ({
+    version: 1,
+    blocks: [
+      {
+        ...emptyBlock('x', {a: {col: 1, colSpan: 4, row: 1, rowSpan: 2}}),
+        fill,
+      },
+    ],
+  });
+
+  it('round-trips a slot and a literal, and keeps them apart', () => {
+    for (const fill of [
+      {color: {slot: 3 as const}},
+      {color: {hex: '#ff0000'}},
+      {color: {slot: 1 as const}, overlay: {color: {hex: '#000000'}, opacity: 0.4}},
+    ]) {
+      expect(decode(encode(withFill(fill)))).toEqual(withFill(fill));
+    }
+  });
+
+  // a number is a slot, a string is a hex — no tag, and no way to confuse them
+  it('writes a slot as a number and a hex as a string', () => {
+    expect(encode(withFill({color: {slot: 3}}))).toContain('"c":3');
+    expect(encode(withFill({color: {hex: '#ff0000'}}))).toContain('"c":"#ff0000"');
+  });
+
+  it('drops a slot outside the palette rather than inventing one', () => {
+    const wire = '{"v":1,"b":[{"i":"x","a":[1,1,4,2],"f":{"c":9}}]}';
+    expect(decode(wire)?.blocks[0]?.fill.color).toBeUndefined();
   });
 });

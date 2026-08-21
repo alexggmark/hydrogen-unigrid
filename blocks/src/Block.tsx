@@ -1,7 +1,7 @@
 import type {CSSProperties, ReactNode} from 'react';
 import type {Block as BlockModel} from '@unigrid/core';
 import {placementVars, type Placement} from './placement';
-import {flexVars, Nodes} from './elements';
+import {flexVars, Nodes, paint} from './elements';
 
 export type BlockProps = {
   block: BlockModel;
@@ -16,7 +16,7 @@ export function Block({block, at, blockId, selected, chrome}: BlockProps) {
   const {fill} = block;
   const style = {
     ...placementVars(at),
-    ...(fill.color ? {'--fill': fill.color} : {}),
+    ...(fill.color ? {'--fill': paint(fill.color)} : {}),
   } as CSSProperties;
 
   return (
@@ -47,7 +47,7 @@ export function Block({block, at, blockId, selected, chrome}: BlockProps) {
           aria-hidden
           style={
             {
-              '--tint': fill.overlay.color,
+              '--tint': paint(fill.overlay.color),
               '--tint-a': fill.overlay.opacity,
             } as CSSProperties
           }
