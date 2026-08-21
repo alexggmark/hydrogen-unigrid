@@ -128,9 +128,6 @@
   line-height: inherit;
   margin: 0;
 }
-.u-grid p {
-  max-inline-size: 62ch;
-}
 
 .u-hl {
   font-weight: 700;

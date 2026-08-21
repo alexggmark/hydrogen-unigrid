@@ -1,8 +1,9 @@
 /* dev chrome. px allowed here only; DEV-gated, so it never ships */
 
+/* the grid's padding box is the row area exactly, so nothing to skip over */
 .u-overlay {
   position: absolute;
-  inset: calc(var(--u) * 4) 0;
+  inset: 0;
   display: grid;
   grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
   gap: var(--gutter);
