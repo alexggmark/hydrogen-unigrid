@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import {encode, emptyBlock, type Layout} from '@unigrid/core';
-import {fromFields} from './layout';
+import {fromFields, loadLayout} from './layout';
 
 const layout: Layout = {
   version: 3,
@@ -42,5 +42,23 @@ describe('metaobject adapter', () => {
   it('falls back to the layout version when the field is unusable', () => {
     expect(fromFields(fields({version: 'seven'}), 'published')?.version).toBe(3);
     expect(fromFields(fields({version: '9'}), 'published')?.version).toBe(9);
+  });
+});
+
+describe('target to handle', () => {
+  // a metaobject handle cannot contain a colon, and the admin app has to derive
+  // exactly the same handle or it writes somewhere the storefront never reads
+  it('reads the layout stored under the mapped handle', async () => {
+    const asked: string[] = [];
+    const storefront = {
+      query: async <T,>(_q: string, o?: {variables?: Record<string, unknown>}) => {
+        asked.push(String(o?.variables?.handle));
+        return {metaobject: {fields: fields()}} as T;
+      },
+    };
+
+    await loadLayout(storefront, 'page:about');
+    await loadLayout(storefront, 'home');
+    expect(asked).toEqual(['page-about', 'home']);
   });
 });

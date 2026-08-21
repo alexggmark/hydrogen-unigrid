@@ -47,7 +47,12 @@ export default [
   {
     // blocks is shared with the admin app, which is not a hydrogen app. an
     // <Image> here compiles in the storefront and breaks the other build.
-    files: ['blocks/**/*.ts', 'blocks/**/*.tsx'],
+    files: [
+      'blocks/**/*.ts',
+      'blocks/**/*.tsx',
+      'editor/**/*.ts',
+      'editor/**/*.tsx',
+    ],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',
@@ -76,7 +81,7 @@ export default [
             },
             {
               group: ['react-router*'],
-              message: 'blocks takes props, never router state',
+              message: 'inject a navigate function instead of a router hook',
             },
             {group: ['~/*'], message: 'no app aliases in a package'},
           ],

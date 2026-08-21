@@ -114,6 +114,7 @@ export type EditorProps = {
   target?: string;
   missing?: boolean;
   onPages?: (intent: string, fields?: Record<string, string>) => void;
+  onOpen?: (target: string) => void;
   onSavePalette?: (palette: Palette) => void;
   // draft differs from published. the editor cannot work this out for itself:
   // what it holds is the last save, not what is live.
@@ -133,6 +134,7 @@ export function Editor({
   target,
   missing,
   onPages,
+  onOpen,
   onSavePalette,
   unpublished,
   error: outerError,
@@ -519,6 +521,7 @@ export function Editor({
           target={target}
           missing={missing}
           onPages={onPages}
+          onOpen={onOpen}
           tab={tab}
           onTab={setTab}
           onPalette={setPalette}

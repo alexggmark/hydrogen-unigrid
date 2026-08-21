@@ -5,7 +5,7 @@ import type {
   LinksFunction,
   LoaderFunctionArgs,
 } from 'react-router';
-import {useFetcher, useLoaderData, useRouteError} from 'react-router';
+import {useFetcher, useLoaderData, useNavigate, useRouteError} from 'react-router';
 import {boundary} from '@shopify/shopify-app-react-router/server';
 import {Editor} from '@unigrid/editor';
 import {DEFAULT_PALETTE, decode, encode, type Layout, type Palette} from '@unigrid/core';
@@ -84,6 +84,7 @@ export default function Index() {
       target: string;
     };
   const fetcher = useFetcher<typeof action>();
+  const navigate = useNavigate();
 
   const onSave = useCallback(
     (next: Layout) =>
@@ -111,11 +112,13 @@ export default function Index() {
 
   return (
     <Editor
+      key={target}
       initial={layout ?? {version: 1, blocks: []}}
       missing={!layout}
       pages={pages}
       target={target}
       onPages={onPages}
+      onOpen={(next) => navigate(`?target=${encodeURIComponent(next)}`)}
       onSave={onSave}
       onPublish={onPublish}
       initialPalette={palette ?? DEFAULT_PALETTE}

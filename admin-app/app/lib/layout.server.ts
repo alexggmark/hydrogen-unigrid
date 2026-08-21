@@ -34,10 +34,16 @@ type Admin = {
     options?: {variables?: Record<string, unknown>},
   ) => Promise<{json: () => Promise<unknown>}>;
 };
+// metaobject handles cannot contain a colon, so `page:about` is stored as
+// `page-about`. the target stays the name everything else uses.
+const handleFor = (target: string) => target.replace(/:/g, '-');
+
 type Fields = {key: string; value?: string | null}[];
 
-async function read(admin: Admin, handle: string) {
-  const response = await admin.graphql(READ, {variables: {handle}});
+async function read(admin: Admin, target: string) {
+  const response = await admin.graphql(READ, {
+    variables: {handle: handleFor(target)},
+  });
   const body = (await response.json()) as {
     data?: {metaobjectByHandle?: {id: string; fields: Fields} | null};
   };
@@ -274,6 +280,7 @@ export async function createLayout(admin: Admin, target: string): Promise<Result
     variables: {
       m: {
         type: 'unigrid_layout',
+        handle: handleFor(target),
         capabilities: {publishable: {status: 'ACTIVE'}},
         fields: [
           {key: 'target', value: target},

@@ -87,6 +87,8 @@ export type RailProps = {
   target?: string;
   missing?: boolean;
   onPages?: (intent: string, fields?: Record<string, string>) => void;
+  // injected, because this package must not reach for a router
+  onOpen?: (target: string) => void;
   onSavePalette?: () => void;
   // absent in the playground, present in the admin app
   onSave?: () => void;
@@ -487,11 +489,6 @@ function ThemePanel({props}: {props: RailProps}) {
 
 function PagesPanel({props}: {props: RailProps}) {
   const pages = props.pages ?? [];
-  const go = (target: string) => {
-    const params = new URLSearchParams(window.location.search);
-    params.set('target', target);
-    window.location.search = params.toString();
-  };
 
   if (!props.onPages) {
     return (
@@ -519,7 +516,7 @@ function PagesPanel({props}: {props: RailProps}) {
               <Button
                 size="1"
                 variant={page.target === props.target ? 'solid' : 'soft'}
-                onClick={() => go(page.target)}
+                onClick={() => props.onOpen?.(page.target)}
                 style={{flex: '1 1 auto', justifyContent: 'flex-start'}}
               >
                 <Text truncate>{page.title}</Text>

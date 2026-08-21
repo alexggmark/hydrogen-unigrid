@@ -13,6 +13,10 @@ export const LAYOUT_QUERY = `#graphql
   }
 ` as const;
 
+// metaobject handles cannot contain a colon, so `page:about` is stored as
+// `page-about`. the target stays the name everything else uses.
+const handleFor = (target: string) => target.replace(/:/g, '-');
+
 type Fields = {key: string; value?: string | null}[];
 
 type Queryable = {
@@ -59,12 +63,12 @@ export async function loadPalette(storefront: Queryable): Promise<Palette> {
 
 export async function loadLayout(
   storefront: Queryable,
-  handle: string,
+  target: string,
   which: 'draft' | 'published' = 'published',
 ): Promise<Stored | null> {
   const data = await storefront.query<{metaobject?: {fields: Fields} | null}>(
     LAYOUT_QUERY,
-    {variables: {handle}},
+    {variables: {handle: handleFor(target)}},
   );
 
   const fields = data?.metaobject?.fields;
