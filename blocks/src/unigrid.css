@@ -210,6 +210,8 @@
   justify-content: var(--jc, flex-start);
   align-items: var(--ai, stretch);
   gap: calc(var(--u) * var(--gap, 1));
+  /* inherits, so a group only has to override what is inside it */
+  text-align: var(--ta, start);
   min-block-size: 100%;
 }
 .u-group {

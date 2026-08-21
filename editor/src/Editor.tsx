@@ -94,7 +94,7 @@ const NEW_NODE: Record<ElementKind | 'group', (id: string) => Node> = {
   group: (id) => ({
     id,
     kind: 'group',
-    flex: {direction: 'row', justify: 'start', align: 'center', gap: 1},
+    flex: {direction: 'row', justify: 'start', align: 'center', text: 'start', gap: 1},
     children: [],
   }),
 };

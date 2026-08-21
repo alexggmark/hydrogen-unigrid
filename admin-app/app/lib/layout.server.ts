@@ -85,9 +85,7 @@ export async function saveDraft(
   return write(admin, entry.id, [{key: 'draft', value: encode(layout)}]);
 }
 
-// promotes whatever is in draft. it does not take a layout: publishing what the
-// browser is holding rather than what was saved would let an unsaved edit go
-// live, and the two would silently disagree.
+// reads the draft back from the store, so an unsaved edit cannot go live
 export async function publish(admin: Admin, handle: string): Promise<Result> {
   const entry = await read(admin, handle);
   if (!entry) return {ok: false, message: `no layout entry for "${handle}"`};

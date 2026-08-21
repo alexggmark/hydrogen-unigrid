@@ -20,6 +20,7 @@ export const flexVars = (f: Flex): CSSProperties =>
     '--fd': f.direction,
     '--jc': JUSTIFY[f.justify],
     '--ai': ALIGN[f.align],
+    '--ta': f.text,
     '--gap': f.gap,
   }) as CSSProperties;
 

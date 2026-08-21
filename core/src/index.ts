@@ -21,6 +21,7 @@ export {
   type Media,
   type Node,
   type Placement,
+  type TextAlign,
   type TextSize,
 } from './types';
 export {

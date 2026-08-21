@@ -22,10 +22,15 @@ export type Element =
 
 export type ElementKind = Element['kind'];
 
+export type TextAlign = 'start' | 'center' | 'end';
+
 export type Flex = {
   direction: 'row' | 'column';
   justify: 'start' | 'center' | 'end' | 'between';
   align: 'start' | 'center' | 'end' | 'stretch';
+  // inherited, so a group overrides only what sits inside it. separate from
+  // `align`, which moves the boxes rather than the text in them.
+  text: TextAlign;
   // in --u multiples, so gap scales with the grid like everything else
   gap: number;
 };
@@ -62,6 +67,7 @@ export const DEFAULT_FLEX: Flex = {
   direction: 'column',
   justify: 'start',
   align: 'stretch',
+  text: 'start',
   gap: 1,
 };
 

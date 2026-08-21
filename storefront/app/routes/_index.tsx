@@ -34,7 +34,7 @@ export default function Home() {
               id: 'empty',
               at: {a: {col: 1, colSpan: 12, row: 1, rowSpan: 2}},
               fill: {},
-              flex: {direction: 'column', justify: 'center', align: 'start', gap: 1},
+              flex: {direction: 'column', justify: 'center', align: 'start', text: 'start', gap: 1},
               invert: false,
               children: [
                 {
