@@ -15,10 +15,13 @@
     "lint": "eslint core blocks editor && npm run lint --workspace storefront",
     "typecheck": "tsc -p core --noEmit && tsc -p blocks --noEmit && tsc -p editor --noEmit && npm run typecheck --workspace storefront && npm run typecheck --workspace admin-app",
     "test": "vitest run",
-    "dev:admin": "npm run dev --workspace admin-app"
+    "dev:admin": "npm run dev --workspace admin-app",
+    "test:e2e": "playwright test",
+    "test:e2e:update": "playwright test --update-snapshots"
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",
+    "@playwright/test": "^1.62.1",
     "eslint": "^9.18.0",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.67.0",
