@@ -3,7 +3,7 @@ import {useLoaderData} from 'react-router';
 import type {Route} from './+types/_index';
 import {Block, Grid, deriveAll} from '@unigrid/blocks';
 import {DEV, gridDevLinks} from '~/blocks/grid-dev';
-import {loadLayout} from '~/lib/layout';
+import {loadLayout, loadPalette} from '~/lib/layout';
 import unigridStyles from '@unigrid/blocks/unigrid.css?url';
 import demoStyles from '~/styles/unigrid-demo.css?url';
 
@@ -18,17 +18,20 @@ export const links: LinksFunction = () => [
 ];
 
 export async function loader({context}: Route.LoaderArgs) {
-  const stored = await loadLayout(context.storefront, 'home');
-  return {stored};
+  const [stored, palette] = await Promise.all([
+    loadLayout(context.storefront, 'home'),
+    loadPalette(context.storefront),
+  ]);
+  return {stored, palette};
 }
 
 export default function Home() {
-  const {stored} = useLoaderData<typeof loader>();
+  const {stored, palette} = useLoaderData<typeof loader>();
 
   if (!stored) {
     return (
       <div className="unigrid-demo">
-        <Grid dev={DEV}>
+        <Grid dev={DEV} palette={palette}>
           <Block
             block={{
               id: 'empty',
@@ -56,7 +59,7 @@ export default function Home() {
 
   return (
     <div className="unigrid-demo">
-      <Grid dev={DEV}>
+      <Grid dev={DEV} palette={palette}>
         {stored.layout.blocks.map((block) => {
           const placement = at.get(block.id);
           return placement ? (

@@ -12,6 +12,7 @@ import {
   TextArea,
   TextField,
   SegmentedControl,
+  Tabs,
   Separator,
   Theme,
 } from '@radix-ui/themes';
@@ -78,6 +79,10 @@ export type RailProps = {
   dragging: NodeDrag | null;
   resync: number;
   palette: ThemePalette;
+  tab: Tab;
+  onTab: (tab: Tab) => void;
+  onPalette?: (palette: ThemePalette) => void;
+  onSavePalette?: () => void;
   // absent in the playground, present in the admin app
   onSave?: () => void;
   onPublish?: () => void;
@@ -423,36 +428,75 @@ function Appearance({block, props}: {block: Block; props: RailProps}) {
   );
 }
 
-export function Rail(props: RailProps) {
+const TABS = [
+  {key: 'editor', label: 'Editor'},
+  {key: 'pages', label: 'Pages'},
+  {key: 'theme', label: 'Theme'},
+] as const;
+
+export type Tab = (typeof TABS)[number]['key'];
+
+function ThemePanel({props}: {props: RailProps}) {
+  return (
+    <Section title="Theme colours">
+      <Text size="1" color="gray">
+        Blocks store which colour, not the colour itself — change one here and
+        every block using it moves, published pages included.
+      </Text>
+      {SLOTS.map((slot) => (
+        <Flex key={slot} gap="3" align="center">
+          <input
+            className="e-swatch"
+            type="color"
+            aria-label={`Theme colour ${slot}`}
+            value={props.palette[slot]}
+            disabled={!props.onPalette}
+            onChange={(e) => props.onPalette?.({...props.palette, [slot]: e.target.value})}
+          />
+          <Text size="2">Colour {slot}</Text>
+          <Text size="1" color="gray">
+            {props.palette[slot]}
+          </Text>
+        </Flex>
+      ))}
+      {props.onSavePalette ? (
+        <Button size="1" onClick={props.onSavePalette} loading={props.busy}>
+          Save theme
+        </Button>
+      ) : (
+        <Callout.Root size="1" color="gray">
+          <Callout.Text>Changes are local to this playground.</Callout.Text>
+        </Callout.Root>
+      )}
+    </Section>
+  );
+}
+
+function PagesPanel() {
+  return (
+    <Section title="Pages">
+      <Callout.Root size="1" color="gray">
+        <Callout.Text>
+          Not wired up yet. Creating and switching between pages lands here.
+        </Callout.Text>
+      </Callout.Root>
+      <Flex direction="column" gap="1">
+        {['Home', 'About', 'Contact'].map((name, i) => (
+          <Button key={name} size="1" variant={i === 0 ? 'solid' : 'soft'} disabled>
+            {name}
+          </Button>
+        ))}
+      </Flex>
+    </Section>
+  );
+}
+
+function EditorPanel({props}: {props: RailProps}) {
   const {layout, band, selected, authored, editable, clipped, block, node} = props;
   const derived = selected !== null && band !== WIDEST && !authored;
 
   return (
-    <Theme
-      className="e-rail"
-      appearance="light"
-      accentColor="indigo"
-      grayColor="sand"
-      radius="small"
-      scaling="90%"
-    >
-      <Flex
-        className="e-head"
-        align="baseline"
-        justify="between"
-        gap="2"
-        px="3"
-        py="2"
-      >
-        <Heading as="h2" size="2">
-          unigrid
-        </Heading>
-        <Text size="1" color="gray">
-          playground
-        </Text>
-      </Flex>
-
-      <Box className="e-scroll">
+    <>
         <Section title="Band">
           <SegmentedControl.Root
             size="1"
@@ -645,6 +689,57 @@ export function Rail(props: RailProps) {
             </Callout.Root>
           )}
         </Section>
+    </>
+  );
+}
+export function Rail(props: RailProps) {
+
+  return (
+    <Theme
+      className="e-rail"
+      appearance="light"
+      accentColor="indigo"
+      grayColor="sand"
+      radius="small"
+      scaling="90%"
+    >
+      <Tabs.Root
+        className="e-tabs-bar"
+        value={props.tab}
+        onValueChange={(t) => props.onTab(t as Tab)}
+      >
+        <Tabs.List size="1">
+          {TABS.map((t) => (
+            <Tabs.Trigger key={t.key} value={t.key}>
+              {t.label}
+            </Tabs.Trigger>
+          ))}
+        </Tabs.List>
+      </Tabs.Root>
+
+      <Flex
+        className="e-head"
+        align="baseline"
+        justify="between"
+        gap="2"
+        px="3"
+        py="2"
+      >
+        <Heading as="h2" size="2">
+          unigrid
+        </Heading>
+        <Text size="1" color="gray">
+          playground
+        </Text>
+      </Flex>
+      <Box className="e-scroll">
+        {props.tab === 'theme' ? (
+          <ThemePanel props={props} />
+        ) : props.tab === 'pages' ? (
+          <PagesPanel />
+        ) : (
+          <EditorPanel props={props} />
+        )}
       </Box>
 
       <Box className="e-foot" px="3" py="2">

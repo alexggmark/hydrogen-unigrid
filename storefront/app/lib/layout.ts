@@ -1,4 +1,4 @@
-import {decode, type Layout} from '@unigrid/core';
+import {DEFAULT_PALETTE, SLOTS, decode, type Layout, type Palette} from '@unigrid/core';
 
 // the metaobject's field shape stops here. everything above this file sees a
 // Layout and nothing else.
@@ -15,6 +15,10 @@ export const LAYOUT_QUERY = `#graphql
 
 type Fields = {key: string; value?: string | null}[];
 
+type Queryable = {
+  query: <T>(query: string, options?: {variables?: Record<string, unknown>}) => Promise<T>;
+};
+
 export function fromFields(fields: Fields, which: 'draft' | 'published'): Stored | null {
   const find = (key: string) => fields.find((f) => f.key === key)?.value ?? null;
 
@@ -28,9 +32,30 @@ export function fromFields(fields: Fields, which: 'draft' | 'published'): Stored
   return {version: Number.isInteger(version) ? version : layout.version, layout};
 }
 
-type Queryable = {
-  query: <T>(query: string, options?: {variables?: Record<string, unknown>}) => Promise<T>;
-};
+export const THEME_QUERY = `#graphql
+  query UnigridTheme {
+    metaobject(handle: {type: "unigrid_theme", handle: "default"}) {
+      fields { key value }
+    }
+  }
+` as const;
+
+// a missing or half-filled theme falls back per slot, so the page still renders
+export function paletteFrom(fields: Fields | null | undefined): Palette {
+  const out = {...DEFAULT_PALETTE};
+  for (const slot of SLOTS) {
+    const hex = fields?.find((f) => f.key === `c${slot}`)?.value;
+    if (hex) out[slot] = hex;
+  }
+  return out;
+}
+
+export async function loadPalette(storefront: Queryable): Promise<Palette> {
+  const data = await storefront.query<{metaobject?: {fields: Fields} | null}>(
+    THEME_QUERY,
+  );
+  return paletteFrom(data?.metaobject?.fields);
+}
 
 export async function loadLayout(
   storefront: Queryable,

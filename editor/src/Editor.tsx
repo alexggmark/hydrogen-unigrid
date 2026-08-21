@@ -45,7 +45,7 @@ import {DragHandles} from './DragHandles';
 import {NEW_SPAN} from './Palette';
 import {cellAt, gridUnits, moved, resized, snap, type Edge} from './geometry';
 import {dropTarget, type NodeDrag} from './Tree';
-import {Rail} from './Rail';
+import {Rail, type Tab} from './Rail';
 import {DEFAULT_PALETTE, type Layout, type Palette} from '@unigrid/core';
 
 
@@ -108,7 +108,8 @@ export type EditorProps = {
   onPublish?: () => void;
   busy?: boolean;
   version?: number;
-  palette?: Palette;
+  initialPalette?: Palette;
+  onSavePalette?: (palette: Palette) => void;
   // draft differs from published. the editor cannot work this out for itself:
   // what it holds is the last save, not what is live.
   unpublished?: boolean;
@@ -122,7 +123,8 @@ export function Editor({
   onPublish,
   busy,
   version,
-  palette = DEFAULT_PALETTE,
+  initialPalette,
+  onSavePalette,
   unpublished,
   error: outerError,
 }: EditorProps) {
@@ -136,6 +138,8 @@ export function Editor({
   const [drag, setDrag] = useState<Drag | null>(null);
   const [preview, setPreview] = useState<Preview | null>(null);
   const [clipped, setClipped] = useState<Record<string, number>>({});
+  const [tab, setTab] = useState<Tab>('editor');
+  const [palette, setPalette] = useState(initialPalette ?? DEFAULT_PALETTE);
   // rail-tree drags are their own gesture: no ghost, no cell, no placement
   const [nodeDrag, setNodeDrag] = useState<NodeDrag | null>(null);
   // dnd-kit reorders the dom during a drag and does not undo it across groups.
@@ -491,6 +495,10 @@ export function Editor({
           unpublished={unpublished}
           resync={resync}
           palette={palette}
+          tab={tab}
+          onTab={setTab}
+          onPalette={setPalette}
+          onSavePalette={onSavePalette ? () => onSavePalette(palette) : undefined}
           error={outerError ?? error}
           bytes={bytes}
           canUndo={canUndo(hist)}

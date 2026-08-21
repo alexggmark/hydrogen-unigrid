@@ -8,12 +8,18 @@ import type {
 import {useFetcher, useLoaderData, useRouteError} from 'react-router';
 import {boundary} from '@shopify/shopify-app-react-router/server';
 import {Editor} from '@unigrid/editor';
-import {decode, encode, type Layout} from '@unigrid/core';
+import {DEFAULT_PALETTE, decode, encode, type Layout, type Palette} from '@unigrid/core';
 import radixStyles from '@radix-ui/themes/styles.css?url';
 import unigridStyles from '@unigrid/blocks/unigrid.css?url';
 import editorStyles from '@unigrid/editor/editor.css?url';
 import {authenticate} from '../shopify.server';
-import {loadDraft, publish, saveDraft} from '../lib/layout.server';
+import {
+  loadDraft,
+  loadPalette,
+  publish,
+  saveDraft,
+  savePalette,
+} from '../lib/layout.server';
 
 const TARGET = 'home';
 
@@ -25,8 +31,12 @@ export const links: LinksFunction = () => [
 
 export const loader = async ({request}: LoaderFunctionArgs) => {
   const {admin} = await authenticate.admin(request);
-  const draft = await loadDraft(admin, TARGET);
+  const [draft, palette] = await Promise.all([
+    loadDraft(admin, TARGET),
+    loadPalette(admin),
+  ]);
   return {
+    palette,
     layout: draft?.layout ?? null,
     version: draft?.version ?? 0,
     unpublished: draft?.unpublished ?? false,
@@ -39,21 +49,32 @@ export const action = async ({request}: ActionFunctionArgs) => {
 
   if (form.get('intent') === 'publish') return publish(admin, TARGET);
 
+  const theme = form.get('palette');
+  if (typeof theme === 'string') {
+    return savePalette(admin, JSON.parse(theme) as Palette);
+  }
+
   const layout = decode(String(form.get('layout') ?? ''));
   if (!layout) return {ok: false, message: 'could not read that layout'};
   return saveDraft(admin, TARGET, layout);
 };
 
 export default function Index() {
-  const {layout, version, unpublished} = useLoaderData<typeof loader>() as {
+  const {layout, version, unpublished, palette} = useLoaderData<typeof loader>() as {
     layout: Layout | null;
     version: number;
     unpublished: boolean;
+    palette: Palette;
   };
   const fetcher = useFetcher<typeof action>();
 
   const onSave = useCallback(
     (next: Layout) => fetcher.submit({layout: encode(next)}, {method: 'post'}),
+    [fetcher],
+  );
+
+  const onSavePalette = useCallback(
+    (next: Palette) => fetcher.submit({palette: JSON.stringify(next)}, {method: 'post'}),
     [fetcher],
   );
 
@@ -73,6 +94,8 @@ export default function Index() {
       initial={layout}
       onSave={onSave}
       onPublish={onPublish}
+      initialPalette={palette ?? DEFAULT_PALETTE}
+      onSavePalette={onSavePalette}
       busy={fetcher.state !== 'idle'}
       version={version}
       unpublished={unpublished}

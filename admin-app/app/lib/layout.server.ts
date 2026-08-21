@@ -1,4 +1,11 @@
-import {decode, encode, type Layout} from '@unigrid/core';
+import {
+  DEFAULT_PALETTE,
+  SLOTS,
+  decode,
+  encode,
+  type Layout,
+  type Palette,
+} from '@unigrid/core';
 
 // the metaobject's field shape stops here, exactly as it does on the storefront
 
@@ -99,4 +106,45 @@ export async function publish(admin: Admin, handle: string): Promise<Result> {
     {key: 'published', value: draft},
     {key: 'version', value: String(version)},
   ]);
+}
+
+const THEME_READ = `#graphql
+  query AdminTheme {
+    metaobjectByHandle(handle: {type: "unigrid_theme", handle: "default"}) {
+      id
+      fields { key value }
+    }
+  }
+`;
+
+export async function loadPalette(admin: Admin): Promise<Palette> {
+  const response = await admin.graphql(THEME_READ);
+  const body = (await response.json()) as {
+    data?: {metaobjectByHandle?: {id: string; fields: Fields} | null};
+  };
+  const fields = body.data?.metaobjectByHandle?.fields;
+
+  const out = {...DEFAULT_PALETTE};
+  for (const slot of SLOTS) {
+    const hex = fields?.find((f) => f.key === `c${slot}`)?.value;
+    if (hex) out[slot] = hex;
+  }
+  return out;
+}
+
+// the theme has no draft. it is referenced by every layout, so a half-applied
+// palette would be visible everywhere at once — saving is publishing.
+export async function savePalette(admin: Admin, palette: Palette): Promise<Result> {
+  const response = await admin.graphql(THEME_READ);
+  const body = (await response.json()) as {
+    data?: {metaobjectByHandle?: {id: string} | null};
+  };
+  const id = body.data?.metaobjectByHandle?.id;
+  if (!id) return {ok: false, message: 'no theme entry found'};
+
+  return write(
+    admin,
+    id,
+    SLOTS.map((slot) => ({key: `c${slot}`, value: palette[slot]})),
+  );
 }
