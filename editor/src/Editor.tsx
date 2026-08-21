@@ -370,7 +370,9 @@ export function Editor({
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement | null;
-      if (el?.matches('input, textarea, select, [contenteditable]')) return;
+      // the whole rail, not just form elements — a radix slider is a span with
+      // a role, so arrows would move the control and the block at once
+      if (el?.closest('.e-rail, input, textarea, select, [contenteditable]')) return;
       if (e.key === 'Escape') return setSelected(null);
       // dnd-kit owns the arrows once a keyboard drag is up
       if (drag || !selected || !editable) return;
@@ -419,11 +421,20 @@ export function Editor({
       const hit = (e.target as HTMLElement).closest<HTMLElement>('[data-block]');
       setSelected(hit?.dataset.block ?? null);
     };
+    // tabbing onto a block selects it, or its resize handles — which only
+    // render for the selection — could never be reached without a mouse
+    const onFocusIn = (e: FocusEvent) => {
+      const hit = (e.target as HTMLElement | null)?.closest<HTMLElement>('[data-block]');
+      if (hit?.dataset.block) setSelected(hit.dataset.block);
+    };
+
     stage.addEventListener('pointerdown', onDown);
     stage.addEventListener('click', onClick);
+    stage.addEventListener('focusin', onFocusIn);
     return () => {
       stage.removeEventListener('pointerdown', onDown);
       stage.removeEventListener('click', onClick);
+      stage.removeEventListener('focusin', onFocusIn);
     };
   }, []);
 

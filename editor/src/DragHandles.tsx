@@ -24,6 +24,10 @@ function Handle({id, edge, label}: {id: string; edge: Edge; label: string}) {
       ref={ref}
       type="button"
       className={`e-handle e-handle-${edge}`}
+      // mouse only. keyboard resizes with shift and the arrows, so eight tab
+      // stops per block would be eight ways to reach what two keys already do.
+      tabIndex={-1}
+      aria-hidden
       aria-label={`Resize ${label} of ${id}`}
     />
   );
@@ -38,11 +42,13 @@ export function DragHandles({id, selected}: {id: string; selected: boolean}) {
 
   return (
     <>
+      {/* the block's one tab stop: focusing it selects, arrows move, shift
+          and arrows resize */}
       <button
         ref={ref}
         type="button"
         className="e-move"
-          aria-label={`Move ${id}`}
+        aria-label={`Block ${id}`}
       />
       {selected
         ? EDGES.map((e) => (
