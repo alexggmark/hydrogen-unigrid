@@ -16,14 +16,7 @@
     "moduleResolution": "Bundler",
     "target": "ES2022",
     "baseUrl": ".",
-    // app-bridge-types declares the s-* elements globally. the template gets it
-    // via an import chain, which does not survive workspace hoisting.
-    "types": [
-      "@react-router/node",
-      "vite/client",
-      "@shopify/polaris-types",
-      "@shopify/app-bridge-types"
-    ],
+    "types": ["@react-router/node", "vite/client", "@shopify/polaris-types"],
     "rootDirs": [".", "./.react-router/types"]
   }
 }

@@ -1,59 +1,62 @@
-import type {HeadersFunction, LinksFunction, LoaderFunctionArgs} from 'react-router';
-import {useLoaderData, useRouteError} from 'react-router';
+import {useCallback} from 'react';
+import type {
+  ActionFunctionArgs,
+  HeadersFunction,
+  LinksFunction,
+  LoaderFunctionArgs,
+} from 'react-router';
+import {useFetcher, useLoaderData, useRouteError} from 'react-router';
 import {boundary} from '@shopify/shopify-app-react-router/server';
-import {Block, Grid, deriveAll} from '@unigrid/blocks';
-import {decode, type Layout} from '@unigrid/core';
+import {Editor} from '@unigrid/editor';
+import {decode, encode, type Layout} from '@unigrid/core';
+import radixStyles from '@radix-ui/themes/styles.css?url';
 import unigridStyles from '@unigrid/blocks/unigrid.css?url';
+import editorStyles from '@unigrid/editor/editor.css?url';
 import {authenticate} from '../shopify.server';
+import {loadDraft, saveDraft} from '../lib/layout.server';
+
+const TARGET = 'home';
 
 export const links: LinksFunction = () => [
+  {rel: 'stylesheet', href: radixStyles},
   {rel: 'stylesheet', href: unigridStyles},
+  {rel: 'stylesheet', href: editorStyles},
 ];
-
-const LAYOUT_QUERY = `#graphql
-  query AdminLayout($handle: String!) {
-    metaobjectByHandle(handle: {type: "unigrid_layout", handle: $handle}) {
-      fields { key value }
-    }
-  }
-`;
 
 export const loader = async ({request}: LoaderFunctionArgs) => {
   const {admin} = await authenticate.admin(request);
-  const response = await admin.graphql(LAYOUT_QUERY, {
-    variables: {handle: 'home'},
-  });
-  const body = (await response.json()) as {
-    data?: {
-      metaobjectByHandle?: {fields: {key: string; value?: string | null}[]} | null;
-    };
-  };
+  const draft = await loadDraft(admin, TARGET);
+  return {layout: draft?.layout ?? null};
+};
 
-  const fields = body.data?.metaobjectByHandle?.fields ?? [];
-  const draft = fields.find((f) => f.key === 'draft')?.value ?? null;
-  return {layout: draft ? decode(draft) : null};
+export const action = async ({request}: ActionFunctionArgs) => {
+  const {admin} = await authenticate.admin(request);
+  const form = await request.formData();
+  const layout = decode(String(form.get('layout') ?? ''));
+  if (!layout) return {ok: false, message: 'could not read that layout'};
+  return saveDraft(admin, TARGET, layout);
 };
 
 export default function Index() {
   const {layout} = useLoaderData<typeof loader>() as {layout: Layout | null};
+  const fetcher = useFetcher<typeof action>();
+
+  const onSave = useCallback(
+    (next: Layout) =>
+      fetcher.submit({layout: encode(next)}, {method: 'post'}),
+    [fetcher],
+  );
 
   if (!layout) {
-    return <s-page heading="unigrid">No layout found for this page.</s-page>;
+    return <s-page heading="unigrid">No layout entry for “{TARGET}”.</s-page>;
   }
 
-  const at = deriveAll(layout);
-
   return (
-    <s-page heading="unigrid">
-      <Grid>
-        {layout.blocks.map((block) => {
-          const placement = at.get(block.id);
-          return placement ? (
-            <Block key={block.id} block={block} at={placement} />
-          ) : null;
-        })}
-      </Grid>
-    </s-page>
+    <Editor
+      initial={layout}
+      onSave={onSave}
+      saving={fetcher.state !== 'idle'}
+    />
   );
 }
 
