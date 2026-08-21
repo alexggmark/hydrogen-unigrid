@@ -39,24 +39,6 @@ body.u-show-grid .u-overlay {
   );
 }
 
-/* flagged so the loss is visible, not silent */
-.u-block.u-over {
-  outline: 2px solid #d8261c;
-  outline-offset: -2px;
-}
-.u-block.u-over::after {
-  content: 'needs ' attr(data-short) ' more';
-  position: absolute;
-  inset-inline-end: 0;
-  inset-block-end: 0;
-  background: #d8261c;
-  color: #fff;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 2px 6px;
-}
-
 .u-hud {
   position: fixed;
   inset-block-start: 0;
