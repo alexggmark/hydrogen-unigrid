@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import {emptyBlock, encode, type Layout} from '@unigrid/core';
-import {loadDraft, publish, saveDraft} from './layout.server';
+import {loadDraft, publish, publishAll, saveDraft} from './layout.server';
 
 const layout: Layout = {
   version: 1,
@@ -101,5 +101,55 @@ describe('draft', () => {
       {key: 'published', value: encode({...layout, blocks: []})},
     ]);
     expect((await loadDraft(other, 'home'))?.unpublished).toBe(true);
+  });
+});
+
+describe('publishAll', () => {
+  // a store where the header is saved but not live, and the page is already live
+  const store: Record<string, Field[]> = {
+    header: [
+      {key: 'draft', value: encode(layout)},
+      {key: 'published', value: encode({...layout, blocks: []})},
+      {key: 'version', value: '1'},
+    ],
+    home: [
+      {key: 'draft', value: encode(layout)},
+      {key: 'published', value: encode(layout)},
+      {key: 'version', value: '4'},
+    ],
+    footer: [],
+  };
+
+  function many() {
+    const wrote: {target: string; fields: Field[]}[] = [];
+    let seen = '';
+    const admin = {
+      graphql: async (query: string, options?: {variables?: Record<string, unknown>}) => {
+        if (query.includes('metaobjectUpdate')) {
+          wrote.push({target: seen, fields: options?.variables?.fields as Field[]});
+          return {json: async () => ({data: {metaobjectUpdate: {userErrors: []}}})};
+        }
+        seen = String(options?.variables?.handle);
+        const fields = store[seen];
+        return {
+          json: async () => ({
+            data: {metaobjectByHandle: fields?.length ? {id: `gid://${seen}`, fields} : null},
+          }),
+        };
+      },
+    };
+    return {admin, wrote};
+  }
+
+  it('promotes only the regions whose draft differs from what is live', async () => {
+    const {admin, wrote} = many();
+    expect(await publishAll(admin, ['header', 'home', 'footer'])).toEqual({ok: true});
+    expect(wrote.map((w) => w.target)).toEqual(['header']);
+  });
+
+  // a footer nobody has written is not a failure, it is nothing to do
+  it('skips a region that does not exist', async () => {
+    const {admin} = many();
+    expect(await publishAll(admin, ['footer'])).toEqual({ok: true});
   });
 });

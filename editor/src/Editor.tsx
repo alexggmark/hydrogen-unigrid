@@ -70,9 +70,8 @@ type Drag =
 
 type Preview = {cell: Cell; ok: boolean; reason?: string};
 
-// `move` transforms the dragged element itself. every other mode inserts a
-// placeholder clone beside it and reparents the original, both outside react's
-// knowledge, so a drop across containers unmounts a node react no longer owns.
+// `move` transforms the element itself. every other mode inserts a placeholder
+// clone and reparents the original, outside react's knowledge.
 const PLUGINS = [
   Accessibility,
   AutoScroller,
@@ -109,10 +108,8 @@ export type EditorProps = {
   regions?: Region[];
   activeTarget?: string;
   dev?: boolean;
-  // absent means this shell cannot persist. that is the playground's guarantee,
-  // not a convention — there is no code path from here to a store without it.
-  // every region with changes, not just the active one — switching region must
-  // never be a way to lose work
+  // absent means this shell has no code path to a store at all
+  // every region with changes, so switching region cannot lose work
   onSave?: (changed: {target: string; layout: Layout}[]) => void;
   onPublish?: () => void;
   busy?: boolean;
@@ -188,9 +185,8 @@ export function Editor({
   const [palette, setPalette] = useState(initialPalette ?? DEFAULT_PALETTE);
   // rail-tree drags are their own gesture: no ghost, no cell, no placement
   const [nodeDrag, setNodeDrag] = useState<NodeDrag | null>(null);
-  // dnd-kit reorders the dom during a drag and does not undo it across groups.
-  // a refused drop leaves the model unchanged, so the tree needs telling to
-  // rebuild from it rather than keep what the drag left behind.
+  // dnd-kit reorders the dom mid-drag and does not undo it across groups, so a
+  // refused drop needs the tree rebuilt from the model
   const [resync, setResync] = useState(0);
 
   const layout = hist.present;
@@ -330,10 +326,8 @@ export function Editor({
     setSelected(id);
   };
 
-  // content edits never touch placement, so they cannot fail the way a drop can.
-  // depends on setHist: that is rebound whenever the active region changes, and
-  // an empty dep list here writes every content edit into whichever region was
-  // active on mount.
+  // setHist is rebound on every region switch; an empty dep list here would pin
+  // every content edit to whichever region was active on mount
   const edit = useCallback(
     (next: typeof layout) => {
       setError(null);
@@ -463,9 +457,8 @@ export function Editor({
     return () => window.removeEventListener('keydown', onKey);
   }, [drag, editable, move, selected]);
 
-  // a drag released outside the block fires its click on a common ancestor, so
-  // selecting from that would clear the selection the drag was acting on.
-  // cleared on pointerdown too, or a keyboard drag would strand the flag.
+  // a drag released outside the block fires its click on a common ancestor,
+  // which would clear the selection the drag just acted on
   useEffect(() => {
     const stage = hostRef.current;
     if (!stage) return;
@@ -511,8 +504,8 @@ export function Editor({
       onDragEnd={onDragEnd}
     >
       <div className="e-shell">
-        <div className="e-stage" ref={hostRef} data-band={band}>
-          <div className="e-canvas">
+        <div className="e-stage u-page" ref={hostRef} data-band={band}>
+          <div className="e-canvas u-stack">
             {/* inert regions: rendered so the page reads whole, but no chrome,
                 no selection and no drag. clicking one makes it the active one. */}
             {(regions ?? []).map((region) => {

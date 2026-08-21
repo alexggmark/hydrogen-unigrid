@@ -19,14 +19,16 @@ export default function GridHarness() {
   const at = deriveAll(HARNESS);
 
   return (
-    <div className="unigrid-demo">
-      <Grid dev={DEV}>
-        {HARNESS.blocks.map((block) => {
-          const placement = at.get(block.id);
-          if (!placement) return null;
-          return <Block key={block.id} block={block} at={placement} />;
-        })}
-      </Grid>
+    <div className="unigrid-demo u-page">
+      <div className="u-stack">
+        <Grid dev={DEV}>
+          {HARNESS.blocks.map((block) => {
+            const placement = at.get(block.id);
+            if (!placement) return null;
+            return <Block key={block.id} block={block} at={placement} />;
+          })}
+        </Grid>
+      </div>
     </div>
   );
 }

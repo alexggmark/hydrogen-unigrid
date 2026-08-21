@@ -165,10 +165,8 @@ export type TreeProps = {
 export function Tree(props: TreeProps) {
   const {block, activeNode, dragging} = props;
 
-  // dnd-kit reorders the real dom as you drag and only restores it within one
-  // group, so after a cross-group drop react's tree no longer matches. keying
-  // on the shape makes react drop this whole list and rebuild, rather than
-  // unmount a row that is no longer where it left it.
+  // dnd-kit reorders the real dom and only restores it within one group, so
+  // keying on the shape rebuilds the list rather than patching a moved row
   const shape = block.children
     .map((c) =>
       isGroup(c) ? `${c.id}[${c.children.map((x) => x.id).join()}]` : c.id,

@@ -35,12 +35,15 @@ export function Composition({
   children?: ReactNode;
 }) {
   // separate grids on purpose: each region is its own composition, so row
-  // numbering and margins in one cannot reach into another
+  // numbering and margins in one cannot reach into another. the stack holds the
+  // page's vertical rhythm, so it does not change with which regions exist.
   return (
-    <div className="unigrid-demo">
-      {header ? <Region layout={header} palette={palette} /> : null}
-      {body ? <Region layout={body} palette={palette} /> : children}
-      {footer ? <Region layout={footer} palette={palette} /> : null}
+    <div className="unigrid-demo u-page">
+      <div className="u-stack">
+        {header ? <Region layout={header} palette={palette} /> : null}
+        {body ? <Region layout={body} palette={palette} /> : children}
+        {footer ? <Region layout={footer} palette={palette} /> : null}
+      </div>
     </div>
   );
 }

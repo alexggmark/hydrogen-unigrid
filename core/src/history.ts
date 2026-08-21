@@ -17,7 +17,7 @@ export const history = (present: Layout): History => ({
 export const canUndo = (h: History): boolean => h.past.length > 0;
 export const canRedo = (h: History): boolean => h.future.length > 0;
 
-// a commit clears the redo branch: you cannot redo into a future you left
+// a commit clears the redo branch — an abandoned future is not reachable again
 export const commit = (h: History, next: Layout): History => ({
   past: [...h.past, h.present].slice(-LIMIT),
   present: next,

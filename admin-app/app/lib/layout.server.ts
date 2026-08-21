@@ -109,7 +109,26 @@ export async function saveDraft(
   return write(admin, entry.id, [{key: 'draft', value: encode(layout)}]);
 }
 
-// reads the draft back from the store, so an unsaved edit cannot go live
+// promotes every region of the page: a header saved but not promoted would go
+// live nowhere, with nothing on screen to say so
+export async function publishAll(
+  admin: Admin,
+  targets: string[],
+): Promise<Result> {
+  for (const target of targets) {
+    const entry = await read(admin, target);
+    if (!entry) continue;
+
+    const draft = field(entry.fields, 'draft');
+    // already live, or never written: not a failure, just nothing to do
+    if (!draft || draft === field(entry.fields, 'published')) continue;
+
+    const result = await publish(admin, target);
+    if (!result.ok) return result;
+  }
+  return {ok: true};
+}
+
 export async function publish(admin: Admin, handle: string): Promise<Result> {
   const entry = await read(admin, handle);
   if (!entry) return {ok: false, message: `no layout entry for "${handle}"`};
@@ -240,11 +259,8 @@ export async function listPages(admin: Admin): Promise<PageRow[]> {
     layouts.map((l) => [field(l.fields, 'target') ?? '', l.id]),
   );
 
-  // a page deleted in Shopify takes its layout with it. done on read rather than
-  // by webhook, because a webhook needs a host and there is not one yet.
-  //
-  // only when the page list is known to be complete: a truncated list would
-  // read as "these pages no longer exist" and delete real work.
+  // a deleted page takes its layout with it. only when the page list is
+  // complete: a truncated one would read as deletions and destroy real work.
   if (pageData && !pageData.pageInfo.hasNextPage) {
     const live = new Set(pages.map((x) => `page:${x.handle}`));
     for (const [target, id] of byTarget) {

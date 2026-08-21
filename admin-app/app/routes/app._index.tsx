@@ -19,7 +19,7 @@ import {
   listPages,
   loadComposition,
   loadPalette,
-  publish,
+  publishAll,
   saveDraft,
   savePalette,
   type PageRow,
@@ -38,9 +38,8 @@ const targetOf = (request: Request) =>
 export const loader = async ({request}: LoaderFunctionArgs) => {
   const {admin} = await authenticate.admin(request);
   const target = targetOf(request);
-  // header and footer are shared, so they have no page of their own. show them
-  // against the homepage rather than emitting a second region with the same
-  // target, which collapses to one and gives react duplicate keys.
+  // shared regions have no page of their own. showing them against the homepage
+  // avoids a second region with the same target, which collapses to one.
   const bodyTarget = target === 'header' || target === 'footer' ? 'home' : target;
 
   const [regions, palette, pages] = await Promise.all([
@@ -61,7 +60,10 @@ export const loader = async ({request}: LoaderFunctionArgs) => {
       {target: 'footer', label: 'Footer', layout: regions.footer?.layout ?? empty},
     ],
     version: regions.body?.version ?? 0,
-    unpublished: regions.body?.unpublished ?? false,
+    // any region, not just the body — a saved header is unpublished work too
+    unpublished: [regions.header, regions.body, regions.footer].some(
+      (r) => r?.unpublished,
+    ),
   };
 };
 
@@ -71,7 +73,10 @@ export const action = async ({request}: ActionFunctionArgs) => {
   const target = String(form.get('target') || targetOf(request));
   const intent = form.get('intent');
 
-  if (intent === 'publish') return publish(admin, target);
+  if (intent === 'publish') {
+    const body = target === 'header' || target === 'footer' ? 'home' : target;
+    return publishAll(admin, ['header', body, 'footer']);
+  }
   if (intent === 'newPage') return createPage(admin, String(form.get('title') || 'Untitled'));
   if (intent === 'attach') return createLayout(admin, target);
 

@@ -7,21 +7,42 @@
   box-sizing: border-box;
 }
 
+/* the page measure and the two scalars every rhythm is a multiple of */
+.u-frame,
+.u-page {
+  --margin: min(4vw, 6rem);
+  --grid-max: 100rem;
+  --gutter-u: 1.5;
+  --pad-u: 4;
+}
+
 /* separate elements on purpose: cqw resolves against the ancestor container, so
    a grid declaring --u: 1cqw on itself would measure its parent */
 .u-frame {
-  --margin: min(4vw, 6rem);
-  --grid-max: 100rem;
   inline-size: min(100% - var(--margin) * 2, var(--grid-max));
   margin-inline: auto;
   container-type: inline-size;
   container-name: grid;
 }
 
+/* header, body and footer are separate grids, so the space between them cannot
+   come from a gap inside one. the stack recomputes the frame's scalar instead of
+   reading it: a cq unit out here measures the page box, not the frame. */
+.u-page {
+  container-type: inline-size;
+}
+.u-stack {
+  --u-page: calc(min(100cqw - var(--margin) * 2, var(--grid-max)) / 100);
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u-page) * var(--gutter-u));
+  padding-block: calc(var(--u-page) * var(--pad-u));
+}
+
 .u-grid {
   position: relative;
   --u: 1cqw;
-  --gutter: calc(var(--u) * 1.5);
+  --gutter: calc(var(--u) * var(--gutter-u, 1.5));
   --col: calc((100cqw - (var(--cols) - 1) * var(--gutter)) / var(--cols));
   --ratio: 0.75; /* fixed cell proportion, declared once */
   --row: calc(var(--col) * var(--ratio));
@@ -30,7 +51,6 @@
   grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
   grid-auto-rows: var(--row);
   gap: var(--gutter);
-  padding-block: calc(var(--u) * 4);
 }
 
 /* three fixed compositions. crossing a bound switches, inside one nothing moves */

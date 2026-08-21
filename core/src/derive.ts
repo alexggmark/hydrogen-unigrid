@@ -4,9 +4,8 @@ import type {Cell, Layout} from './types';
 
 export type Resolved = ReadonlyMap<string, Cell>;
 
-// a narrow band is the wide band's reading order laid into a fixed number of
-// tracks. a block wider than half the wide grid keeps the full width; the rest
-// pair up, so a two-column desktop stays two columns on a tablet.
+// the wide band's reading order laid into a fixed number of tracks. a block
+// wider than half the wide grid keeps full width; the rest pair up.
 export function derive(layout: Layout, band: Band): Map<string, Cell> {
   const out = new Map<string, Cell>();
   const order = readingOrder(layout);

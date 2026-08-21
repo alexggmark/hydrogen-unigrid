@@ -32,9 +32,8 @@ const ALIGN: Record<Flex['align'], string> = {
   stretch: 'stretch',
 };
 
-// text follows whichever axis runs horizontally: `align` in a column, `justify`
-// in a row. authoring it separately meant two controls that look alike and
-// disagree only when a box is wider than its content.
+// text follows whichever axis runs horizontally: align in a column, justify in
+// a row
 const TEXT_IN_COLUMN: Record<Flex['align'], string> = {
   start: 'start',
   center: 'center',

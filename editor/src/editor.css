@@ -322,18 +322,13 @@
   text-transform: uppercase;
   color: var(--gray-a9);
 }
-.e-canvas {
-  display: flex;
-  flex-direction: column;
-}
-
 /* nothing written yet. without a body of its own there is nothing to click,
    so the label is the affordance rather than a hint on hover. */
 .e-region[data-empty] {
   min-block-size: 64px;
   display: grid;
   place-items: center;
-  margin: 8px 24px;
+  margin-inline: 24px;
   border: 1px dashed var(--gray-a7);
   border-radius: 4px;
   opacity: 1;
