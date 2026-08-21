@@ -15,12 +15,32 @@ const ALIGN: Record<Flex['align'], string> = {
   stretch: 'stretch',
 };
 
+// text follows whichever axis runs horizontally: `align` in a column, `justify`
+// in a row. authoring it separately meant two controls that look alike and
+// disagree only when a box is wider than its content.
+const TEXT_IN_COLUMN: Record<Flex['align'], string> = {
+  start: 'start',
+  center: 'center',
+  end: 'end',
+  stretch: 'start',
+};
+
+const TEXT_IN_ROW: Record<Flex['justify'], string> = {
+  start: 'start',
+  center: 'center',
+  end: 'end',
+  between: 'start',
+};
+
+export const textAlign = (f: Flex): string =>
+  f.direction === 'column' ? TEXT_IN_COLUMN[f.align] : TEXT_IN_ROW[f.justify];
+
 export const flexVars = (f: Flex): CSSProperties =>
   ({
     '--fd': f.direction,
     '--jc': JUSTIFY[f.justify],
     '--ai': ALIGN[f.align],
-    '--ta': f.text,
+    '--ta': textAlign(f),
     '--gap': f.gap,
   }) as CSSProperties;
 

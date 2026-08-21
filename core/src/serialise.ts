@@ -50,7 +50,6 @@ function encodeFlex(f: Flex): Obj | undefined {
   if (f.direction !== DEFAULT_FLEX.direction) out.d = f.direction;
   if (f.justify !== DEFAULT_FLEX.justify) out.j = f.justify;
   if (f.align !== DEFAULT_FLEX.align) out.a = f.align;
-  if (f.text !== DEFAULT_FLEX.text) out.t = f.text;
   if (f.gap !== DEFAULT_FLEX.gap) out.g = f.gap;
   return Object.keys(out).length ? out : undefined;
 }
@@ -58,7 +57,6 @@ function encodeFlex(f: Flex): Obj | undefined {
 const DIRECTIONS = ['row', 'column'] as const;
 const JUSTIFY = ['start', 'center', 'end', 'between'] as const;
 const ALIGN = ['start', 'center', 'end', 'stretch'] as const;
-const TEXT = ['start', 'center', 'end'] as const;
 
 const oneOf = <T extends string>(
   w: unknown,
@@ -73,7 +71,6 @@ function decodeFlex(w: unknown): Flex {
     direction: oneOf(o.d, DIRECTIONS, DEFAULT_FLEX.direction),
     justify: oneOf(o.j, JUSTIFY, DEFAULT_FLEX.justify),
     align: oneOf(o.a, ALIGN, DEFAULT_FLEX.align),
-    text: oneOf(o.t, TEXT, DEFAULT_FLEX.text),
     gap: typeof o.g === 'number' && Number.isFinite(o.g) ? o.g : DEFAULT_FLEX.gap,
   };
 }

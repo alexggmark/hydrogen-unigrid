@@ -17,7 +17,7 @@ const el = (id: string): Element => ({id, kind: 'text', size: 'sm', value: id});
 const group = (id: string): Group => ({
   id,
   kind: 'group',
-  flex: {direction: 'row', justify: 'start', align: 'stretch', text: 'start', gap: 1},
+  flex: {direction: 'row', justify: 'start', align: 'stretch', gap: 1},
   children: [],
 });
 

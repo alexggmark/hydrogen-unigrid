@@ -168,7 +168,6 @@
 .u-btn {
   display: inline-flex;
   align-items: center;
-  align-self: flex-start;
   font-size: var(--t-micro);
   text-transform: uppercase;
   letter-spacing: 0.14em;
@@ -214,7 +213,11 @@
   text-align: var(--ta, start);
   min-block-size: 100%;
 }
+/* a group always spans the axis it lays out on. sized by the block's align
+   instead, it would shrink to its contents and its own justify would have no
+   free space to distribute — a control that works until an unrelated one moves. */
 .u-group {
+  align-self: stretch;
   min-block-size: 0;
 }
 .u-el,

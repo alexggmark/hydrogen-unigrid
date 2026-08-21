@@ -123,7 +123,7 @@ export const HARNESS: Layout = {
           overlay: {color: '#000000', opacity: 0.35},
         },
         invert: true,
-        flex: flex({justify: 'center', align: 'center', text: 'start', gap: 1}),
+        flex: flex({justify: 'center', align: 'center', gap: 1}),
         children: [
           hl('tint-h', 5, 'Overlay'),
           text('tint-t', 'sm', 'Colour, then a tint at any opacity.'),

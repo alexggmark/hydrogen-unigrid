@@ -116,7 +116,7 @@ describe('wire size', () => {
       return {
         id: `${id}-g${i}`,
         kind: 'group',
-        flex: {direction: 'row', justify: 'between', align: 'center', text: 'start', gap: 2},
+        flex: {direction: 'row', justify: 'between', align: 'center', gap: 2},
         children: [
           {id: `${id}-g${i}-a`, kind: 'text', size: 'sm', value: LOREM},
           {id: `${id}-g${i}-b`, kind: 'button', variant: 'secondary', label: 'More', href: '/x'},
@@ -136,7 +136,7 @@ describe('wire size', () => {
       }),
       fill: {color: '#112233', overlay: {color: '#000000', opacity: 0.35}},
       invert: i % 2 === 0,
-      flex: {direction: 'column', justify: 'between', align: 'stretch', text: 'start', gap: 2},
+      flex: {direction: 'column', justify: 'between', align: 'stretch', gap: 2},
       children: elements(`block-${i}`, per),
     })),
   });

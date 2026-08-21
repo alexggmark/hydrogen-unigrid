@@ -31,7 +31,6 @@ export function flex(r: () => number): Flex {
     direction: r() < 0.5 ? 'row' : 'column',
     justify: (['start', 'center', 'end', 'between'] as const)[int(r, 0, 3)] ?? 'start',
     align: (['start', 'center', 'end', 'stretch'] as const)[int(r, 0, 3)] ?? 'stretch',
-    text: (['start', 'center', 'end'] as const)[int(r, 0, 2)] ?? 'start',
     gap: int(r, 0, 6),
   };
 }

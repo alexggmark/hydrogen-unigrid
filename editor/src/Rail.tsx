@@ -43,7 +43,6 @@ const AXES = [
 const DIRECTION = ['column', 'row'] as const;
 const JUSTIFY = ['start', 'center', 'end', 'between'] as const;
 const ALIGN = ['start', 'center', 'end', 'stretch'] as const;
-const TEXT = ['start', 'center', 'end'] as const;
 const LEVELS = ['1', '2', '3', '4', '5'] as const;
 const SIZES = ['sm', 'lg'] as const;
 const VARIANTS = ['primary', 'secondary'] as const;
@@ -181,12 +180,6 @@ function FlexFields({
         value={flex.align}
         options={ALIGN}
         onPick={(align) => onChange({align})}
-      />
-      <Segment
-        label="Text"
-        value={flex.text}
-        options={TEXT}
-        onPick={(text) => onChange({text})}
       />
       <Field label={`Gap — ${flex.gap}`}>
         <Slider
