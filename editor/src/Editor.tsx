@@ -271,7 +271,7 @@ export function Editor({
         setError(reasonOf(result));
       }
     },
-    [band, layout],
+    [band, layout, setHist],
   );
 
   const move = useCallback(
@@ -330,13 +330,16 @@ export function Editor({
     setSelected(id);
   };
 
-  // content edits never touch placement, so they cannot fail the way a drop can
+  // content edits never touch placement, so they cannot fail the way a drop can.
+  // depends on setHist: that is rebound whenever the active region changes, and
+  // an empty dep list here writes every content edit into whichever region was
+  // active on mount.
   const edit = useCallback(
     (next: typeof layout) => {
       setError(null);
       setHist((h) => commit(h, next));
     },
-    [],
+    [setHist],
   );
 
   const addChild = (kind: ElementKind | 'group', parentId: string | null) => {
