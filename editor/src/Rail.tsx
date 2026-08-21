@@ -75,7 +75,10 @@ export type RailProps = {
   resync: number;
   // absent in the playground, present in the admin app
   onSave?: () => void;
-  saving?: boolean;
+  onPublish?: () => void;
+  busy?: boolean;
+  version?: number;
+  unpublished?: boolean;
   error: string | null;
   bytes: number;
   canUndo: boolean;
@@ -586,9 +589,26 @@ export function Rail(props: RailProps) {
             Layout serialises to {(props.bytes / 1024).toFixed(1)}kb
           </Text>
           {props.onSave ? (
-            <Button size="1" onClick={props.onSave} loading={props.saving}>
-              Save draft
-            </Button>
+            <Flex direction="column" gap="2">
+              <Flex gap="2" align="center">
+                <Button size="1" variant="soft" onClick={props.onSave} loading={props.busy}>
+                  Save draft
+                </Button>
+                <Button
+                  size="1"
+                  onClick={props.onPublish}
+                  loading={props.busy}
+                  disabled={!props.onPublish}
+                >
+                  Publish
+                </Button>
+              </Flex>
+              <Text size="1" color="gray">
+                {props.unpublished
+                  ? 'Draft differs from what is live'
+                  : `Live — version ${props.version ?? 1}`}
+              </Text>
+            </Flex>
           ) : (
             <Callout.Root size="1" color="gray">
               <Callout.Text>

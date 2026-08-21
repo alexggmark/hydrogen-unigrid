@@ -105,10 +105,25 @@ export type EditorProps = {
   // absent means this shell cannot persist. that is the playground's guarantee,
   // not a convention — there is no code path from here to a store without it.
   onSave?: (layout: Layout) => void;
-  saving?: boolean;
+  onPublish?: () => void;
+  busy?: boolean;
+  version?: number;
+  // draft differs from published. the editor cannot work this out for itself:
+  // what it holds is the last save, not what is live.
+  unpublished?: boolean;
+  error?: string;
 };
 
-export function Editor({initial, dev, onSave, saving}: EditorProps) {
+export function Editor({
+  initial,
+  dev,
+  onSave,
+  onPublish,
+  busy,
+  version,
+  unpublished,
+  error: outerError,
+}: EditorProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const afterDrag = useRef(false);
   const [hist, setHist] = useState(() => history(initial));
@@ -468,9 +483,12 @@ export function Editor({initial, dev, onSave, saving}: EditorProps) {
           node={picked}
           dragging={nodeDrag}
           onSave={onSave ? () => onSave(layout) : undefined}
-          saving={saving}
+          onPublish={onPublish}
+          busy={busy}
+          version={version}
+          unpublished={unpublished}
           resync={resync}
-          error={error}
+          error={outerError ?? error}
           bytes={bytes}
           canUndo={canUndo(hist)}
           canRedo={canRedo(hist)}
