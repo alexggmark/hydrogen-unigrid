@@ -2,6 +2,7 @@ import {
   DEFAULT_PALETTE,
   SLOTS,
   decode,
+  emptyLayout,
   encode,
   type Layout,
   type Palette,
@@ -147,4 +148,158 @@ export async function savePalette(admin: Admin, palette: Palette): Promise<Resul
     id,
     SLOTS.map((slot) => ({key: `c${slot}`, value: palette[slot]})),
   );
+}
+
+const PAGES = `#graphql
+  query AdminPages($first: Int!) {
+    pages(first: $first) {
+      nodes { id handle title }
+      pageInfo { hasNextPage }
+    }
+  }
+`;
+
+const LAYOUTS = `#graphql
+  query AdminLayouts($first: Int!) {
+    metaobjects(type: "unigrid_layout", first: $first) {
+      nodes { id handle fields { key value } }
+    }
+  }
+`;
+
+const PAGE_CREATE = `#graphql
+  mutation NewPage($page: PageCreateInput!) {
+    pageCreate(page: $page) { page { handle } userErrors { field message } }
+  }
+`;
+
+const LAYOUT_CREATE = `#graphql
+  mutation NewLayout($m: MetaobjectCreateInput!) {
+    metaobjectCreate(metaobject: $m) {
+      metaobject { handle }
+      userErrors { field message }
+    }
+  }
+`;
+
+const LAYOUT_DELETE = `#graphql
+  mutation DropLayout($id: ID!) {
+    metaobjectDelete(id: $id) { deletedId userErrors { field message } }
+  }
+`;
+
+export type PageRow = {
+  target: string;
+  title: string;
+  handle: string;
+  hasLayout: boolean;
+  layoutId?: string;
+};
+
+export async function listPages(admin: Admin): Promise<PageRow[]> {
+  const [pagesRes, layoutsRes] = await Promise.all([
+    admin.graphql(PAGES, {variables: {first: 250}}),
+    admin.graphql(LAYOUTS, {variables: {first: 250}}),
+  ]);
+
+  const pageData = ((await pagesRes.json()) as {
+    data?: {
+      pages?: {nodes: {handle: string; title: string}[]; pageInfo: {hasNextPage: boolean}};
+    };
+  }).data?.pages;
+  const pages = pageData?.nodes ?? [];
+
+  const layouts = ((await layoutsRes.json()) as {
+    data?: {metaobjects?: {nodes: {id: string; fields: Fields}[]}};
+  }).data?.metaobjects?.nodes ?? [];
+
+  const byTarget = new Map(
+    layouts.map((l) => [field(l.fields, 'target') ?? '', l.id]),
+  );
+
+  // a page deleted in Shopify takes its layout with it. done on read rather than
+  // by webhook, because a webhook needs a host and there is not one yet.
+  //
+  // only when the page list is known to be complete: a truncated list would
+  // read as "these pages no longer exist" and delete real work.
+  if (pageData && !pageData.pageInfo.hasNextPage) {
+    const live = new Set(pages.map((x) => `page:${x.handle}`));
+    for (const [target, id] of byTarget) {
+      if (!target.startsWith('page:') || live.has(target)) continue;
+      await deleteLayout(admin, id);
+      byTarget.delete(target);
+    }
+  }
+
+  return [
+    {
+      target: 'home',
+      title: 'Home',
+      handle: '',
+      hasLayout: byTarget.has('home'),
+      ...(byTarget.get('home') ? {layoutId: byTarget.get('home')!} : {}),
+    },
+    ...pages.map((x) => ({
+      target: `page:${x.handle}`,
+      title: x.title,
+      handle: x.handle,
+      hasLayout: byTarget.has(`page:${x.handle}`),
+      ...(byTarget.get(`page:${x.handle}`)
+        ? {layoutId: byTarget.get(`page:${x.handle}`)!}
+        : {}),
+    })),
+  ];
+}
+
+export async function createPage(
+  admin: Admin,
+  title: string,
+): Promise<Result & {handle?: string}> {
+  const res = await admin.graphql(PAGE_CREATE, {variables: {page: {title}}});
+  const body = (await res.json()) as {
+    data?: {pageCreate?: {page?: {handle: string}; userErrors: {message: string}[]}};
+  };
+  const errors = body.data?.pageCreate?.userErrors ?? [];
+  const handle = body.data?.pageCreate?.page?.handle;
+  if (errors.length || !handle) {
+    return {ok: false, message: errors[0]?.message ?? 'could not create the page'};
+  }
+
+  const made = await createLayout(admin, `page:${handle}`);
+  return made.ok ? {ok: true, handle} : made;
+}
+
+export async function createLayout(admin: Admin, target: string): Promise<Result> {
+  const res = await admin.graphql(LAYOUT_CREATE, {
+    variables: {
+      m: {
+        type: 'unigrid_layout',
+        capabilities: {publishable: {status: 'ACTIVE'}},
+        fields: [
+          {key: 'target', value: target},
+          {key: 'version', value: '1'},
+          {key: 'draft', value: encode(emptyLayout())},
+          {key: 'published', value: encode(emptyLayout())},
+        ],
+      },
+    },
+  });
+  const body = (await res.json()) as {
+    data?: {metaobjectCreate?: {userErrors: {message: string}[]}};
+  };
+  const errors = body.data?.metaobjectCreate?.userErrors ?? [];
+  return errors.length
+    ? {ok: false, message: errors[0]?.message ?? 'could not create the layout'}
+    : {ok: true};
+}
+
+export async function deleteLayout(admin: Admin, id: string): Promise<Result> {
+  const res = await admin.graphql(LAYOUT_DELETE, {variables: {id}});
+  const body = (await res.json()) as {
+    data?: {metaobjectDelete?: {userErrors: {message: string}[]}};
+  };
+  const errors = body.data?.metaobjectDelete?.userErrors ?? [];
+  return errors.length
+    ? {ok: false, message: errors[0]?.message ?? 'could not delete the layout'}
+    : {ok: true};
 }

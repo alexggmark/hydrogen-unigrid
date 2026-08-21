@@ -35,6 +35,7 @@ import {
   type Layout,
   type Palette as ThemePalette,
 } from '@unigrid/core';
+import {useState} from 'react';
 import {Palette} from './Palette';
 import {Tree, type NodeDrag} from './Tree';
 
@@ -82,6 +83,10 @@ export type RailProps = {
   tab: Tab;
   onTab: (tab: Tab) => void;
   onPalette?: (palette: ThemePalette) => void;
+  pages?: PageEntry[];
+  target?: string;
+  missing?: boolean;
+  onPages?: (intent: string, fields?: Record<string, string>) => void;
   onSavePalette?: () => void;
   // absent in the playground, present in the admin app
   onSave?: () => void;
@@ -436,6 +441,14 @@ const TABS = [
 
 export type Tab = (typeof TABS)[number]['key'];
 
+export type PageEntry = {
+  target: string;
+  title: string;
+  handle: string;
+  hasLayout: boolean;
+  layoutId?: string;
+};
+
 function ThemePanel({props}: {props: RailProps}) {
   return (
     <Section title="Theme colours">
@@ -472,22 +485,86 @@ function ThemePanel({props}: {props: RailProps}) {
   );
 }
 
-function PagesPanel() {
+function PagesPanel({props}: {props: RailProps}) {
+  const pages = props.pages ?? [];
+  const go = (target: string) => {
+    const params = new URLSearchParams(window.location.search);
+    params.set('target', target);
+    window.location.search = params.toString();
+  };
+
+  if (!props.onPages) {
+    return (
+      <Section title="Pages">
+        <Callout.Root size="1" color="gray">
+          <Callout.Text>
+            Pages live in the admin app. The playground edits one fixed layout.
+          </Callout.Text>
+        </Callout.Root>
+      </Section>
+    );
+  }
+
   return (
     <Section title="Pages">
-      <Callout.Root size="1" color="gray">
-        <Callout.Text>
-          Not wired up yet. Creating and switching between pages lands here.
-        </Callout.Text>
-      </Callout.Root>
-      <Flex direction="column" gap="1">
-        {['Home', 'About', 'Contact'].map((name, i) => (
-          <Button key={name} size="1" variant={i === 0 ? 'solid' : 'soft'} disabled>
-            {name}
-          </Button>
+      <Flex direction="column" gap="2">
+        {pages.map((page) => (
+          <Flex
+            key={page.target}
+            direction="column"
+            gap="1"
+            className="e-page"
+          >
+            <Flex gap="2" align="center">
+              <Button
+                size="1"
+                variant={page.target === props.target ? 'solid' : 'soft'}
+                onClick={() => go(page.target)}
+                style={{flex: '1 1 auto', justifyContent: 'flex-start'}}
+              >
+                <Text truncate>{page.title}</Text>
+              </Button>
+              {page.hasLayout ? null : (
+                <Badge size="1" color="gray">
+                  no layout
+                </Badge>
+              )}
+            </Flex>
+
+            {page.hasLayout ? null : (
+              <Button
+                size="1"
+                variant="soft"
+                onClick={() => props.onPages?.('attach', {target: page.target})}
+              >
+                Add a layout
+              </Button>
+            )}
+          </Flex>
         ))}
       </Flex>
+
+      <NewPage onCreate={(title) => props.onPages?.('newPage', {title})} />
     </Section>
+  );
+}
+
+function NewPage({onCreate}: {onCreate: (title: string) => void}) {
+  const [title, setTitle] = useState('');
+  return (
+    <Flex gap="2" align="end">
+      <Field label="New page">
+        <TextField.Root
+          size="1"
+          value={title}
+          placeholder="Title"
+          onChange={(e) => setTitle(e.target.value)}
+        />
+      </Field>
+      <Button size="1" disabled={!title.trim()} onClick={() => onCreate(title.trim())}>
+        Create
+      </Button>
+    </Flex>
   );
 }
 
@@ -736,7 +813,7 @@ export function Rail(props: RailProps) {
         {props.tab === 'theme' ? (
           <ThemePanel props={props} />
         ) : props.tab === 'pages' ? (
-          <PagesPanel />
+          <PagesPanel props={props} />
         ) : (
           <EditorPanel props={props} />
         )}

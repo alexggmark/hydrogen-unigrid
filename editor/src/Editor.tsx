@@ -45,7 +45,7 @@ import {DragHandles} from './DragHandles';
 import {NEW_SPAN} from './Palette';
 import {cellAt, gridUnits, moved, resized, snap, type Edge} from './geometry';
 import {dropTarget, type NodeDrag} from './Tree';
-import {Rail, type Tab} from './Rail';
+import {Rail, type PageEntry, type Tab} from './Rail';
 import {DEFAULT_PALETTE, type Layout, type Palette} from '@unigrid/core';
 
 
@@ -109,6 +109,11 @@ export type EditorProps = {
   busy?: boolean;
   version?: number;
   initialPalette?: Palette;
+  // the shell owns pages; the editor only shows them and reports intent
+  pages?: PageEntry[];
+  target?: string;
+  missing?: boolean;
+  onPages?: (intent: string, fields?: Record<string, string>) => void;
   onSavePalette?: (palette: Palette) => void;
   // draft differs from published. the editor cannot work this out for itself:
   // what it holds is the last save, not what is live.
@@ -124,6 +129,10 @@ export function Editor({
   busy,
   version,
   initialPalette,
+  pages,
+  target,
+  missing,
+  onPages,
   onSavePalette,
   unpublished,
   error: outerError,
@@ -506,6 +515,10 @@ export function Editor({
           unpublished={unpublished}
           resync={resync}
           palette={palette}
+          pages={pages}
+          target={target}
+          missing={missing}
+          onPages={onPages}
           tab={tab}
           onTab={setTab}
           onPalette={setPalette}
