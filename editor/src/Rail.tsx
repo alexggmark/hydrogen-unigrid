@@ -89,6 +89,10 @@ export type RailProps = {
   onPages?: (intent: string, fields?: Record<string, string>) => void;
   // injected, because this package must not reach for a router
   onOpen?: (target: string) => void;
+  dirty?: boolean;
+  regions?: {target: string; label: string}[];
+  active?: string;
+  onActivate?: (target: string) => void;
   onSavePalette?: () => void;
   // absent in the playground, present in the admin app
   onSave?: () => void;
@@ -516,7 +520,12 @@ function PagesPanel({props}: {props: RailProps}) {
               <Button
                 size="1"
                 variant={page.target === props.target ? 'solid' : 'soft'}
-                onClick={() => props.onOpen?.(page.target)}
+                onClick={() => {
+                  // already on the canvas: switch locally rather than reloading
+                  const here = props.regions?.some((r) => r.target === page.target);
+                  if (here) props.onActivate?.(page.target);
+                  else props.onOpen?.(page.target);
+                }}
                 style={{flex: '1 1 auto', justifyContent: 'flex-start'}}
               >
                 <Text truncate>{page.title}</Text>
@@ -565,12 +574,33 @@ function NewPage({onCreate}: {onCreate: (title: string) => void}) {
   );
 }
 
+function RegionPicker({props}: {props: RailProps}) {
+  if (!props.regions || props.regions.length < 2) return null;
+  return (
+    <Section title="Editing">
+      <SegmentedControl.Root
+        size="1"
+        value={props.active ?? ''}
+        onValueChange={(t) => props.onActivate?.(t)}
+        style={{width: '100%'}}
+      >
+        {props.regions.map((r) => (
+          <SegmentedControl.Item key={r.target} value={r.target}>
+            {r.label}
+          </SegmentedControl.Item>
+        ))}
+      </SegmentedControl.Root>
+    </Section>
+  );
+}
+
 function EditorPanel({props}: {props: RailProps}) {
   const {layout, band, selected, authored, editable, clipped, block, node} = props;
   const derived = selected !== null && band !== WIDEST && !authored;
 
   return (
     <>
+        <RegionPicker props={props} />
         <Section title="Band">
           <SegmentedControl.Root
             size="1"
@@ -736,7 +766,13 @@ function EditorPanel({props}: {props: RailProps}) {
           {props.onSave ? (
             <Flex direction="column" gap="2">
               <Flex gap="2" align="center">
-                <Button size="1" variant="soft" onClick={props.onSave} loading={props.busy}>
+                <Button
+                  size="1"
+                  variant="soft"
+                  onClick={props.onSave}
+                  loading={props.busy}
+                  disabled={!props.dirty}
+                >
                   Save draft
                 </Button>
                 <Button

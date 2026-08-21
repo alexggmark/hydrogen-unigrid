@@ -397,6 +397,25 @@ export type UnigridThemeQuery = {
   }>;
 };
 
+export type UnigridCompositionQueryVariables = StorefrontAPI.Exact<{
+  body: StorefrontAPI.Scalars['String']['input'];
+}>;
+
+export type UnigridCompositionQuery = {
+  header?: StorefrontAPI.Maybe<{
+    fields: Array<Pick<StorefrontAPI.MetaobjectField, 'key' | 'value'>>;
+  }>;
+  body?: StorefrontAPI.Maybe<{
+    fields: Array<Pick<StorefrontAPI.MetaobjectField, 'key' | 'value'>>;
+  }>;
+  footer?: StorefrontAPI.Maybe<{
+    fields: Array<Pick<StorefrontAPI.MetaobjectField, 'key' | 'value'>>;
+  }>;
+  theme?: StorefrontAPI.Maybe<{
+    fields: Array<Pick<StorefrontAPI.MetaobjectField, 'key' | 'value'>>;
+  }>;
+};
+
 export type ArticleQueryVariables = StorefrontAPI.Exact<{
   articleHandle: StorefrontAPI.Scalars['String']['input'];
   blogHandle: StorefrontAPI.Scalars['String']['input'];
@@ -1236,6 +1255,10 @@ interface GeneratedQueryTypes {
   '#graphql\n  query UnigridTheme {\n    metaobject(handle: {type: "unigrid_theme", handle: "default"}) {\n      fields { key value }\n    }\n  }\n': {
     return: UnigridThemeQuery;
     variables: UnigridThemeQueryVariables;
+  };
+  '#graphql\n  query UnigridComposition($body: String!) {\n    header: metaobject(handle: {type: "unigrid_layout", handle: "header"}) {\n      fields { key value }\n    }\n    body: metaobject(handle: {type: "unigrid_layout", handle: $body}) {\n      fields { key value }\n    }\n    footer: metaobject(handle: {type: "unigrid_layout", handle: "footer"}) {\n      fields { key value }\n    }\n    theme: metaobject(handle: {type: "unigrid_theme", handle: "default"}) {\n      fields { key value }\n    }\n  }\n': {
+    return: UnigridCompositionQuery;
+    variables: UnigridCompositionQueryVariables;
   };
   '#graphql\n  query Article(\n    $articleHandle: String!\n    $blogHandle: String!\n    $country: CountryCode\n    $language: LanguageCode\n  ) @inContext(language: $language, country: $country) {\n    blog(handle: $blogHandle) {\n      handle\n      articleByHandle(handle: $articleHandle) {\n        handle\n        title\n        contentHtml\n        publishedAt\n        author: authorV2 {\n          name\n        }\n        image {\n          id\n          altText\n          url\n          width\n          height\n        }\n        seo {\n          description\n          title\n        }\n      }\n    }\n  }\n': {
     return: ArticleQuery;

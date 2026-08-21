@@ -37,6 +37,7 @@ import {
   WIDEST,
   type Band,
   type Cell,
+  type History as LayoutHistory,
   type ElementKind,
   type Node,
 } from '@unigrid/core';
@@ -99,12 +100,20 @@ const NEW_NODE: Record<ElementKind | 'group', (id: string) => Node> = {
   }),
 };
 
+export type Region = {target: string; label: string; layout: Layout};
+
 export type EditorProps = {
   initial: Layout;
+  // every region on the canvas, in render order. one is active, the rest are
+  // shown but inert — clicking one activates it.
+  regions?: Region[];
+  activeTarget?: string;
   dev?: boolean;
   // absent means this shell cannot persist. that is the playground's guarantee,
   // not a convention — there is no code path from here to a store without it.
-  onSave?: (layout: Layout) => void;
+  // every region with changes, not just the active one — switching region must
+  // never be a way to lose work
+  onSave?: (changed: {target: string; layout: Layout}[]) => void;
   onPublish?: () => void;
   busy?: boolean;
   version?: number;
@@ -124,6 +133,8 @@ export type EditorProps = {
 
 export function Editor({
   initial,
+  regions,
+  activeTarget,
   dev,
   onSave,
   onPublish,
@@ -141,7 +152,31 @@ export function Editor({
 }: EditorProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const afterDrag = useRef(false);
-  const [hist, setHist] = useState(() => history(initial));
+  // a history per region. only one is ever editable, so nothing spans them —
+  // that is what keeps this from being three editors in a trenchcoat.
+  const [hists, setHists] = useState<Record<string, LayoutHistory>>(() =>
+    Object.fromEntries(
+      (regions ?? [{target: 'page', layout: initial}]).map((r) => [
+        r.target,
+        history(r.layout),
+      ]),
+    ),
+  );
+  const [active, setActive] = useState(
+    () => activeTarget ?? regions?.[0]?.target ?? 'page',
+  );
+
+  const hist = hists[active] ?? history(initial);
+  const activate = useCallback((target: string) => {
+    setActive(target);
+    setSelected(null);
+    setNode(null);
+  }, []);
+  const setHist = useCallback(
+    (fn: (h: LayoutHistory) => LayoutHistory) =>
+      setHists((all) => ({...all, [active]: fn(all[active] ?? history(initial))})),
+    [active, initial],
+  );
   const [band, setBand] = useState<Band>(WIDEST);
   const [selected, setSelected] = useState<string | null>(null);
   const [node, setNode] = useState<string | null>(null);
@@ -177,8 +212,11 @@ export function Editor({
   const authored = block ? cellIn(block, band) : undefined;
   const editable = authored ?? (selected ? cellOf(selected) : undefined);
 
+  // the active region's grid. `.u-grid` alone would find the header's, and
+  // every drag delta and clip measurement would silently use its geometry.
   const gridEl = () =>
-    hostRef.current?.querySelector<HTMLElement>('.u-grid') ?? null;
+    hostRef.current?.querySelector<HTMLElement>('.e-region-active .u-grid') ??
+    null;
 
   // url is the editor's state store. plain searchparams, no router hooks.
   useEffect(() => {
@@ -336,6 +374,13 @@ export function Editor({
 
     if (drag.kind === 'new') {
       const {x, y} = operation.position.current;
+      // a pointer over an inert region would otherwise be clamped into the
+      // active grid, dropping the block somewhere the pointer never was
+      const box = grid.getBoundingClientRect();
+      const inside =
+        x >= box.left && x <= box.right && y >= box.top && y <= box.bottom;
+      if (!inside) return setPreview(null);
+
       const spot = cellAt(grid, x, y, u, NEW_SPAN.colSpan);
       setPreview(previewOf({...spot, ...NEW_SPAN}, null));
       return;
@@ -429,13 +474,18 @@ export function Editor({
         afterDrag.current = false;
         return;
       }
-      const hit = (e.target as HTMLElement).closest<HTMLElement>('[data-block]');
+      const el = e.target as HTMLElement;
+      // an inert region handles its own click by activating itself
+      if (!el.closest('.e-region-active')) return;
+      const hit = el.closest<HTMLElement>('[data-block]');
       setSelected(hit?.dataset.block ?? null);
     };
     // tabbing onto a block selects it, or its resize handles — which only
     // render for the selection — could never be reached without a mouse
     const onFocusIn = (e: FocusEvent) => {
-      const hit = (e.target as HTMLElement | null)?.closest<HTMLElement>('[data-block]');
+      const el = e.target as HTMLElement | null;
+      if (!el?.closest('.e-region-active')) return;
+      const hit = el.closest<HTMLElement>('[data-block]');
       if (hit?.dataset.block) setSelected(hit.dataset.block);
     };
 
@@ -460,6 +510,44 @@ export function Editor({
       <div className="e-shell">
         <div className="e-stage" ref={hostRef} data-band={band}>
           <div className="e-canvas">
+            {/* inert regions: rendered so the page reads whole, but no chrome,
+                no selection and no drag. clicking one makes it the active one. */}
+            {(regions ?? []).map((region) => {
+              if (region.target === active) return null;
+              const layoutOf = hists[region.target]?.present;
+              const blocks = layoutOf?.blocks ?? [];
+              // an empty region still renders. the storefront hides one, but
+              // here it is the only thing there is to click to start writing it.
+              return (
+                <div
+                  key={region.target}
+                  className="e-region"
+                  data-label={region.label}
+                  data-empty={blocks.length ? undefined : ''}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => activate(region.target)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') activate(region.target);
+                  }}
+                  style={{order: regions?.indexOf(region)}}
+                >
+                  {blocks.length && layoutOf ? (
+                    <Grid dev={false} palette={palette}>
+                      {blocks.map((b) => {
+                        const cell = deriveAll(layoutOf).get(b.id);
+                        return cell ? <Block key={b.id} block={b} at={cell} /> : null;
+                      })}
+                    </Grid>
+                  ) : null}
+                </div>
+              );
+            })}
+            <div
+              className="e-region e-region-active"
+              data-label={regions?.find((r) => r.target === active)?.label}
+              style={{order: regions?.findIndex((r) => r.target === active)}}
+            >
             <Grid probes dev={dev} palette={palette}>
               {layout.blocks.map((b) => {
                 const p = at.get(b.id);
@@ -497,6 +585,7 @@ export function Editor({
                 />
               ) : null}
             </Grid>
+            </div>
           </div>
         </div>
 
@@ -510,7 +599,20 @@ export function Editor({
           block={block}
           node={picked}
           dragging={nodeDrag}
-          onSave={onSave ? () => onSave(layout) : undefined}
+          onSave={
+            onSave
+              ? () =>
+                  onSave(
+                    Object.entries(hists)
+                      .filter(([, h]) => h.past.length > 0)
+                      .map(([target, h]) => ({target, layout: h.present})),
+                  )
+              : undefined
+          }
+          dirty={Object.values(hists).some((h) => h.past.length > 0)}
+          regions={regions}
+          active={active}
+          onActivate={activate}
           onPublish={onPublish}
           busy={busy}
           version={version}

@@ -66,6 +66,16 @@ async function write(admin: Admin, id: string, fields: Fields): Promise<Result> 
     : {ok: true};
 }
 
+// every region the editor shows at once: the two shared ones plus the target
+export async function loadComposition(admin: Admin, target: string) {
+  const [header, body, footer] = await Promise.all([
+    loadDraft(admin, 'header'),
+    loadDraft(admin, target),
+    loadDraft(admin, 'footer'),
+  ]);
+  return {header, body, footer};
+}
+
 export async function loadDraft(admin: Admin, handle: string) {
   const entry = await read(admin, handle);
   if (!entry) return null;
@@ -194,6 +204,13 @@ const LAYOUT_DELETE = `#graphql
   }
 `;
 
+// header and footer are layouts like any other, they just are not pages. fixed
+// rows so they are always reachable, and never candidates for reconciliation.
+export const REGIONS = [
+  {target: 'header', title: 'Header'},
+  {target: 'footer', title: 'Footer'},
+] as const;
+
 export type PageRow = {
   target: string;
   title: string;
@@ -238,6 +255,13 @@ export async function listPages(admin: Admin): Promise<PageRow[]> {
   }
 
   return [
+    ...REGIONS.map((r) => ({
+      target: r.target as string,
+      title: r.title as string,
+      handle: '',
+      hasLayout: byTarget.has(r.target),
+      ...(byTarget.get(r.target) ? {layoutId: byTarget.get(r.target)!} : {}),
+    })),
     {
       target: 'home',
       title: 'Home',

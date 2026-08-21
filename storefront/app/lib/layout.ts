@@ -61,6 +61,61 @@ export async function loadPalette(storefront: Queryable): Promise<Palette> {
   return paletteFrom(data?.metaobject?.fields);
 }
 
+// one request for the whole page: header, body, footer and the theme. four
+// round trips to render one page would be three too many.
+export const COMPOSITION_QUERY = `#graphql
+  query UnigridComposition($body: String!) {
+    header: metaobject(handle: {type: "unigrid_layout", handle: "header"}) {
+      fields { key value }
+    }
+    body: metaobject(handle: {type: "unigrid_layout", handle: $body}) {
+      fields { key value }
+    }
+    footer: metaobject(handle: {type: "unigrid_layout", handle: "footer"}) {
+      fields { key value }
+    }
+    theme: metaobject(handle: {type: "unigrid_theme", handle: "default"}) {
+      fields { key value }
+    }
+  }
+` as const;
+
+export type Composition = {
+  header: Layout | null;
+  body: Layout | null;
+  footer: Layout | null;
+  palette: Palette;
+};
+
+const layoutFrom = (
+  region: {fields: Fields} | null | undefined,
+  which: 'draft' | 'published',
+): Layout | null => {
+  const stored = region ? fromFields(region.fields, which) : null;
+  // an empty region is the same as no region — nothing to render, no wrapper
+  return stored && stored.layout.blocks.length ? stored.layout : null;
+};
+
+export async function loadComposition(
+  storefront: Queryable,
+  target: string,
+  which: 'draft' | 'published' = 'published',
+): Promise<Composition> {
+  const data = await storefront.query<{
+    header?: {fields: Fields} | null;
+    body?: {fields: Fields} | null;
+    footer?: {fields: Fields} | null;
+    theme?: {fields: Fields} | null;
+  }>(COMPOSITION_QUERY, {variables: {body: handleFor(target)}});
+
+  return {
+    header: layoutFrom(data?.header, which),
+    body: layoutFrom(data?.body, which),
+    footer: layoutFrom(data?.footer, which),
+    palette: paletteFrom(data?.theme?.fields),
+  };
+}
+
 export async function loadLayout(
   storefront: Queryable,
   target: string,

@@ -17,7 +17,7 @@ import {
   createLayout,
   createPage,
   listPages,
-  loadDraft,
+  loadComposition,
   loadPalette,
   publish,
   saveDraft,
@@ -38,18 +38,30 @@ const targetOf = (request: Request) =>
 export const loader = async ({request}: LoaderFunctionArgs) => {
   const {admin} = await authenticate.admin(request);
   const target = targetOf(request);
-  const [draft, palette, pages] = await Promise.all([
-    loadDraft(admin, target),
+  // header and footer are shared, so they have no page of their own. show them
+  // against the homepage rather than emitting a second region with the same
+  // target, which collapses to one and gives react duplicate keys.
+  const bodyTarget = target === 'header' || target === 'footer' ? 'home' : target;
+
+  const [regions, palette, pages] = await Promise.all([
+    loadComposition(admin, bodyTarget),
     loadPalette(admin),
     listPages(admin),
   ]);
+  const empty: Layout = {version: 1, blocks: []};
+  const label = pages.find((p) => p.target === bodyTarget)?.title ?? 'Page';
+
   return {
     target,
     pages,
     palette,
-    layout: draft?.layout ?? null,
-    version: draft?.version ?? 0,
-    unpublished: draft?.unpublished ?? false,
+    regions: [
+      {target: 'header', label: 'Header', layout: regions.header?.layout ?? empty},
+      {target: bodyTarget, label, layout: regions.body?.layout ?? empty},
+      {target: 'footer', label: 'Footer', layout: regions.footer?.layout ?? empty},
+    ],
+    version: regions.body?.version ?? 0,
+    unpublished: regions.body?.unpublished ?? false,
   };
 };
 
@@ -68,15 +80,26 @@ export const action = async ({request}: ActionFunctionArgs) => {
     return savePalette(admin, JSON.parse(theme) as Palette);
   }
 
-  const layout = decode(String(form.get('layout') ?? ''));
-  if (!layout) return {ok: false, message: 'could not read that layout'};
-  return saveDraft(admin, target, layout);
+  // one submit carries every region that changed, so switching region cannot
+  // strand an edit in a tab nobody saved
+  const changed = JSON.parse(String(form.get('changed') ?? '[]')) as {
+    target: string;
+    layout: string;
+  }[];
+
+  for (const region of changed) {
+    const layout = decode(region.layout);
+    if (!layout) return {ok: false, message: `could not read ${region.target}`};
+    const result = await saveDraft(admin, region.target, layout);
+    if (!result.ok) return result;
+  }
+  return {ok: true};
 };
 
 export default function Index() {
-  const {layout, version, unpublished, palette, pages, target} =
+  const {regions, version, unpublished, palette, pages, target} =
     useLoaderData<typeof loader>() as {
-      layout: Layout | null;
+      regions: {target: string; label: string; layout: Layout}[];
       version: number;
       unpublished: boolean;
       palette: Palette;
@@ -87,8 +110,16 @@ export default function Index() {
   const navigate = useNavigate();
 
   const onSave = useCallback(
-    (next: Layout) =>
-      fetcher.submit({layout: encode(next), target}, {method: 'post'}),
+    (changed: {target: string; layout: Layout}[]) =>
+      fetcher.submit(
+        {
+          changed: JSON.stringify(
+            changed.map((c) => ({target: c.target, layout: encode(c.layout)})),
+          ),
+          target,
+        },
+        {method: 'post'},
+      ),
     [fetcher, target],
   );
 
@@ -113,8 +144,9 @@ export default function Index() {
   return (
     <Editor
       key={target}
-      initial={layout ?? {version: 1, blocks: []}}
-      missing={!layout}
+      initial={regions[1]?.layout ?? {version: 1, blocks: []}}
+      regions={regions}
+      activeTarget={target}
       pages={pages}
       target={target}
       onPages={onPages}

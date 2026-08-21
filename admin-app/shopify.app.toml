@@ -26,6 +26,4 @@ api_version = "2026-07"
 redirect_urls = [ "http://localhost" ]
 
 [build]
-# without this, `deploy` pushes extensions only — scope changes never reach Shopify
-include_config_on_deploy = true
 automatically_update_urls_on_dev = true

@@ -44,8 +44,10 @@ export default defineConfig({
     port: Number(process.env.PORT || 3000),
     hmr: hmrConfig,
     fs: {
+      // the workspace packages are symlinks into the repo root, and vite
+      // resolves them to their real paths — outside both of these
       // See https://vitejs.dev/config/server-options.html#server-fs-allow for more information
-      allow: ["app", "node_modules"],
+      allow: ["app", "node_modules", ".."],
     },
   },
   plugins: [
@@ -57,5 +59,8 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ["@shopify/app-bridge-react"],
+    // source, not dependencies. pre-bundling them caches the build and edits
+    // stop reaching the browser until the cache is cleared by hand.
+    exclude: ["@unigrid/core", "@unigrid/blocks", "@unigrid/editor"],
   },
 }) satisfies UserConfig;

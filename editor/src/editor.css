@@ -270,3 +270,79 @@
   padding-inline: 12px;
   border-block-end: 1px solid var(--gray-a5);
 }
+
+/* an inert region: shown so the page reads whole, but nothing in it responds */
+.e-region {
+  position: relative;
+}
+.e-region:not(.e-region-active) {
+  cursor: pointer;
+  opacity: 0.55;
+  filter: saturate(0.6);
+}
+.e-region:not(.e-region-active) * {
+  pointer-events: none;
+}
+.e-region:not(.e-region-active)::after {
+  content: attr(data-label) ' — click to edit';
+  position: absolute;
+  inset-block-start: 6px;
+  inset-inline-start: 6px;
+  z-index: 4;
+  background: var(--gray-12);
+  color: var(--gray-1);
+  font: 700 10px/1 ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 6px;
+  border-radius: 3px;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.e-region:not(.e-region-active):hover::after,
+.e-region:not(.e-region-active):focus-visible::after {
+  opacity: 1;
+}
+.e-region:not(.e-region-active):hover,
+.e-region:not(.e-region-active):focus-visible {
+  outline: 2px dashed var(--gray-a8);
+  outline-offset: -2px;
+  opacity: 0.8;
+}
+/* the region being edited says so, quietly */
+.e-region-active::after {
+  content: attr(data-label);
+  position: absolute;
+  inset-block-start: 6px;
+  inset-inline-start: 6px;
+  z-index: 4;
+  pointer-events: none;
+  font: 700 10px/1 ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gray-a9);
+}
+.e-canvas {
+  display: flex;
+  flex-direction: column;
+}
+
+/* nothing written yet. without a body of its own there is nothing to click,
+   so the label is the affordance rather than a hint on hover. */
+.e-region[data-empty] {
+  min-block-size: 64px;
+  display: grid;
+  place-items: center;
+  margin: 8px 24px;
+  border: 1px dashed var(--gray-a7);
+  border-radius: 4px;
+  opacity: 1;
+  filter: none;
+}
+.e-region[data-empty]::after {
+  content: attr(data-label) ' — empty, click to add';
+  position: static;
+  opacity: 1;
+  background: none;
+  color: var(--gray-a10);
+}
