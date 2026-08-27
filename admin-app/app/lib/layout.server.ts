@@ -1,3 +1,4 @@
+import {menuPath, type MenuLink} from '@unigrid/blocks';
 import {
   DEFAULT_PALETTE,
   SLOTS,
@@ -183,6 +184,66 @@ export async function savePalette(admin: Admin, palette: Palette): Promise<Resul
     id,
     SLOTS.map((slot) => ({key: `c${slot}`, value: palette[slot]})),
   );
+}
+
+const MENUS = `#graphql
+  query AdminMenus($first: Int!) {
+    menus(first: $first) {
+      nodes {
+        id
+        handle
+        title
+        items { id title url }
+      }
+    }
+  }
+`;
+
+const SHOP_DOMAIN = `#graphql
+  query AdminShopDomain {
+    shop { primaryDomain { host } myshopifyDomain }
+  }
+`;
+
+export type StoreMenu = {handle: string; title: string; items: MenuLink[]};
+
+// every menu, not just the referenced ones: the rail offers them as a picker,
+// so a merchant chooses from what exists rather than typing a handle.
+export async function loadMenus(admin: Admin): Promise<StoreMenu[]> {
+  const [menusRes, shopRes] = await Promise.all([
+    admin.graphql(MENUS, {variables: {first: 50}}),
+    admin.graphql(SHOP_DOMAIN),
+  ]);
+
+  const nodes = ((await menusRes.json()) as {
+    data?: {
+      menus?: {
+        nodes: {
+          handle: string;
+          title: string;
+          items: {id: string; title: string; url?: string | null}[];
+        }[];
+      };
+    };
+  }).data?.menus?.nodes ?? [];
+
+  const shop = ((await shopRes.json()) as {
+    data?: {shop?: {primaryDomain?: {host: string}; myshopifyDomain?: string}};
+  }).data?.shop;
+  const domains = [shop?.primaryDomain?.host, shop?.myshopifyDomain].filter(
+    (d): d is string => Boolean(d),
+  );
+
+  return nodes.map((menu) => ({
+    handle: menu.handle,
+    title: menu.title,
+    items: menu.items.reduce<MenuLink[]>((acc, item) => {
+      if (item.url) {
+        acc.push({id: item.id, title: item.title, url: menuPath(item.url, domains)});
+      }
+      return acc;
+    }, []),
+  }));
 }
 
 const PAGES = `#graphql

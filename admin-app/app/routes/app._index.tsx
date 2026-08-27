@@ -18,11 +18,13 @@ import {
   createPage,
   listPages,
   loadComposition,
+  loadMenus,
   loadPalette,
   publishAll,
   saveDraft,
   savePalette,
   type PageRow,
+  type StoreMenu,
 } from '../lib/layout.server';
 
 export const links: LinksFunction = () => [
@@ -42,10 +44,11 @@ export const loader = async ({request}: LoaderFunctionArgs) => {
   // avoids a second region with the same target, which collapses to one.
   const bodyTarget = target === 'header' || target === 'footer' ? 'home' : target;
 
-  const [regions, palette, pages] = await Promise.all([
+  const [regions, palette, pages, menus] = await Promise.all([
     loadComposition(admin, bodyTarget),
     loadPalette(admin),
     listPages(admin),
+    loadMenus(admin),
   ]);
   const empty: Layout = {version: 1, blocks: []};
   const label = pages.find((p) => p.target === bodyTarget)?.title ?? 'Page';
@@ -54,6 +57,7 @@ export const loader = async ({request}: LoaderFunctionArgs) => {
     target,
     pages,
     palette,
+    menus,
     regions: [
       {target: 'header', label: 'Header', layout: regions.header?.layout ?? empty},
       {target: bodyTarget, label, layout: regions.body?.layout ?? empty},
@@ -102,13 +106,14 @@ export const action = async ({request}: ActionFunctionArgs) => {
 };
 
 export default function Index() {
-  const {regions, version, unpublished, palette, pages, target} =
+  const {regions, version, unpublished, palette, pages, menus, target} =
     useLoaderData<typeof loader>() as {
       regions: {target: string; label: string; layout: Layout}[];
       version: number;
       unpublished: boolean;
       palette: Palette;
       pages: PageRow[];
+      menus: StoreMenu[];
       target: string;
     };
   const fetcher = useFetcher<typeof action>();
@@ -159,6 +164,7 @@ export default function Index() {
       onSave={onSave}
       onPublish={onPublish}
       initialPalette={palette ?? DEFAULT_PALETTE}
+      menus={menus}
       onSavePalette={onSavePalette}
       busy={fetcher.state !== 'idle'}
       version={version}

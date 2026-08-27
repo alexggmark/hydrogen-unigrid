@@ -18,7 +18,11 @@ export const links: LinksFunction = () => [
 ];
 
 export async function loader({context}: Route.LoaderArgs) {
-  return {composition: await loadComposition(context.storefront, 'home')};
+  return {
+    composition: await loadComposition(context.storefront, 'home', 'published', [
+      context.env.PUBLIC_STORE_DOMAIN,
+    ]),
+  };
 }
 
 export default function Home() {

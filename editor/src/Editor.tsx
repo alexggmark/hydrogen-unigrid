@@ -41,8 +41,17 @@ import {
   type ElementKind,
   type Node,
 } from '@unigrid/core';
-import {Block, Grid, deriveAll, overflowing, sameOverflow} from '@unigrid/blocks';
+import {
+  Block,
+  Grid,
+  deriveAll,
+  overflowing,
+  sameOverflow,
+  type MenuLink,
+  type Menus,
+} from '@unigrid/blocks';
 import {DragHandles} from './DragHandles';
+import {InertLink} from './link';
 import {NEW_SPAN} from './Palette';
 import {cellAt, gridUnits, moved, resized, snap, type Edge} from './geometry';
 import {dropTarget, type NodeDrag} from './Tree';
@@ -90,7 +99,10 @@ const NEW_NODE: Record<ElementKind | 'group', (id: string) => Node> = {
   headline: (id) => ({id, kind: 'headline', level: 2, value: 'Headline'}),
   text: (id) => ({id, kind: 'text', size: 'sm', value: 'Body text.'}),
   richText: (id) => ({id, kind: 'richText', size: 'sm', value: 'First line.\nSecond line.'}),
-  button: (id) => ({id, kind: 'button', variant: 'primary', label: 'Button', href: '#'}),
+  // no href until one is typed: a new button is a label, not a link to nowhere
+  button: (id) => ({id, kind: 'button', variant: 'primary', label: 'Button', href: ''}),
+  // no handle until one is picked: the rail lists what the store actually has
+  menu: (id) => ({id, kind: 'menu', handle: '', direction: 'row', collapse: false}),
   group: (id) => ({
     id,
     kind: 'group',
@@ -100,6 +112,9 @@ const NEW_NODE: Record<ElementKind | 'group', (id: string) => Node> = {
 };
 
 export type Region = {target: string; label: string; layout: Layout};
+
+// the store's navigation menus, resolved by the shell. the playground has none.
+export type StoreMenu = {handle: string; title: string; items: MenuLink[]};
 
 export type EditorProps = {
   initial: Layout;
@@ -115,6 +130,7 @@ export type EditorProps = {
   busy?: boolean;
   version?: number;
   initialPalette?: Palette;
+  menus?: StoreMenu[];
   // the shell owns pages; the editor only shows them and reports intent
   pages?: PageEntry[];
   target?: string;
@@ -138,6 +154,7 @@ export function Editor({
   busy,
   version,
   initialPalette,
+  menus,
   pages,
   target,
   missing,
@@ -183,6 +200,10 @@ export function Editor({
   const [clipped, setClipped] = useState<Record<string, number>>({});
   const [tab, setTab] = useState<Tab>('editor');
   const [palette, setPalette] = useState(initialPalette ?? DEFAULT_PALETTE);
+  const resolved: Menus = useMemo(
+    () => Object.fromEntries((menus ?? []).map((m) => [m.handle, m.items])),
+    [menus],
+  );
   // rail-tree drags are their own gesture: no ghost, no cell, no placement
   const [nodeDrag, setNodeDrag] = useState<NodeDrag | null>(null);
   // dnd-kit reorders the dom mid-drag and does not undo it across groups, so a
@@ -529,7 +550,12 @@ export function Editor({
                   style={{order: regions?.indexOf(region)}}
                 >
                   {blocks.length && layoutOf ? (
-                    <Grid dev={false} palette={palette}>
+                    <Grid
+                      dev={false}
+                      link={InertLink}
+                      menus={resolved}
+                      palette={palette}
+                    >
                       {blocks.map((b) => {
                         const cell = deriveAll(layoutOf).get(b.id);
                         return cell ? <Block key={b.id} block={b} at={cell} /> : null;
@@ -544,7 +570,13 @@ export function Editor({
               data-label={regions?.find((r) => r.target === active)?.label}
               style={{order: regions?.findIndex((r) => r.target === active)}}
             >
-            <Grid probes dev={dev} palette={palette}>
+            <Grid
+              probes
+              dev={dev}
+              link={InertLink}
+              menus={resolved}
+              palette={palette}
+            >
               {layout.blocks.map((b) => {
                 const p = at.get(b.id);
                 if (!p) return null;
@@ -615,6 +647,7 @@ export function Editor({
           unpublished={unpublished}
           resync={resync}
           palette={palette}
+          menus={menus}
           pages={pages}
           target={target}
           missing={missing}

@@ -1,4 +1,6 @@
-import type {CSSProperties} from 'react';
+import {useState, type CSSProperties} from 'react';
+import {useLinkRender} from './link';
+import {useMenu} from './menu';
 import {
   isGroup,
   isSlot,
@@ -62,7 +64,46 @@ export const flexVars = (f: Flex): CSSProperties =>
 
 const HEADINGS = ['h1', 'h2', 'h3', 'h4', 'h5'] as const;
 
+// top level only, like the hydrogen header it is modelled on. nested items in a
+// clipped box would open into a space the block does not have.
+function Menu({node}: {node: Extract<Element, {kind: 'menu'}>}) {
+  const Link = useLinkRender();
+  const items = useMenu(node.handle);
+  const [open, setOpen] = useState(false);
+
+  return (
+    <nav
+      className="u-menu"
+      data-collapse={node.collapse ? '' : undefined}
+      data-dir={node.direction}
+      data-open={open ? '' : undefined}
+    >
+      {node.collapse ? (
+        <button
+          aria-expanded={open}
+          className="u-menu-toggle"
+          onClick={() => setOpen((v) => !v)}
+          type="button"
+        >
+          <span aria-hidden>{open ? '\u2715' : '\u2630'}</span>
+          <span className="u-sr">Menu</span>
+        </button>
+      ) : null}
+      <ul className="u-menu-list">
+        {items.map((item) => (
+          <li key={item.id}>
+            <Link className="u-menu-link" href={item.url}>
+              {item.title}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
 function Leaf({node}: {node: Element}) {
+  const Link = useLinkRender();
   switch (node.kind) {
     case 'headline': {
       const Tag = HEADINGS[node.level - 1] ?? 'h2';
@@ -76,11 +117,18 @@ function Leaf({node}: {node: Element}) {
         <p className={`u-text u-text-${node.size} u-lines`}>{node.value}</p>
       );
     case 'button':
-      return (
+      // no href is a label, not a broken link
+      return node.href ? (
+        <Link className="u-btn" href={node.href} variant={node.variant}>
+          {node.label}
+        </Link>
+      ) : (
         <span className="u-btn" data-variant={node.variant}>
           {node.label}
         </span>
       );
+    case 'menu':
+      return <Menu node={node} />;
   }
 }
 

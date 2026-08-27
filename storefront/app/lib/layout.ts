@@ -1,4 +1,12 @@
-import {DEFAULT_PALETTE, SLOTS, decode, type Layout, type Palette} from '@unigrid/core';
+import {
+  DEFAULT_PALETTE,
+  SLOTS,
+  decode,
+  menuHandles,
+  type Layout,
+  type Palette,
+} from '@unigrid/core';
+import {menuPath, type MenuLink, type Menus} from '@unigrid/blocks';
 
 // the metaobject's field shape stops here. everything above this file sees a
 // Layout and nothing else.
@@ -85,7 +93,52 @@ export type Composition = {
   body: Layout | null;
   footer: Layout | null;
   palette: Palette;
+  menus: Menus;
 };
+
+export const MENU_QUERY = `#graphql
+  query UnigridMenu($handle: String!) {
+    menu(handle: $handle) {
+      items {
+        id
+        title
+        url
+      }
+    }
+  }
+` as const;
+
+type RawItem = {id: string; title: string; url?: string | null};
+
+// one query per referenced handle rather than one aliased query for all of
+// them: a header and a footer reference one menu each, and each caches alone.
+async function loadMenus(
+  storefront: Queryable,
+  layouts: (Layout | null)[],
+  domains: readonly string[],
+): Promise<Menus> {
+  const handles = [...new Set(layouts.flatMap((l) => (l ? menuHandles(l) : [])))];
+  if (!handles.length) return {};
+
+  const results = await Promise.all(
+    handles.map((handle) =>
+      storefront.query<{menu?: {items: RawItem[]} | null}>(MENU_QUERY, {
+        variables: {handle},
+      }),
+    ),
+  );
+
+  const out: Menus = {};
+  handles.forEach((handle, i) => {
+    const items = results[i]?.menu?.items;
+    if (!items) return;
+    out[handle] = items.reduce<MenuLink[]>((acc, item) => {
+      if (item.url) acc.push({id: item.id, title: item.title, url: menuPath(item.url, domains)});
+      return acc;
+    }, []);
+  });
+  return out;
+}
 
 const layoutFrom = (
   region: {fields: Fields} | null | undefined,
@@ -100,6 +153,7 @@ export async function loadComposition(
   storefront: Queryable,
   target: string,
   which: 'draft' | 'published' = 'published',
+  domains: readonly string[] = [],
 ): Promise<Composition> {
   const data = await storefront.query<{
     header?: {fields: Fields} | null;
@@ -108,11 +162,16 @@ export async function loadComposition(
     theme?: {fields: Fields} | null;
   }>(COMPOSITION_QUERY, {variables: {body: handleFor(target)}});
 
+  const header = layoutFrom(data?.header, which);
+  const body = layoutFrom(data?.body, which);
+  const footer = layoutFrom(data?.footer, which);
+
   return {
-    header: layoutFrom(data?.header, which),
-    body: layoutFrom(data?.body, which),
-    footer: layoutFrom(data?.footer, which),
+    header,
+    body,
+    footer,
     palette: paletteFrom(data?.theme?.fields),
+    menus: await loadMenus(storefront, [header, body, footer], domains),
   };
 }
 

@@ -23,6 +23,7 @@ export {
   type HeadingLevel,
   type Layout,
   type Media,
+  type MenuDirection,
   type Palette,
   type Slot,
   type Node,
@@ -33,6 +34,7 @@ export {
 export {
   addNode,
   findNode,
+  menuHandles,
   moveNode,
   patchBlock,
   patchNode,

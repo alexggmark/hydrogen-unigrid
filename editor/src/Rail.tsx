@@ -6,6 +6,7 @@ import {
   Flex,
   Grid,
   Heading,
+  Select,
   Slider,
   Switch,
   Text,
@@ -52,11 +53,13 @@ const ALIGN = ['start', 'center', 'end', 'stretch'] as const;
 const LEVELS = ['1', '2', '3', '4', '5'] as const;
 const SIZES = ['sm', 'lg'] as const;
 const VARIANTS = ['primary', 'secondary'] as const;
+const MENU_DIRECTIONS = ['row', 'column'] as const;
 const ADDABLE: (ElementKind | 'group')[] = [
   'headline',
   'text',
   'richText',
   'button',
+  'menu',
   'group',
 ];
 
@@ -65,8 +68,11 @@ export const LABEL: Record<string, string> = {
   text: 'Text',
   richText: 'Rich text',
   button: 'Button',
+  menu: 'Menu',
   group: 'Group',
 };
+
+export type MenuEntry = {handle: string; title: string};
 
 export type RailProps = {
   layout: Layout;
@@ -80,6 +86,8 @@ export type RailProps = {
   dragging: NodeDrag | null;
   resync: number;
   palette: ThemePalette;
+  // the store's navigation menus, for the menu element's picker
+  menus?: MenuEntry[];
   tab: Tab;
   onTab: (tab: Tab) => void;
   onPalette?: (palette: ThemePalette) => void;
@@ -254,6 +262,48 @@ function Inspector({found, props}: {found: Found; props: RailProps}) {
   }
 
   const patch = (p: Partial<Element>) => props.onPatchNode(node.id, p);
+
+  if (node.kind === 'menu') {
+    const menus = props.menus ?? [];
+    return (
+      <>
+        <Field label="Menu">
+          <Select.Root
+            size="1"
+            value={node.handle || undefined}
+            onValueChange={(handle) => patch({handle})}
+          >
+            <Select.Trigger placeholder="Choose a menu" style={{width: '100%'}} />
+            <Select.Content>
+              {menus.map((m) => (
+                <Select.Item key={m.handle} value={m.handle}>
+                  {m.title}
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select.Root>
+        </Field>
+        <Segment
+          label="Direction"
+          value={node.direction}
+          options={MENU_DIRECTIONS}
+          onPick={(direction) => patch({direction})}
+        />
+        <Field label="Collapse on mobile">
+          <Switch
+            size="1"
+            checked={node.collapse}
+            onCheckedChange={(collapse) => patch({collapse})}
+          />
+        </Field>
+        {node.handle && !menus.some((m) => m.handle === node.handle) ? (
+          <Text size="1" color="orange">
+            no menu called “{node.handle}” in this store
+          </Text>
+        ) : null}
+      </>
+    );
+  }
 
   return (
     <>

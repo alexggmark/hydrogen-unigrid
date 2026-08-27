@@ -13,12 +13,23 @@ export type Placement = {a: Cell} & Partial<Record<Exclude<Band, 'a'>, Cell>>;
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5;
 export type TextSize = 'lg' | 'sm';
 export type ButtonVariant = 'primary' | 'secondary';
+export type MenuDirection = 'row' | 'column';
 
 export type Element =
   | {id: string; kind: 'headline'; level: HeadingLevel; value: string}
   | {id: string; kind: 'text'; size: TextSize; value: string}
   | {id: string; kind: 'richText'; size: TextSize; value: string}
-  | {id: string; kind: 'button'; variant: ButtonVariant; label: string; href: string};
+  | {id: string; kind: 'button'; variant: ButtonVariant; label: string; href: string}
+  // a handle, never the links. the menu is authored in the shopify admin, and a
+  // copy taken here would go stale the moment it is edited there.
+  | {
+      id: string;
+      kind: 'menu';
+      handle: string;
+      direction: MenuDirection;
+      // narrowest band only, so the same element serves a header and a footer
+      collapse: boolean;
+    };
 
 export type ElementKind = Element['kind'];
 

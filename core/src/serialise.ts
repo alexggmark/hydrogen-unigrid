@@ -141,6 +141,14 @@ function encodeNode(n: Node): Obj {
         v: n.label,
         ...(n.href ? {h: n.href} : {}),
       };
+    case 'menu':
+      return {
+        i: n.id,
+        k: 'm',
+        v: n.handle,
+        ...(n.direction !== 'row' ? {d: n.direction} : {}),
+        ...(n.collapse ? {z: 1} : {}),
+      };
   }
 }
 
@@ -179,6 +187,14 @@ function decodeNode(w: unknown): Node | undefined {
       const variant: ButtonVariant = o.p === 'secondary' ? 'secondary' : 'primary';
       return {id, kind: 'button', variant, label: value, href: str(o.h) ?? ''};
     }
+    case 'm':
+      return {
+        id,
+        kind: 'menu',
+        handle: value,
+        direction: o.d === 'column' ? 'column' : 'row',
+        collapse: o.z === 1,
+      };
     default:
       return undefined;
   }

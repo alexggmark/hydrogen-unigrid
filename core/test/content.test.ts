@@ -2,6 +2,7 @@ import {describe, expect, it} from 'vitest';
 import {
   addNode,
   findNode,
+  menuHandles,
   moveNode,
   patchBlock,
   patchNode,
@@ -140,5 +141,42 @@ describe('content tree', () => {
       };
       expect(decode(encode(l)), `seed ${seed}`).toEqual(l);
     }
+  });
+});
+
+describe('menuHandles', () => {
+  const menu = (id: string, handle: string): Element => ({
+    id,
+    kind: 'menu',
+    handle,
+    direction: 'row',
+    collapse: false,
+  });
+
+  const withChildren = (children: Layout['blocks'][number]['children']): Layout => ({
+    version: 1,
+    blocks: [{...emptyBlock('b1', {a: {col: 1, colSpan: 2, row: 1, rowSpan: 1}}), children}],
+  });
+
+  it('finds handles at both depths and reports each once', () => {
+    const layout = withChildren([
+      menu('m1', 'main-menu'),
+      {
+        id: 'g1',
+        kind: 'group',
+        flex: {direction: 'row', justify: 'start', align: 'center', gap: 1},
+        children: [menu('m2', 'footer'), menu('m3', 'main-menu')],
+      },
+    ]);
+    expect(menuHandles(layout).sort()).toEqual(['footer', 'main-menu']);
+  });
+
+  // an unpicked menu would otherwise send the route off to query ""
+  it('skips a menu with no handle chosen', () => {
+    expect(menuHandles(withChildren([menu('m1', '')]))).toEqual([]);
+  });
+
+  it('is empty for a layout with no menus', () => {
+    expect(menuHandles(withChildren([{id: 't', kind: 'text', size: 'sm', value: 'x'}]))).toEqual([]);
   });
 });

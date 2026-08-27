@@ -23,12 +23,15 @@ const LABEL: Record<string, string> = {
   text: 'Text',
   richText: 'Rich text',
   button: 'Button',
+  menu: 'Menu',
   group: 'Group',
 };
 
 const preview = (node: Node): string => {
   if (isGroup(node)) return `${node.children.length} inside`;
-  return node.kind === 'button' ? node.label : node.value;
+  if (node.kind === 'button') return node.label;
+  if (node.kind === 'menu') return node.handle || 'no menu chosen';
+  return node.value;
 };
 
 type RowProps = {

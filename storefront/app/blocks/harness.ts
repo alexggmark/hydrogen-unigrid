@@ -152,3 +152,18 @@ export const HARNESS: Layout = {
     ),
   ],
 };
+
+// the playground has no store to query, so the menu element has something to
+// render. nothing here reaches a real menu.
+export const DEMO_MENUS = [
+  {
+    handle: 'main-menu',
+    title: 'Main menu',
+    items: [
+      {id: 'demo-1', title: 'Shop', url: '/collections/all'},
+      {id: 'demo-2', title: 'Lookbook', url: '/pages/lookbook'},
+      {id: 'demo-3', title: 'About', url: '/pages/about'},
+      {id: 'demo-4', title: 'Contact', url: '/pages/contact'},
+    ],
+  },
+];

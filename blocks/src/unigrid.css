@@ -122,6 +122,13 @@
   margin: 0;
 }
 
+/* links arrive injected, so the layer cannot know what element they render as —
+   strip the ua underline and blue and let the block's ink stand */
+.u-grid a {
+  color: inherit;
+  text-decoration: none;
+}
+
 /* a rule on the element beats an inherited value, so name them explicitly */
 .u-grid :where(p, li, dd, dt, figcaption, blockquote, h1, h2, h3, h4, h5, h6) {
   font-size: inherit;
@@ -199,6 +206,87 @@
 .u-btn[data-variant='secondary'] {
   background: transparent;
   color: var(--ink);
+}
+
+/* the menu lays out its own links; its box is a grid cell like any other. the
+   toggle expands the list inside the block, so a collapsed menu that opens past
+   its span clips like every other overrun rather than overlaying the page. */
+.u-menu {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 1);
+}
+.u-menu-list {
+  display: flex;
+  flex-direction: var(--menu-dir, row);
+  flex-wrap: wrap;
+  gap: calc(var(--u) * 0.6) calc(var(--u) * 1.6);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.u-menu[data-dir='column'] {
+  --menu-dir: column;
+}
+.u-menu-link {
+  font-size: var(--t-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 700;
+}
+.u-menu-toggle {
+  align-self: start;
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  display: none;
+  font: inherit;
+  font-size: var(--t-h5);
+  line-height: 1;
+  padding: 0;
+}
+.u-sr {
+  clip-path: inset(50%);
+  position: absolute;
+  white-space: nowrap;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+}
+
+/* collapsing is band c only, so one element serves a header and a footer */
+@container grid (width < 36rem) {
+  .u-menu[data-collapse] .u-menu-toggle {
+    display: block;
+  }
+  .u-menu[data-collapse] .u-menu-list {
+    flex-direction: column;
+  }
+  .u-menu[data-collapse]:not([data-open]) .u-menu-list {
+    display: none;
+  }
+}
+
+/* forced band, same as the block placements above: a container query carries no
+   specificity, so band a and b have to say the open state out loud */
+[data-band='a'] .u-menu[data-collapse] .u-menu-toggle,
+[data-band='b'] .u-menu[data-collapse] .u-menu-toggle {
+  display: none;
+}
+[data-band='a'] .u-menu[data-collapse] .u-menu-list,
+[data-band='b'] .u-menu[data-collapse] .u-menu-list {
+  display: flex;
+  flex-direction: var(--menu-dir, row);
+}
+[data-band='c'] .u-menu[data-collapse] .u-menu-toggle {
+  display: block;
+}
+[data-band='c'] .u-menu[data-collapse] .u-menu-list {
+  flex-direction: column;
+}
+[data-band='c'] .u-menu[data-collapse]:not([data-open]) .u-menu-list {
+  display: none;
 }
 
 /* background and tint fill the block behind the content, so neither is content */

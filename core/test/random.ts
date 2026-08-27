@@ -49,20 +49,32 @@ export function flex(r: () => number): Flex {
   };
 }
 
-export function element(r: () => number, id: string): Extract<Node, {kind: 'headline' | 'text' | 'richText' | 'button'}> {
+export function element(
+  r: () => number,
+  id: string,
+): Extract<Node, {kind: 'headline' | 'text' | 'richText' | 'button' | 'menu'}> {
   const s = `v${int(r, 0, 9999)} — ünïcode "quotes"`;
-  const pick = int(r, 0, 3);
+  const pick = int(r, 0, 4);
   if (pick === 0) {
     return {id, kind: 'headline', level: int(r, 1, 5) as 1 | 2 | 3 | 4 | 5, value: s};
   }
   if (pick === 1) return {id, kind: 'text', size: r() < 0.5 ? 'lg' : 'sm', value: s};
   if (pick === 2) return {id, kind: 'richText', size: r() < 0.5 ? 'lg' : 'sm', value: s};
+  if (pick === 3) {
+    return {
+      id,
+      kind: 'button',
+      variant: r() < 0.5 ? 'primary' : 'secondary',
+      label: s,
+      href: r() < 0.5 ? `/x/${int(r, 0, 99)}` : '',
+    };
+  }
   return {
     id,
-    kind: 'button',
-    variant: r() < 0.5 ? 'primary' : 'secondary',
-    label: s,
-    href: r() < 0.5 ? `/x/${int(r, 0, 99)}` : '',
+    kind: 'menu',
+    handle: r() < 0.5 ? `menu-${int(r, 0, 9)}` : '',
+    direction: r() < 0.5 ? 'row' : 'column',
+    collapse: r() < 0.5,
   };
 }
 

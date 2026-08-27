@@ -175,3 +175,17 @@ export const setFlex = (
   if (!found || !isGroup(found.node)) return layout;
   return patchNode(layout, id, {flex: {...found.node.flex, ...patch}});
 };
+
+// which menus a layout references. the route resolves these; blocks/ cannot
+// fetch, so nothing downstream can discover them for itself.
+export function menuHandles(layout: Layout): string[] {
+  const out = new Set<string>();
+  const walk = (nodes: readonly Node[]) => {
+    for (const n of nodes) {
+      if (isGroup(n)) walk(n.children);
+      else if (n.kind === 'menu' && n.handle) out.add(n.handle);
+    }
+  };
+  for (const block of layout.blocks) walk(block.children);
+  return [...out];
+}
