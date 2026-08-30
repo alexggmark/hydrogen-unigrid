@@ -24,6 +24,7 @@ const LABEL: Record<string, string> = {
   richText: 'Rich text',
   button: 'Button',
   menu: 'Menu',
+  product: 'Product',
   group: 'Group',
 };
 
@@ -31,6 +32,10 @@ const preview = (node: Node): string => {
   if (isGroup(node)) return `${node.children.length} inside`;
   if (node.kind === 'button') return node.label;
   if (node.kind === 'menu') return node.handle || 'no menu chosen';
+  if (node.kind === 'product') {
+    const which = node.source === 'context' ? 'on this page' : node.source.handle;
+    return `${node.view} — ${which}`;
+  }
   return node.value;
 };
 

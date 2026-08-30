@@ -6,6 +6,16 @@ export {Nodes, flexVars, paint, paletteVars, textAlign} from './elements';
 export {Grid} from './Grid';
 export {LinkRenderer, useLinkRender, type LinkProps, type LinkRender} from './link';
 export {MenuSource, menuPath, useMenu, type MenuLink, type Menus} from './menu';
+export {ImageRenderer, useImageRender, type ImageProps, type ImageRender} from './image';
+export {
+  ProductDetails,
+  ProductMedia,
+  ProductSource,
+  useProduct,
+  type ProductData,
+  type ProductImage,
+  type Products,
+} from './product';
 export {GridDev} from './GridDev';
 export {GridProbes} from './GridProbes';
 export {deriveAll, placementVars, type Placement} from './placement';

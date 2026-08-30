@@ -1,6 +1,7 @@
 import {useState, type CSSProperties} from 'react';
 import {useLinkRender} from './link';
 import {useMenu} from './menu';
+import {ProductDetails, ProductMedia, useProduct} from './product';
 import {
   isGroup,
   isSlot,
@@ -102,6 +103,17 @@ function Menu({node}: {node: Extract<Element, {kind: 'menu'}>}) {
   );
 }
 
+// binding is the only thing that separates this from a text element: it takes
+// its content from the route rather than from the layout
+function Product({node}: {node: Extract<Element, {kind: 'product'}>}) {
+  const product = useProduct(node.source);
+  return node.view === 'details' ? (
+    <ProductDetails product={product} />
+  ) : (
+    <ProductMedia product={product} />
+  );
+}
+
 function Leaf({node}: {node: Element}) {
   const Link = useLinkRender();
   switch (node.kind) {
@@ -129,6 +141,8 @@ function Leaf({node}: {node: Element}) {
       );
     case 'menu':
       return <Menu node={node} />;
+    case 'product':
+      return <Product node={node} />;
   }
 }
 
@@ -146,7 +160,12 @@ export function Nodes({nodes}: {nodes: readonly Node[]}) {
             <Nodes nodes={node.children} />
           </div>
         ) : (
-          <div key={node.id} className="u-el" data-node={node.id}>
+          <div
+            key={node.id}
+            className="u-el"
+            data-kind={node.kind}
+            data-node={node.id}
+          >
             <Leaf node={node} />
           </div>
         ),

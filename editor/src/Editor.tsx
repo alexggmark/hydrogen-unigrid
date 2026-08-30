@@ -38,7 +38,6 @@ import {
   type Band,
   type Cell,
   type History as LayoutHistory,
-  type ElementKind,
   type Node,
 } from '@unigrid/core';
 import {
@@ -49,13 +48,15 @@ import {
   sameOverflow,
   type MenuLink,
   type Menus,
+  type ProductData,
+  type Products,
 } from '@unigrid/blocks';
 import {DragHandles} from './DragHandles';
 import {InertLink} from './link';
 import {NEW_SPAN} from './Palette';
 import {cellAt, gridUnits, moved, resized, snap, type Edge} from './geometry';
 import {dropTarget, type NodeDrag} from './Tree';
-import {Rail, type PageEntry, type Tab} from './Rail';
+import {Rail, type AddKey, type PageEntry, type Tab} from './Rail';
 import {DEFAULT_PALETTE, type Layout, type Palette} from '@unigrid/core';
 
 
@@ -95,7 +96,7 @@ const nextId = (taken: (id: string) => boolean, prefix: string): string => {
   return `${prefix}-${n}`;
 };
 
-const NEW_NODE: Record<ElementKind | 'group', (id: string) => Node> = {
+const NEW_NODE: Record<AddKey, (id: string) => Node> = {
   headline: (id) => ({id, kind: 'headline', level: 2, value: 'Headline'}),
   text: (id) => ({id, kind: 'text', size: 'sm', value: 'Body text.'}),
   richText: (id) => ({id, kind: 'richText', size: 'sm', value: 'First line.\nSecond line.'}),
@@ -103,6 +104,10 @@ const NEW_NODE: Record<ElementKind | 'group', (id: string) => Node> = {
   button: (id) => ({id, kind: 'button', variant: 'primary', label: 'Button', href: ''}),
   // no handle until one is picked: the rail lists what the store actually has
   menu: (id) => ({id, kind: 'menu', handle: '', direction: 'row', collapse: false}),
+  // one kind, two entries in the palette. bound to the route's own product by
+  // default, which is what makes a single template serve the catalogue.
+  productMedia: (id) => ({id, kind: 'product', view: 'media', source: 'context'}),
+  productDetails: (id) => ({id, kind: 'product', view: 'details', source: 'context'}),
   group: (id) => ({
     id,
     kind: 'group',
@@ -131,6 +136,9 @@ export type EditorProps = {
   version?: number;
   initialPalette?: Palette;
   menus?: StoreMenu[];
+  // the store's products. one hydrates a contextual element so the template can
+  // be seen against something; the rest are what a pinned element picks from.
+  products?: ProductData[];
   // the shell owns pages; the editor only shows them and reports intent
   pages?: PageEntry[];
   target?: string;
@@ -155,6 +163,7 @@ export function Editor({
   version,
   initialPalette,
   menus,
+  products,
   pages,
   target,
   missing,
@@ -204,6 +213,12 @@ export function Editor({
     () => Object.fromEntries((menus ?? []).map((m) => [m.handle, m.items])),
     [menus],
   );
+  const byHandle: Products = useMemo(
+    () => Object.fromEntries((products ?? []).map((p) => [p.handle, p])),
+    [products],
+  );
+  // the preview never reaches the layout, so which product it is cannot matter
+  const previewProduct = products?.[0];
   // rail-tree drags are their own gesture: no ghost, no cell, no placement
   const [nodeDrag, setNodeDrag] = useState<NodeDrag | null>(null);
   // dnd-kit reorders the dom mid-drag and does not undo it across groups, so a
@@ -357,10 +372,10 @@ export function Editor({
     [setHist],
   );
 
-  const addChild = (kind: ElementKind | 'group', parentId: string | null) => {
+  const addChild = (key: AddKey, parentId: string | null) => {
     if (!selected) return;
-    const id = nextId((x) => Boolean(findNode(layout, x)), kind);
-    edit(addNode(layout, selected, parentId, NEW_NODE[kind](id)));
+    const id = nextId((x) => Boolean(findNode(layout, x)), key);
+    edit(addNode(layout, selected, parentId, NEW_NODE[key](id)));
     setNode(id);
   };
 
@@ -554,6 +569,8 @@ export function Editor({
                       dev={false}
                       link={InertLink}
                       menus={resolved}
+                      product={previewProduct}
+                      products={byHandle}
                       palette={palette}
                     >
                       {blocks.map((b) => {
@@ -575,6 +592,8 @@ export function Editor({
               dev={dev}
               link={InertLink}
               menus={resolved}
+              product={previewProduct}
+              products={byHandle}
               palette={palette}
             >
               {layout.blocks.map((b) => {
@@ -648,6 +667,7 @@ export function Editor({
           resync={resync}
           palette={palette}
           menus={menus}
+          products={products}
           pages={pages}
           target={target}
           missing={missing}

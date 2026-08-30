@@ -3,10 +3,17 @@ import {
   SLOTS,
   decode,
   menuHandles,
+  productHandles,
   type Layout,
   type Palette,
 } from '@unigrid/core';
-import {menuPath, type MenuLink, type Menus} from '@unigrid/blocks';
+import {
+  menuPath,
+  type MenuLink,
+  type Menus,
+  type ProductData,
+  type Products,
+} from '@unigrid/blocks';
 
 // the metaobject's field shape stops here. everything above this file sees a
 // Layout and nothing else.
@@ -94,6 +101,9 @@ export type Composition = {
   footer: Layout | null;
   palette: Palette;
   menus: Menus;
+  // only the ones a layout pinned. the route's own product is not a reference
+  // to resolve — it is already here.
+  products: Products;
 };
 
 export const MENU_QUERY = `#graphql
@@ -140,6 +150,75 @@ async function loadMenus(
   return out;
 }
 
+export const PRODUCT_REF_QUERY = `#graphql
+  query UnigridProduct($handle: String!) {
+    product(handle: $handle) {
+      handle
+      title
+      priceRange { minVariantPrice { amount currencyCode } }
+      images(first: 10) { nodes { id url altText } }
+    }
+  }
+` as const;
+
+type RawProduct = {
+  handle: string;
+  title: string;
+  priceRange?: {minVariantPrice?: {amount: string; currencyCode: string}};
+  images?: {nodes: {id: string; url: string; altText?: string | null}[]};
+};
+
+// formatted here rather than in blocks/, which holds no currency logic and
+// cannot import <Money>
+export const money = (m?: {
+  amount: string;
+  currencyCode: string;
+}): string | undefined => {
+  if (!m) return undefined;
+  const amount = Number(m.amount);
+  if (!Number.isFinite(amount)) return undefined;
+  return new Intl.NumberFormat('en', {
+    style: 'currency',
+    currency: m.currencyCode,
+  }).format(amount);
+};
+
+export const productData = (p: RawProduct): ProductData => ({
+  handle: p.handle,
+  title: p.title,
+  price: money(p.priceRange?.minVariantPrice),
+  images: (p.images?.nodes ?? []).map((i) => ({
+    id: i.id,
+    url: i.url,
+    ...(i.altText ? {alt: i.altText} : {}),
+  })),
+});
+
+// one query per pinned handle, for the same reason menus take one each: a
+// featured product on the homepage caches separately from the layout.
+async function loadProducts(
+  storefront: Queryable,
+  layouts: (Layout | null)[],
+): Promise<Products> {
+  const handles = [...new Set(layouts.flatMap((l) => (l ? productHandles(l) : [])))];
+  if (!handles.length) return {};
+
+  const results = await Promise.all(
+    handles.map((handle) =>
+      storefront.query<{product?: RawProduct | null}>(PRODUCT_REF_QUERY, {
+        variables: {handle},
+      }),
+    ),
+  );
+
+  const out: Products = {};
+  for (const result of results) {
+    const product = result?.product;
+    if (product) out[product.handle] = productData(product);
+  }
+  return out;
+}
+
 const layoutFrom = (
   region: {fields: Fields} | null | undefined,
   which: 'draft' | 'published',
@@ -166,12 +245,19 @@ export async function loadComposition(
   const body = layoutFrom(data?.body, which);
   const footer = layoutFrom(data?.footer, which);
 
+  const regions = [header, body, footer];
+  const [menus, products] = await Promise.all([
+    loadMenus(storefront, regions, domains),
+    loadProducts(storefront, regions),
+  ]);
+
   return {
     header,
     body,
     footer,
     palette: paletteFrom(data?.theme?.fields),
-    menus: await loadMenus(storefront, [header, body, footer], domains),
+    menus,
+    products,
   };
 }
 

@@ -289,6 +289,57 @@
   display: none;
 }
 
+/* the block sizes a product element, never its images. without this, a block
+   whose align shrink-wraps its children would take the strip's max-content
+   width — the catalogue deciding the layout, which is backwards. */
+.u-el[data-kind='product'] {
+  align-self: stretch;
+}
+
+/* a product element takes no size of its own: it fills the block's content box,
+   and the block's span is what the merchant sized. squares throughout, so the
+   strip's height follows the width and nothing here has to be measured. */
+.u-pmedia {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 0.75);
+  inline-size: 100%;
+}
+.u-pmain {
+  aspect-ratio: 1;
+  display: block;
+  inline-size: 100%;
+  object-fit: cover;
+}
+/* scrolls rather than wraps: wrapping would change the element's height with
+   the image count, which is the merchant's decision and not the catalogue's */
+.u-pthumbs {
+  display: flex;
+  gap: calc(var(--u) * 0.75);
+  overflow-x: auto;
+}
+/* a percentage, not a --u multiple: the strip scales with its block rather than
+   with the page, so the same element reads the same at any span */
+.u-pthumb {
+  aspect-ratio: 1;
+  flex: 0 0 18%;
+  /* a flex item's auto minimum is its min-content size, which for an image is
+     the image. without this the strip is sized by the file, not the block. */
+  min-inline-size: 0;
+  object-fit: cover;
+}
+.u-pmain[data-empty],
+.u-pthumb[data-empty] {
+  background: color-mix(in srgb, var(--ink) 12%, transparent);
+}
+
+.u-pdetails {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 0.75);
+  align-items: var(--ai, stretch);
+}
+
 /* background and tint fill the block behind the content, so neither is content */
 .u-bg {
   position: absolute;

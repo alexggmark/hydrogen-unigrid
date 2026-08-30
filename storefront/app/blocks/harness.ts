@@ -1,4 +1,10 @@
 import {DEFAULT_FLEX, type Block, type Layout, type Node} from '@unigrid/core';
+import shot1 from '~/assets/demo/shot-1.svg';
+import shot2 from '~/assets/demo/shot-2.svg';
+import shot3 from '~/assets/demo/shot-3.svg';
+import shot4 from '~/assets/demo/shot-4.svg';
+import shot5 from '~/assets/demo/shot-5.svg';
+import shot6 from '~/assets/demo/shot-6.svg';
 
 // dummy content for the spike. nothing here is persisted.
 
@@ -165,5 +171,32 @@ export const DEMO_MENUS = [
       {id: 'demo-3', title: 'About', url: '/pages/about'},
       {id: 'demo-4', title: 'Contact', url: '/pages/contact'},
     ],
+  },
+];
+
+// same for products: svg assets served from this origin, because the dev csp
+// blocks data uris. deliberately wider than tall, so object-fit has something
+// to crop.
+const SHOTS = [shot1, shot2, shot3, shot4, shot5, shot6];
+
+const shots = (handle: string, from: number) =>
+  SHOTS.map((url, i) => ({
+    id: `${handle}-${i + 1}`,
+    url: SHOTS[(i + from) % SHOTS.length] ?? url,
+    alt: `${handle} view ${i + 1}`,
+  }));
+
+export const DEMO_PRODUCTS = [
+  {
+    handle: 'demo-chair',
+    title: 'Cantilever chair',
+    price: '£420.00',
+    images: shots('demo-chair', 0),
+  },
+  {
+    handle: 'demo-lamp',
+    title: 'Column lamp',
+    price: '£180.00',
+    images: shots('demo-lamp', 3),
   },
 ];

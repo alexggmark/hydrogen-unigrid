@@ -1,4 +1,5 @@
 import {describe, expect, it} from 'vitest';
+import {productHandles} from '../src/content';
 import {decode, encode} from '../src/serialise';
 import {
   emptyBlock,
@@ -158,6 +159,36 @@ describe('wire size', () => {
       blocks: [emptyBlock('x', {a: {col: 1, colSpan: 1, row: 1, rowSpan: 1}})],
     };
     expect(encode(bare)).toBe('{"v":1,"b":[{"i":"x","a":[1,1]}]}');
+  });
+});
+
+describe('product binding', () => {
+  const withProduct = (source: 'context' | {handle: string}): Layout => ({
+    version: 1,
+    blocks: [
+      {
+        ...emptyBlock('x', {a: {col: 1, colSpan: 4, row: 1, rowSpan: 4}}),
+        children: [{id: 'p1', kind: 'product', view: 'media', source}],
+      },
+    ],
+  });
+
+  it('roundtrips both sources', () => {
+    for (const source of ['context', {handle: 'a-shirt'}] as const) {
+      expect(decode(encode(withProduct(source)))).toEqual(withProduct(source));
+    }
+  });
+
+  // the whole point of one template per catalogue: the saved layout is the same
+  // whichever product was on screen
+  it('writes no handle for the product the route is rendering', () => {
+    const wire = JSON.parse(encode(withProduct('context')));
+    expect(wire.b[0].k[0]).toEqual({i: 'p1', k: 'p', w: 'm'});
+  });
+
+  it('lists pinned handles and ignores contextual ones', () => {
+    expect(productHandles(withProduct({handle: 'a-shirt'}))).toEqual(['a-shirt']);
+    expect(productHandles(withProduct('context'))).toEqual([]);
   });
 });
 

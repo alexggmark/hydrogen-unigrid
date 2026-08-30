@@ -17,6 +17,7 @@ import {
   createLayout,
   createPage,
   listPages,
+  listProducts,
   loadComposition,
   loadMenus,
   loadPalette,
@@ -26,6 +27,7 @@ import {
   type PageRow,
   type StoreMenu,
 } from '../lib/layout.server';
+import type {ProductData} from '@unigrid/blocks';
 
 export const links: LinksFunction = () => [
   {rel: 'stylesheet', href: radixStyles},
@@ -44,11 +46,12 @@ export const loader = async ({request}: LoaderFunctionArgs) => {
   // avoids a second region with the same target, which collapses to one.
   const bodyTarget = target === 'header' || target === 'footer' ? 'home' : target;
 
-  const [regions, palette, pages, menus] = await Promise.all([
+  const [regions, palette, pages, menus, products] = await Promise.all([
     loadComposition(admin, bodyTarget),
     loadPalette(admin),
     listPages(admin),
     loadMenus(admin),
+    listProducts(admin),
   ]);
   const empty: Layout = {version: 1, blocks: []};
   const label = pages.find((p) => p.target === bodyTarget)?.title ?? 'Page';
@@ -58,6 +61,7 @@ export const loader = async ({request}: LoaderFunctionArgs) => {
     pages,
     palette,
     menus,
+    products,
     regions: [
       {target: 'header', label: 'Header', layout: regions.header?.layout ?? empty},
       {target: bodyTarget, label, layout: regions.body?.layout ?? empty},
@@ -106,7 +110,7 @@ export const action = async ({request}: ActionFunctionArgs) => {
 };
 
 export default function Index() {
-  const {regions, version, unpublished, palette, pages, menus, target} =
+  const {regions, version, unpublished, palette, pages, menus, products, target} =
     useLoaderData<typeof loader>() as {
       regions: {target: string; label: string; layout: Layout}[];
       version: number;
@@ -114,6 +118,7 @@ export default function Index() {
       palette: Palette;
       pages: PageRow[];
       menus: StoreMenu[];
+      products: ProductData[];
       target: string;
     };
   const fetcher = useFetcher<typeof action>();
@@ -165,6 +170,7 @@ export default function Index() {
       onPublish={onPublish}
       initialPalette={palette ?? DEFAULT_PALETTE}
       menus={menus}
+      products={products}
       onSavePalette={onSavePalette}
       busy={fetcher.state !== 'idle'}
       version={version}

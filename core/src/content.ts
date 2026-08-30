@@ -176,6 +176,20 @@ export const setFlex = (
   return patchNode(layout, id, {flex: {...found.node.flex, ...patch}});
 };
 
+// pinned product handles. a 'context' source resolves from the route, so it is
+// not a reference the loader has to go and fetch.
+export function productHandles(layout: Layout): string[] {
+  const out = new Set<string>();
+  const walk = (nodes: readonly Node[]) => {
+    for (const n of nodes) {
+      if (isGroup(n)) walk(n.children);
+      else if (n.kind === 'product' && n.source !== 'context') out.add(n.source.handle);
+    }
+  };
+  for (const block of layout.blocks) walk(block.children);
+  return [...out];
+}
+
 // which menus a layout references. the route resolves these; blocks/ cannot
 // fetch, so nothing downstream can discover them for itself.
 export function menuHandles(layout: Layout): string[] {

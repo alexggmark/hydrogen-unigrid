@@ -1,4 +1,4 @@
-import {menuPath, type MenuLink} from '@unigrid/blocks';
+import {menuPath, type MenuLink, type ProductData} from '@unigrid/blocks';
 import {
   DEFAULT_PALETTE,
   SLOTS,
@@ -246,6 +246,60 @@ export async function loadMenus(admin: Admin): Promise<StoreMenu[]> {
   }));
 }
 
+const PRODUCTS = `#graphql
+  query AdminProducts($first: Int!) {
+    products(first: $first, sortKey: TITLE) {
+      nodes {
+        handle
+        title
+        priceRangeV2 { minVariantPrice { amount currencyCode } }
+        images(first: 10) { nodes { id url altText } }
+      }
+    }
+  }
+`;
+
+// the whole catalogue is not the point — the rail needs a picker, and one
+// product hydrates the template so it can be seen against something real.
+export async function listProducts(admin: Admin): Promise<ProductData[]> {
+  const response = await admin.graphql(PRODUCTS, {variables: {first: 50}});
+  const nodes = ((await response.json()) as {
+    data?: {
+      products?: {
+        nodes: {
+          handle: string;
+          title: string;
+          priceRangeV2?: {minVariantPrice?: {amount: string; currencyCode: string}};
+          images?: {nodes: {id: string; url: string; altText?: string | null}[]};
+        }[];
+      };
+    };
+  }).data?.products?.nodes ?? [];
+
+  return nodes.map((p) => ({
+    handle: p.handle,
+    title: p.title,
+    price: money(p.priceRangeV2?.minVariantPrice),
+    images: (p.images?.nodes ?? []).map((i) => ({
+      id: i.id,
+      url: i.url,
+      ...(i.altText ? {alt: i.altText} : {}),
+    })),
+  }));
+}
+
+// formatted here, because blocks/ holds no currency logic and <Money> is
+// hydrogen's, which the admin app cannot import
+const money = (m?: {amount: string; currencyCode: string}): string | undefined => {
+  if (!m) return undefined;
+  const amount = Number(m.amount);
+  if (!Number.isFinite(amount)) return undefined;
+  return new Intl.NumberFormat('en', {
+    style: 'currency',
+    currency: m.currencyCode,
+  }).format(amount);
+};
+
 const PAGES = `#graphql
   query AdminPages($first: Int!) {
     pages(first: $first) {
@@ -290,6 +344,10 @@ export const REGIONS = [
   {target: 'header', title: 'Header'},
   {target: 'footer', title: 'Footer'},
 ] as const;
+
+// one layout renders the whole catalogue, so the product template is a fixed
+// row too — there is nothing per-product for a merchant to create
+export const TEMPLATES = [{target: 'product', title: 'Product template'}] as const;
 
 export type PageRow = {
   target: string;
@@ -338,6 +396,13 @@ export async function listPages(admin: Admin): Promise<PageRow[]> {
       handle: '',
       hasLayout: byTarget.has(r.target),
       ...(byTarget.get(r.target) ? {layoutId: byTarget.get(r.target)!} : {}),
+    })),
+    ...TEMPLATES.map((t) => ({
+      target: t.target as string,
+      title: t.title as string,
+      handle: '',
+      hasLayout: byTarget.has(t.target),
+      ...(byTarget.get(t.target) ? {layoutId: byTarget.get(t.target)!} : {}),
     })),
     {
       target: 'home',

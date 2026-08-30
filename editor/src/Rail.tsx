@@ -54,12 +54,23 @@ const LEVELS = ['1', '2', '3', '4', '5'] as const;
 const SIZES = ['sm', 'lg'] as const;
 const VARIANTS = ['primary', 'secondary'] as const;
 const MENU_DIRECTIONS = ['row', 'column'] as const;
-const ADDABLE: (ElementKind | 'group')[] = [
+const PRODUCT_VIEWS = ['media', 'details'] as const;
+
+// a key, not a kind: product is two entries here and one kind in the model
+export type AddKey =
+  | Exclude<ElementKind, 'product'>
+  | 'group'
+  | 'productMedia'
+  | 'productDetails';
+
+const ADDABLE: AddKey[] = [
   'headline',
   'text',
   'richText',
   'button',
   'menu',
+  'productMedia',
+  'productDetails',
   'group',
 ];
 
@@ -69,10 +80,14 @@ export const LABEL: Record<string, string> = {
   richText: 'Rich text',
   button: 'Button',
   menu: 'Menu',
+  product: 'Product',
+  productMedia: 'Product carousel',
+  productDetails: 'Product details',
   group: 'Group',
 };
 
 export type MenuEntry = {handle: string; title: string};
+export type ProductEntry = {handle: string; title: string};
 
 export type RailProps = {
   layout: Layout;
@@ -88,6 +103,8 @@ export type RailProps = {
   palette: ThemePalette;
   // the store's navigation menus, for the menu element's picker
   menus?: MenuEntry[];
+  // the store's products, for pinning one to a product element
+  products?: ProductEntry[];
   tab: Tab;
   onTab: (tab: Tab) => void;
   onPalette?: (palette: ThemePalette) => void;
@@ -121,7 +138,7 @@ export type RailProps = {
   onUndo: () => void;
   onRedo: () => void;
   onPickNode: (id: string | null) => void;
-  onAddChild: (kind: ElementKind | 'group', parentId: string | null) => void;
+  onAddChild: (key: AddKey, parentId: string | null) => void;
   onPatchNode: (id: string, patch: Partial<Element> | Partial<Group>) => void;
   onMoveNode: (id: string, delta: number) => void;
   onRemoveNode: (id: string) => void;
@@ -229,20 +246,20 @@ function AddMenu({
   onAdd,
 }: {
   parentId: string | null;
-  onAdd: (kind: ElementKind | 'group', parentId: string | null) => void;
+  onAdd: (key: AddKey, parentId: string | null) => void;
 }) {
   // a group takes elements only, so it is never offered inside one
   const offer = parentId ? ADDABLE.filter((k) => k !== 'group') : ADDABLE;
   return (
     <Flex gap="1" wrap="wrap">
-      {offer.map((kind) => (
+      {offer.map((key) => (
         <Button
-          key={kind}
+          key={key}
           size="1"
           variant="soft"
-          onClick={() => onAdd(kind, parentId)}
+          onClick={() => onAdd(key, parentId)}
         >
-          + {LABEL[kind]}
+          + {LABEL[key]}
         </Button>
       ))}
     </Flex>
@@ -299,6 +316,66 @@ function Inspector({found, props}: {found: Found; props: RailProps}) {
         {node.handle && !menus.some((m) => m.handle === node.handle) ? (
           <Text size="1" color="orange">
             no menu called “{node.handle}” in this store
+          </Text>
+        ) : null}
+      </>
+    );
+  }
+
+  if (node.kind === 'product') {
+    const products = props.products ?? [];
+    const handle = node.source === 'context' ? '' : node.source.handle;
+    const pinned = node.source !== 'context';
+    // only a product template renders a product of its own; anywhere else a
+    // contextual element has nothing to bind to
+    const contextual = props.target === 'product';
+    return (
+      <>
+        <Segment
+          label="Shows"
+          value={node.view}
+          options={PRODUCT_VIEWS}
+          onPick={(view) => patch({view})}
+        />
+        <Field label="Product">
+          <SegmentedControl.Root
+            size="1"
+            value={pinned ? 'pick' : 'context'}
+            onValueChange={(v) =>
+              patch({source: v === 'pick' ? {handle: ''} : 'context'})
+            }
+            style={{width: '100%'}}
+          >
+            <SegmentedControl.Item value="context">
+              On this page
+            </SegmentedControl.Item>
+            <SegmentedControl.Item value="pick">Pick one</SegmentedControl.Item>
+          </SegmentedControl.Root>
+        </Field>
+        {pinned ? (
+          <Select.Root
+            size="1"
+            value={handle || undefined}
+            onValueChange={(h) => patch({source: {handle: h}})}
+          >
+            <Select.Trigger placeholder="Choose a product" style={{width: '100%'}} />
+            <Select.Content>
+              {products.map((p) => (
+                <Select.Item key={p.handle} value={p.handle}>
+                  {p.title}
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select.Root>
+        ) : null}
+        {!pinned && !contextual ? (
+          <Text size="1" color="orange">
+            this page has no product of its own — showing a preview
+          </Text>
+        ) : null}
+        {pinned && handle && !products.some((p) => p.handle === handle) ? (
+          <Text size="1" color="orange">
+            no product called “{handle}” in this store
           </Text>
         ) : null}
       </>

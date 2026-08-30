@@ -15,6 +15,8 @@ import type {
   Media,
   Slot,
   Node,
+  ProductRef,
+  ProductView,
   TextSize,
 } from './types';
 
@@ -24,7 +26,7 @@ import type {
 //   {v, b:[block]}
 //   block   = {i, a:cell, b?:cell, c?:cell, f?:fill, x?:flex, n?:1, k?:[node]}
 //   cell    = [col, row] | [col, row, colSpan] | [col, row, colSpan, rowSpan]
-//   node    = {i, k:'h'|'t'|'x'|'b'|'g', ...}
+//   node    = {i, k:'h'|'t'|'x'|'b'|'m'|'p'|'g', ...}
 //   fill    = {c?:hex, m?:[kind, src], o?:[hex, opacity]}
 
 const encodeCell = (c: Cell): number[] =>
@@ -149,6 +151,14 @@ function encodeNode(n: Node): Obj {
         ...(n.direction !== 'row' ? {d: n.direction} : {}),
         ...(n.collapse ? {z: 1} : {}),
       };
+    // the route's own product is the default, so it costs no bytes
+    case 'product':
+      return {
+        i: n.id,
+        k: 'p',
+        w: n.view === 'details' ? 'd' : 'm',
+        ...(n.source !== 'context' ? {v: n.source.handle} : {}),
+      };
   }
 }
 
@@ -195,6 +205,11 @@ function decodeNode(w: unknown): Node | undefined {
         direction: o.d === 'column' ? 'column' : 'row',
         collapse: o.z === 1,
       };
+    case 'p': {
+      const view: ProductView = o.w === 'd' ? 'details' : 'media';
+      const source: ProductRef = value ? {handle: value} : 'context';
+      return {id, kind: 'product', view, source};
+    }
     default:
       return undefined;
   }

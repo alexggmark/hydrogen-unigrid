@@ -52,9 +52,12 @@ export function flex(r: () => number): Flex {
 export function element(
   r: () => number,
   id: string,
-): Extract<Node, {kind: 'headline' | 'text' | 'richText' | 'button' | 'menu'}> {
+): Extract<
+  Node,
+  {kind: 'headline' | 'text' | 'richText' | 'button' | 'menu' | 'product'}
+> {
   const s = `v${int(r, 0, 9999)} — ünïcode "quotes"`;
-  const pick = int(r, 0, 4);
+  const pick = int(r, 0, 5);
   if (pick === 0) {
     return {id, kind: 'headline', level: int(r, 1, 5) as 1 | 2 | 3 | 4 | 5, value: s};
   }
@@ -69,12 +72,20 @@ export function element(
       href: r() < 0.5 ? `/x/${int(r, 0, 99)}` : '',
     };
   }
+  if (pick === 4) {
+    return {
+      id,
+      kind: 'menu',
+      handle: r() < 0.5 ? `menu-${int(r, 0, 9)}` : '',
+      direction: r() < 0.5 ? 'row' : 'column',
+      collapse: r() < 0.5,
+    };
+  }
   return {
     id,
-    kind: 'menu',
-    handle: r() < 0.5 ? `menu-${int(r, 0, 9)}` : '',
-    direction: r() < 0.5 ? 'row' : 'column',
-    collapse: r() < 0.5,
+    kind: 'product',
+    view: r() < 0.5 ? 'media' : 'details',
+    source: r() < 0.5 ? 'context' : {handle: `p-${int(r, 0, 99)}`},
   };
 }
 

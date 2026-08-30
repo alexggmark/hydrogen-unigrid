@@ -3,8 +3,10 @@ import {DEFAULT_PALETTE, type Palette} from '@unigrid/core';
 import {GridDev} from './GridDev';
 import {GridProbes} from './GridProbes';
 import {paletteVars} from './elements';
+import {ImageRenderer, type ImageRender} from './image';
 import {LinkRenderer, type LinkRender} from './link';
 import {MenuSource, type Menus} from './menu';
+import {ProductSource, type ProductData, type Products} from './product';
 
 // frame and grid are separate elements on purpose — see unigrid.css
 export function Grid({
@@ -13,7 +15,10 @@ export function Grid({
   dev,
   palette = DEFAULT_PALETTE,
   link,
+  image,
   menus,
+  product,
+  products,
 }: {
   children?: ReactNode;
   probes?: boolean;
@@ -22,8 +27,13 @@ export function Grid({
   palette?: Palette;
   // how this surface navigates. absent falls back to a plain anchor.
   link?: LinkRender;
+  // hydrogen's <Image> on the storefront, a plain img anywhere else
+  image?: ImageRender;
   // resolved by the route, keyed by handle
   menus?: Menus;
+  // the product this route is rendering, if any, and any the layout pinned
+  product?: ProductData;
+  products?: Products;
 }) {
   return (
     <div className="u-frame" style={paletteVars(palette) as CSSProperties}>
@@ -31,7 +41,13 @@ export function Grid({
         {dev ? <GridDev /> : null}
         {probes || dev ? <GridProbes /> : null}
         <LinkRenderer render={link}>
-          <MenuSource menus={menus}>{children}</MenuSource>
+          <ImageRenderer render={image}>
+            <MenuSource menus={menus}>
+              <ProductSource product={product} products={products}>
+                {children}
+              </ProductSource>
+            </MenuSource>
+          </ImageRenderer>
         </LinkRenderer>
       </div>
     </div>

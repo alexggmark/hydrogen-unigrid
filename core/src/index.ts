@@ -28,6 +28,8 @@ export {
   type Slot,
   type Node,
   type Placement,
+  type ProductRef,
+  type ProductView,
   type TextAlign,
   type TextSize,
 } from './types';
@@ -35,6 +37,7 @@ export {
   addNode,
   findNode,
   menuHandles,
+  productHandles,
   moveNode,
   patchBlock,
   patchNode,

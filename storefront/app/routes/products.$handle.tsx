@@ -1,3 +1,4 @@
+import type {LinksFunction} from 'react-router';
 import {redirect, useLoaderData} from 'react-router';
 import type {Route} from './+types/products.$handle';
 import {
@@ -12,6 +13,21 @@ import {ProductPrice} from '~/components/ProductPrice';
 import {ProductImage} from '~/components/ProductImage';
 import {ProductForm} from '~/components/ProductForm';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
+import {Composition} from '~/blocks/Composition';
+import {gridDevLinks} from '~/blocks/grid-dev';
+import {loadComposition, money} from '~/lib/layout';
+import unigridStyles from '@unigrid/blocks/unigrid.css?url';
+import demoStyles from '~/styles/unigrid-demo.css?url';
+
+// bare, like every other unigrid route: the store's own header and footer would
+// otherwise wrap the grid and margin it from outside.
+export const handle = {bare: true};
+
+export const links: LinksFunction = () => [
+  {rel: 'stylesheet', href: unigridStyles},
+  {rel: 'stylesheet', href: demoStyles},
+  ...gridDevLinks(),
+];
 
 export const meta: Route.MetaFunction = ({data}) => {
   return [
@@ -45,11 +61,15 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
     throw new Error('Expected product handle to be defined');
   }
 
-  const [{product}] = await Promise.all([
+  // one template for the whole catalogue, so the layout is keyed on the route,
+  // never on which product is being rendered
+  const [{product}, composition] = await Promise.all([
     storefront.query(PRODUCT_QUERY, {
       variables: {handle, selectedOptions: getSelectedProductOptions(request)},
     }),
-    // Add other queries here, so that they are loaded in parallel
+    loadComposition(storefront, 'product', 'published', [
+      context.env.PUBLIC_STORE_DOMAIN,
+    ]),
   ]);
 
   if (!product?.id) {
@@ -61,6 +81,7 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
 
   return {
     product,
+    composition,
   };
 }
 
@@ -77,7 +98,7 @@ function loadDeferredData({context, params}: Route.LoaderArgs) {
 }
 
 export default function Product() {
-  const {product} = useLoaderData<typeof loader>();
+  const {product, composition} = useLoaderData<typeof loader>();
 
   // Optimistically selects a variant with given available variant information
   const selectedVariant = useOptimisticVariant(
@@ -97,7 +118,39 @@ export default function Product() {
 
   const {title, descriptionHtml} = product;
 
-  return (
+  // the contextual product every product element on the template binds to
+  const bound = {
+    handle: product.handle,
+    title: product.title,
+    price: money(selectedVariant?.price),
+    images: (product.images?.nodes ?? []).map((image) => ({
+      id: image.id ?? image.url,
+      url: image.url,
+      ...(image.altText ? {alt: image.altText} : {}),
+    })),
+  };
+
+  const analytics = (
+    <Analytics.ProductView
+      data={{
+        products: [
+          {
+            id: product.id,
+            title: product.title,
+            price: selectedVariant?.price.amount || '0',
+            vendor: product.vendor,
+            variantId: selectedVariant?.id || '',
+            variantTitle: selectedVariant?.title || '',
+            quantity: 1,
+          },
+        ],
+      }}
+    />
+  );
+
+  // no template authored yet: keep the skeleton page rather than an empty grid,
+  // so a store without a layout still sells
+  const fallback = (
     <div className="product">
       <ProductImage image={selectedVariant?.image} />
       <div className="product-main">
@@ -120,22 +173,16 @@ export default function Product() {
         <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
         <br />
       </div>
-      <Analytics.ProductView
-        data={{
-          products: [
-            {
-              id: product.id,
-              title: product.title,
-              price: selectedVariant?.price.amount || '0',
-              vendor: product.vendor,
-              variantId: selectedVariant?.id || '',
-              variantTitle: selectedVariant?.title || '',
-              quantity: 1,
-            },
-          ],
-        }}
-      />
     </div>
+  );
+
+  return (
+    <>
+      <Composition {...composition} product={bound}>
+        {fallback}
+      </Composition>
+      {analytics}
+    </>
   );
 }
 
@@ -184,6 +231,13 @@ const PRODUCT_FRAGMENT = `#graphql
     handle
     descriptionHtml
     description
+    images(first: 10) {
+      nodes {
+        id
+        url
+        altText
+      }
+    }
     encodedVariantExistence
     encodedVariantAvailability
     options {

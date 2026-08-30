@@ -15,6 +15,12 @@ export type TextSize = 'lg' | 'sm';
 export type ButtonVariant = 'primary' | 'secondary';
 export type MenuDirection = 'row' | 'column';
 
+export type ProductView = 'media' | 'details';
+
+// 'context' is whatever product the route is rendering, so one template serves
+// the whole catalogue. a handle pins one product, for a feature elsewhere.
+export type ProductRef = 'context' | {handle: string};
+
 export type Element =
   | {id: string; kind: 'headline'; level: HeadingLevel; value: string}
   | {id: string; kind: 'text'; size: TextSize; value: string}
@@ -29,7 +35,10 @@ export type Element =
       direction: MenuDirection;
       // narrowest band only, so the same element serves a header and a footer
       collapse: boolean;
-    };
+    }
+  // a reference, never the product. geometry is identical to every other
+  // element; only the binding differs.
+  | {id: string; kind: 'product'; view: ProductView; source: ProductRef};
 
 export type ElementKind = Element['kind'];
 
