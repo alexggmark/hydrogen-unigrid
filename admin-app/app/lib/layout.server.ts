@@ -1,4 +1,9 @@
-import {menuPath, type MenuLink, type ProductData} from '@unigrid/blocks';
+import {
+  menuPath,
+  type CollectionData,
+  type MenuLink,
+  type ProductData,
+} from '@unigrid/blocks';
 import {
   DEFAULT_PALETTE,
   SLOTS,
@@ -284,6 +289,67 @@ export async function listProducts(admin: Admin): Promise<ProductData[]> {
       id: i.id,
       url: i.url,
       ...(i.altText ? {alt: i.altText} : {}),
+    })),
+  }));
+}
+
+const COLLECTIONS = `#graphql
+  query AdminCollections($first: Int!, $items: Int!) {
+    collections(first: $first, sortKey: TITLE) {
+      nodes {
+        handle
+        title
+        products(first: $items) {
+          nodes {
+            handle
+            title
+            priceRangeV2 { minVariantPrice { amount currencyCode } }
+            images(first: 1) { nodes { id url altText } }
+          }
+        }
+      }
+    }
+  }
+`;
+
+// nested connections multiply, so the numbers are deliberately small: this is a
+// picker and a preview, not the catalogue. an element asking for more rows than
+// this renders what it got.
+export async function listCollections(admin: Admin): Promise<CollectionData[]> {
+  const response = await admin.graphql(COLLECTIONS, {
+    variables: {first: 30, items: 12},
+  });
+  const nodes = ((await response.json()) as {
+    data?: {
+      collections?: {
+        nodes: {
+          handle: string;
+          title: string;
+          products?: {
+            nodes: {
+              handle: string;
+              title: string;
+              priceRangeV2?: {minVariantPrice?: {amount: string; currencyCode: string}};
+              images?: {nodes: {id: string; url: string; altText?: string | null}[]};
+            }[];
+          };
+        }[];
+      };
+    };
+  }).data?.collections?.nodes ?? [];
+
+  return nodes.map((c) => ({
+    handle: c.handle,
+    title: c.title,
+    products: (c.products?.nodes ?? []).map((p) => ({
+      handle: p.handle,
+      title: p.title,
+      price: money(p.priceRangeV2?.minVariantPrice),
+      images: (p.images?.nodes ?? []).map((i) => ({
+        id: i.id,
+        url: i.url,
+        ...(i.altText ? {alt: i.altText} : {}),
+      })),
     })),
   }));
 }

@@ -19,6 +19,8 @@ import {
   encode,
   findBlock,
   findNode,
+  DEFAULT_COLUMNS,
+  DEFAULT_COUNT,
   history,
   insertAfter,
   isBand,
@@ -48,6 +50,8 @@ import {
   sameOverflow,
   type MenuLink,
   type Menus,
+  type CollectionData,
+  type Collections,
   type ProductData,
   type Products,
 } from '@unigrid/blocks';
@@ -108,6 +112,15 @@ const NEW_NODE: Record<AddKey, (id: string) => Node> = {
   // default, which is what makes a single template serve the catalogue.
   productMedia: (id) => ({id, kind: 'product', view: 'media', source: 'context'}),
   productDetails: (id) => ({id, kind: 'product', view: 'details', source: 'context'}),
+  // contextual for the same reason: a collection template binds to whatever
+  // collection is being browsed
+  collection: (id) => ({
+    id,
+    kind: 'collection',
+    source: 'context',
+    columns: DEFAULT_COLUMNS,
+    count: DEFAULT_COUNT,
+  }),
   group: (id) => ({
     id,
     kind: 'group',
@@ -139,6 +152,9 @@ export type EditorProps = {
   // the store's products. one hydrates a contextual element so the template can
   // be seen against something; the rest are what a pinned element picks from.
   products?: ProductData[];
+  // and the same for collections: one hydrates a contextual repeater, the rest
+  // are what a pinned one picks from
+  collections?: CollectionData[];
   // the shell owns pages; the editor only shows them and reports intent
   pages?: PageEntry[];
   target?: string;
@@ -164,6 +180,7 @@ export function Editor({
   initialPalette,
   menus,
   products,
+  collections,
   pages,
   target,
   missing,
@@ -217,8 +234,13 @@ export function Editor({
     () => Object.fromEntries((products ?? []).map((p) => [p.handle, p])),
     [products],
   );
+  const byCollection: Collections = useMemo(
+    () => Object.fromEntries((collections ?? []).map((c) => [c.handle, c])),
+    [collections],
+  );
   // the preview never reaches the layout, so which product it is cannot matter
   const previewProduct = products?.[0];
+  const previewCollection = collections?.[0];
   // rail-tree drags are their own gesture: no ghost, no cell, no placement
   const [nodeDrag, setNodeDrag] = useState<NodeDrag | null>(null);
   // dnd-kit reorders the dom mid-drag and does not undo it across groups, so a
@@ -571,6 +593,8 @@ export function Editor({
                       menus={resolved}
                       product={previewProduct}
                       products={byHandle}
+                      collection={previewCollection}
+                      collections={byCollection}
                       palette={palette}
                     >
                       {blocks.map((b) => {
@@ -594,6 +618,8 @@ export function Editor({
               menus={resolved}
               product={previewProduct}
               products={byHandle}
+              collection={previewCollection}
+              collections={byCollection}
               palette={palette}
             >
               {layout.blocks.map((b) => {
@@ -668,6 +694,7 @@ export function Editor({
           palette={palette}
           menus={menus}
           products={products}
+          collections={collections}
           pages={pages}
           target={target}
           missing={missing}

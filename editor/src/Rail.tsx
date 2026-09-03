@@ -19,6 +19,7 @@ import {
 } from '@radix-ui/themes';
 import {
   BANDS,
+  fitCount,
   isSlot,
   SLOTS,
   isGroup,
@@ -27,6 +28,7 @@ import {
   type Block,
   type Cell,
   type Colour,
+  type Columns,
   type Element,
   type ElementKind,
   type Fill,
@@ -387,6 +389,87 @@ function Inspector({found, props}: {found: Found; props: RailProps}) {
             no product called “{handle}” in this store
           </Text>
         ) : null}
+      </>
+    );
+  }
+
+  if (node.kind === 'collection') {
+    const rows = node.count / node.columns;
+    const collections = props.collections ?? [];
+    const handle = node.source === 'context' ? '' : node.source.handle;
+    const pinned = node.source !== 'context';
+    // only a collection template browses one of its own
+    const contextual = props.target === 'collection';
+    return (
+      <>
+        <Field label="Collection">
+          <SegmentedControl.Root
+            size="1"
+            value={pinned ? 'pick' : 'context'}
+            onValueChange={(v) =>
+              patch({source: v === 'pick' ? {handle: ''} : 'context'})
+            }
+            style={{width: '100%'}}
+          >
+            <SegmentedControl.Item value="context">
+              On this page
+            </SegmentedControl.Item>
+            <SegmentedControl.Item value="pick">Pick one</SegmentedControl.Item>
+          </SegmentedControl.Root>
+        </Field>
+        {pinned ? (
+          <Select.Root
+            size="1"
+            value={handle || undefined}
+            onValueChange={(h) => patch({source: {handle: h}})}
+          >
+            <Select.Trigger placeholder="Choose a collection" style={{width: '100%'}} />
+            <Select.Content>
+              {collections.map((c) => (
+                <Select.Item key={c.handle} value={c.handle}>
+                  {c.title}
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select.Root>
+        ) : null}
+        {!pinned && !contextual ? (
+          <Text size="1" color="orange">
+            this page browses no collection of its own — showing a preview
+          </Text>
+        ) : null}
+        {pinned && handle && !collections.some((c) => c.handle === handle) ? (
+          <Text size="1" color="orange">
+            no collection called “{handle}” in this store
+          </Text>
+        ) : null}
+        <Segment
+          label="Columns"
+          value={String(node.columns) as (typeof COLUMN_CHOICES)[number]}
+          options={COLUMN_CHOICES}
+          onPick={(c) => {
+            const columns = Number(c) as Columns;
+            // the count is a whole number of rows, so a new grid re-fits it
+            // rather than leaving every page ragged
+            patch({columns, count: fitCount(node.count, columns)});
+          }}
+        />
+        <Field label="Rows per page">
+          <Select.Root
+            size="1"
+            value={String(rows)}
+            onValueChange={(r) => patch({count: Number(r) * node.columns})}
+          >
+            <Select.Trigger placeholder="Rows" style={{width: '100%'}} />
+            <Select.Content>
+              {PAGE_ROWS.map((r) => (
+                <Select.Item key={r} value={String(r)}>
+                  {r}
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select.Root>
+        </Field>
       </>
     );
   }

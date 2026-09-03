@@ -25,6 +25,7 @@ const LABEL: Record<string, string> = {
   button: 'Button',
   menu: 'Menu',
   product: 'Product',
+  collection: 'Collection',
   group: 'Group',
 };
 
@@ -35,6 +36,10 @@ const preview = (node: Node): string => {
   if (node.kind === 'product') {
     const which = node.source === 'context' ? 'on this page' : node.source.handle;
     return `${node.view} — ${which}`;
+  }
+  if (node.kind === 'collection') {
+    const which = node.source === 'context' ? 'on this page' : node.source.handle;
+    return `${node.count} in ${node.columns} — ${which}`;
   }
   return node.value;
 };

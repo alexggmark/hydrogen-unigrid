@@ -1,6 +1,6 @@
 import type {LinksFunction} from 'react-router';
 import {Editor} from '@unigrid/editor';
-import {DEMO_MENUS, DEMO_PRODUCTS, HARNESS} from '~/blocks/harness';
+import {DEMO_COLLECTION, DEMO_MENUS, DEMO_PRODUCTS, HARNESS} from '~/blocks/harness';
 import {DEV, gridDevLinks} from '~/blocks/grid-dev';
 import radixStyles from '@radix-ui/themes/styles.css?url';
 import unigridStyles from '@unigrid/blocks/unigrid.css?url';
@@ -24,6 +24,7 @@ export default function Playground() {
       dev={DEV}
       menus={DEMO_MENUS}
       products={DEMO_PRODUCTS}
+      collections={[DEMO_COLLECTION]}
     />
   );
 }
