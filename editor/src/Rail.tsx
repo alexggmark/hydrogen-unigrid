@@ -55,13 +55,17 @@ const SIZES = ['sm', 'lg'] as const;
 const VARIANTS = ['primary', 'secondary'] as const;
 const MENU_DIRECTIONS = ['row', 'column'] as const;
 const PRODUCT_VIEWS = ['media', 'details'] as const;
+const COLUMN_CHOICES = ['1', '2', '3', '4', '5', '6'] as const;
+// eight rows is already more than any block on screen can show
+const PAGE_ROWS = [1, 2, 3, 4, 5, 6, 8, 10];
 
 // a key, not a kind: product is two entries here and one kind in the model
 export type AddKey =
   | Exclude<ElementKind, 'product'>
   | 'group'
   | 'productMedia'
-  | 'productDetails';
+  | 'productDetails'
+  | 'collection';
 
 const ADDABLE: AddKey[] = [
   'headline',
@@ -71,6 +75,7 @@ const ADDABLE: AddKey[] = [
   'menu',
   'productMedia',
   'productDetails',
+  'collection',
   'group',
 ];
 
@@ -83,11 +88,13 @@ export const LABEL: Record<string, string> = {
   product: 'Product',
   productMedia: 'Product carousel',
   productDetails: 'Product details',
+  collection: 'Collection',
   group: 'Group',
 };
 
 export type MenuEntry = {handle: string; title: string};
 export type ProductEntry = {handle: string; title: string};
+export type CollectionEntry = {handle: string; title: string};
 
 export type RailProps = {
   layout: Layout;
@@ -105,6 +112,8 @@ export type RailProps = {
   menus?: MenuEntry[];
   // the store's products, for pinning one to a product element
   products?: ProductEntry[];
+  // the store's collections, for pinning one to a repeater
+  collections?: CollectionEntry[];
   tab: Tab;
   onTab: (tab: Tab) => void;
   onPalette?: (palette: ThemePalette) => void;

@@ -3,6 +3,11 @@ import {DEFAULT_PALETTE, type Palette} from '@unigrid/core';
 import {GridDev} from './GridDev';
 import {GridProbes} from './GridProbes';
 import {paletteVars} from './elements';
+import {
+  CollectionSource,
+  type CollectionData,
+  type Collections,
+} from './collection';
 import {ImageRenderer, type ImageRender} from './image';
 import {LinkRenderer, type LinkRender} from './link';
 import {MenuSource, type Menus} from './menu';
@@ -19,6 +24,8 @@ export function Grid({
   menus,
   product,
   products,
+  collection,
+  collections,
 }: {
   children?: ReactNode;
   probes?: boolean;
@@ -34,6 +41,9 @@ export function Grid({
   // the product this route is rendering, if any, and any the layout pinned
   product?: ProductData;
   products?: Products;
+  // the collection this route is browsing, if any, and any the layout pinned
+  collection?: CollectionData;
+  collections?: Collections;
 }) {
   return (
     <div className="u-frame" style={paletteVars(palette) as CSSProperties}>
@@ -44,7 +54,12 @@ export function Grid({
           <ImageRenderer render={image}>
             <MenuSource menus={menus}>
               <ProductSource product={product} products={products}>
-                {children}
+                <CollectionSource
+                  collection={collection}
+                  collections={collections}
+                >
+                  {children}
+                </CollectionSource>
               </ProductSource>
             </MenuSource>
           </ImageRenderer>

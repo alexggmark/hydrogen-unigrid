@@ -1,6 +1,7 @@
 import {useState, type CSSProperties} from 'react';
 import {useLinkRender} from './link';
 import {useMenu} from './menu';
+import {CollectionGrid, useCollection} from './collection';
 import {ProductDetails, ProductMedia, useProduct} from './product';
 import {
   isGroup,
@@ -114,6 +115,17 @@ function Product({node}: {node: Extract<Element, {kind: 'product'}>}) {
   );
 }
 
+function Collection({node}: {node: Extract<Element, {kind: 'collection'}>}) {
+  const collection = useCollection(node.source);
+  return (
+    <CollectionGrid
+      collection={collection}
+      columns={node.columns}
+      count={node.count}
+    />
+  );
+}
+
 function Leaf({node}: {node: Element}) {
   const Link = useLinkRender();
   switch (node.kind) {
@@ -143,6 +155,8 @@ function Leaf({node}: {node: Element}) {
       return <Menu node={node} />;
     case 'product':
       return <Product node={node} />;
+    case 'collection':
+      return <Collection node={node} />;
   }
 }
 

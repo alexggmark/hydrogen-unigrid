@@ -1,5 +1,5 @@
 import {BANDS, type Band} from './bands';
-import {DEFAULT_FLEX} from './types';
+import {DEFAULT_COLUMNS, DEFAULT_COUNT, DEFAULT_FLEX, fitCount} from './types';
 import {isSlot, SLOTS} from './types';
 import type {
   Block,
@@ -14,6 +14,8 @@ import type {
   Layout,
   Media,
   Slot,
+  CollectionRef,
+  Columns,
   Node,
   ProductRef,
   ProductView,
@@ -26,7 +28,7 @@ import type {
 //   {v, b:[block]}
 //   block   = {i, a:cell, b?:cell, c?:cell, f?:fill, x?:flex, n?:1, k?:[node]}
 //   cell    = [col, row] | [col, row, colSpan] | [col, row, colSpan, rowSpan]
-//   node    = {i, k:'h'|'t'|'x'|'b'|'m'|'p'|'g', ...}
+//   node    = {i, k:'h'|'t'|'x'|'b'|'m'|'p'|'c'|'g', ...}
 //   fill    = {c?:hex, m?:[kind, src], o?:[hex, opacity]}
 
 const encodeCell = (c: Cell): number[] =>
@@ -159,10 +161,19 @@ function encodeNode(n: Node): Obj {
         w: n.view === 'details' ? 'd' : 'm',
         ...(n.source !== 'context' ? {v: n.source.handle} : {}),
       };
+    case 'collection':
+      return {
+        i: n.id,
+        k: 'c',
+        ...(n.source !== 'context' ? {v: n.source.handle} : {}),
+        ...(n.columns !== DEFAULT_COLUMNS ? {n: n.columns} : {}),
+        ...(n.count !== DEFAULT_COUNT ? {q: n.count} : {}),
+      };
   }
 }
 
 const LEVELS: HeadingLevel[] = [1, 2, 3, 4, 5];
+const COLUMN_CHOICES: Columns[] = [1, 2, 3, 4, 5, 6];
 
 function decodeNode(w: unknown): Node | undefined {
   const o = obj(w);
@@ -209,6 +220,16 @@ function decodeNode(w: unknown): Node | undefined {
       const view: ProductView = o.w === 'd' ? 'details' : 'media';
       const source: ProductRef = value ? {handle: value} : 'context';
       return {id, kind: 'product', view, source};
+    }
+    case 'c': {
+      const source: CollectionRef = value ? {handle: value} : 'context';
+      const columns = COLUMN_CHOICES.includes(o.n as Columns)
+        ? (o.n as Columns)
+        : DEFAULT_COLUMNS;
+      // a count that is not a multiple of columns would ragged the last row of
+      // every page, so it is repaired on the way in rather than trusted
+      const raw = Number.isInteger(o.q) ? (o.q as number) : DEFAULT_COUNT;
+      return {id, kind: 'collection', source, columns, count: fitCount(raw, columns)};
     }
     default:
       return undefined;

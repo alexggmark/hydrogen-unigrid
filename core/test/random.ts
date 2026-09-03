@@ -54,10 +54,19 @@ export function element(
   id: string,
 ): Extract<
   Node,
-  {kind: 'headline' | 'text' | 'richText' | 'button' | 'menu' | 'product'}
+  {
+    kind:
+      | 'headline'
+      | 'text'
+      | 'richText'
+      | 'button'
+      | 'menu'
+      | 'product'
+      | 'collection';
+  }
 > {
   const s = `v${int(r, 0, 9999)} — ünïcode "quotes"`;
-  const pick = int(r, 0, 5);
+  const pick = int(r, 0, 6);
   if (pick === 0) {
     return {id, kind: 'headline', level: int(r, 1, 5) as 1 | 2 | 3 | 4 | 5, value: s};
   }
@@ -81,11 +90,23 @@ export function element(
       collapse: r() < 0.5,
     };
   }
+  if (pick === 5) {
+    return {
+      id,
+      kind: 'product',
+      view: r() < 0.5 ? 'media' : 'details',
+      source: r() < 0.5 ? 'context' : {handle: `p-${int(r, 0, 99)}`},
+    };
+  }
+  const columns = int(r, 1, 6) as 1 | 2 | 3 | 4 | 5 | 6;
   return {
     id,
-    kind: 'product',
-    view: r() < 0.5 ? 'media' : 'details',
-    source: r() < 0.5 ? 'context' : {handle: `p-${int(r, 0, 99)}`},
+    kind: 'collection',
+    source: r() < 0.5 ? 'context' : {handle: `c-${int(r, 0, 99)}`},
+    columns,
+    // only ever generated as a whole number of rows, because that is the only
+    // state the model is allowed to hold
+    count: columns * int(r, 1, 8),
   };
 }
 

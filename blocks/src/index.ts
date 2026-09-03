@@ -8,6 +8,13 @@ export {LinkRenderer, useLinkRender, type LinkProps, type LinkRender} from './li
 export {MenuSource, menuPath, useMenu, type MenuLink, type Menus} from './menu';
 export {ImageRenderer, useImageRender, type ImageProps, type ImageRender} from './image';
 export {
+  CollectionGrid,
+  CollectionSource,
+  useCollection,
+  type CollectionData,
+  type Collections,
+} from './collection';
+export {
   ProductDetails,
   ProductMedia,
   ProductSource,

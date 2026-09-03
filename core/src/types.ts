@@ -17,9 +17,27 @@ export type MenuDirection = 'row' | 'column';
 
 export type ProductView = 'media' | 'details';
 
+export const COLUMNS_MAX = 6;
+export type Columns = 1 | 2 | 3 | 4 | 5 | 6;
+
 // 'context' is whatever product the route is rendering, so one template serves
 // the whole catalogue. a handle pins one product, for a feature elsewhere.
 export type ProductRef = 'context' | {handle: string};
+
+// same shape, different resource. 'context' on a collection template is the
+// collection being browsed.
+export type CollectionRef = 'context' | {handle: string};
+
+export const DEFAULT_COLUMNS: Columns = 3;
+export const DEFAULT_COUNT = 12;
+export const ROWS_MAX = 20;
+
+// a page is a whole number of rows. a count that is not a multiple of columns
+// leaves a short row on every page rather than only the last one.
+export const fitCount = (count: number, columns: number): number => {
+  const rows = Math.round(count / columns);
+  return Math.min(ROWS_MAX, Math.max(1, rows)) * columns;
+};
 
 export type Element =
   | {id: string; kind: 'headline'; level: HeadingLevel; value: string}
@@ -38,7 +56,17 @@ export type Element =
     }
   // a reference, never the product. geometry is identical to every other
   // element; only the binding differs.
-  | {id: string; kind: 'product'; view: ProductView; source: ProductRef};
+  | {id: string; kind: 'product'; view: ProductView; source: ProductRef}
+  // a repeater with fixed internals: the merchant sizes the block and chooses
+  // the grid, the card inside is code. count stays a multiple of columns, so
+  // only the last page can have a short row.
+  | {
+      id: string;
+      kind: 'collection';
+      source: CollectionRef;
+      columns: Columns;
+      count: number;
+    };
 
 export type ElementKind = Element['kind'];
 

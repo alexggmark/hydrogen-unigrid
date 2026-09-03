@@ -289,10 +289,11 @@
   display: none;
 }
 
-/* the block sizes a product element, never its images. without this, a block
-   whose align shrink-wraps its children would take the strip's max-content
+/* the block sizes a bound element, never its images. without this, a block
+   whose align shrink-wraps its children would take the content's max-content
    width — the catalogue deciding the layout, which is backwards. */
-.u-el[data-kind='product'] {
+.u-el[data-kind='product'],
+.u-el[data-kind='collection'] {
   align-self: stretch;
 }
 
@@ -331,6 +332,48 @@
 .u-pmain[data-empty],
 .u-pthumb[data-empty] {
   background: color-mix(in srgb, var(--ink) 12%, transparent);
+}
+
+/* the repeater. its own grid, inside one cell of the page grid: the merchant
+   sizes the block and picks the columns, the card is code. */
+.u-repeat {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 1.5);
+  inline-size: 100%;
+}
+.u-repeat-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols-in, 3), minmax(0, 1fr));
+  gap: calc(var(--u) * 1.5) calc(var(--u) * 1);
+}
+.u-card {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 0.4);
+  min-inline-size: 0;
+  color: inherit;
+  text-decoration: none;
+}
+.u-card-img {
+  aspect-ratio: 1;
+  display: block;
+  inline-size: 100%;
+  object-fit: cover;
+}
+.u-card-img[data-empty] {
+  background: color-mix(in srgb, var(--ink) 12%, transparent);
+}
+.u-card-title {
+  font-size: var(--t-sm);
+}
+.u-card-price {
+  font-size: var(--t-micro);
+  letter-spacing: 0.08em;
+}
+.u-repeat-pages {
+  display: flex;
+  gap: calc(var(--u) * 1);
 }
 
 .u-pdetails {

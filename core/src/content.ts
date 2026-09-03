@@ -190,6 +190,38 @@ export function productHandles(layout: Layout): string[] {
   return [...out];
 }
 
+// pinned collection handles, for the same reason products have one
+export function collectionHandles(layout: Layout): string[] {
+  const out = new Set<string>();
+  const walk = (nodes: readonly Node[]) => {
+    for (const n of nodes) {
+      if (isGroup(n)) walk(n.children);
+      else if (n.kind === 'collection' && n.source !== 'context') {
+        out.add(n.source.handle);
+      }
+    }
+  };
+  for (const block of layout.blocks) walk(block.children);
+  return [...out];
+}
+
+// how many products the route has to fetch for the collection it is browsing.
+// the largest contextual count wins, so two elements asking for different page
+// sizes both get enough. zero means nothing on the page is browsing it.
+export function collectionPageSize(layout: Layout): number {
+  let most = 0;
+  const walk = (nodes: readonly Node[]) => {
+    for (const n of nodes) {
+      if (isGroup(n)) walk(n.children);
+      else if (n.kind === 'collection' && n.source === 'context') {
+        most = Math.max(most, n.count);
+      }
+    }
+  };
+  for (const block of layout.blocks) walk(block.children);
+  return most;
+}
+
 // which menus a layout references. the route resolves these; blocks/ cannot
 // fetch, so nothing downstream can discover them for itself.
 export function menuHandles(layout: Layout): string[] {

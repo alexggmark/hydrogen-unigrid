@@ -180,7 +180,10 @@ describe('bands', () => {
       const result = add(layout, block(r, `b${i}`));
       if (result.ok) layout = result.value;
     }
-    const victim = layout.blocks[2]!.id;
+    // whichever landed: how many of five random cells are accepted depends on
+    // the seed, and this is a test about delete, not about add
+    const victim = layout.blocks.at(-1)!.id;
+    expect(layout.blocks.length).toBeGreaterThan(0);
     const after = remove(layout, victim);
     expect(after.blocks.some((b) => b.id === victim)).toBe(false);
     expect(readingOrder(after).some((b) => b.id === victim)).toBe(false);

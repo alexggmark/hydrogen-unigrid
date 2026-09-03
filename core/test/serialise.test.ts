@@ -1,5 +1,9 @@
 import {describe, expect, it} from 'vitest';
-import {productHandles} from '../src/content';
+import {
+  collectionHandles,
+  collectionPageSize,
+  productHandles,
+} from '../src/content';
 import {decode, encode} from '../src/serialise';
 import {
   emptyBlock,
@@ -189,6 +193,57 @@ describe('product binding', () => {
   it('lists pinned handles and ignores contextual ones', () => {
     expect(productHandles(withProduct({handle: 'a-shirt'}))).toEqual(['a-shirt']);
     expect(productHandles(withProduct('context'))).toEqual([]);
+  });
+});
+
+describe('collection repeater', () => {
+  const withCollection = (patch: Partial<Extract<Node, {kind: 'collection'}>>) => ({
+    version: 1,
+    blocks: [
+      {
+        ...emptyBlock('x', {a: {col: 1, colSpan: 12, row: 1, rowSpan: 6}}),
+        children: [
+          {
+            id: 'c1',
+            kind: 'collection' as const,
+            source: 'context' as const,
+            columns: 3 as const,
+            count: 12,
+            ...patch,
+          },
+        ],
+      },
+    ],
+  });
+
+  it('roundtrips both sources', () => {
+    for (const source of ['context', {handle: 'shirts'}] as const) {
+      const before = withCollection({source});
+      expect(decode(encode(before))).toEqual(before);
+    }
+  });
+
+  it('costs nothing on the wire at its defaults', () => {
+    const wire = JSON.parse(encode(withCollection({})));
+    expect(wire.b[0].k[0]).toEqual({i: 'c1', k: 'c'});
+  });
+
+  // a hand-edited count would ragged the last row of every page, not just the
+  // final one, so it is repaired rather than trusted
+  it('repairs a count that is not a whole number of rows', () => {
+    const wire = JSON.parse(encode(withCollection({columns: 4, count: 12})));
+    wire.b[0].k[0].q = 13;
+    const node = decode(JSON.stringify(wire))?.blocks[0]?.children[0];
+    expect(node && node.kind === 'collection' && node.count).toBe(12);
+  });
+
+  it('lists pinned handles and sizes the page from contextual ones', () => {
+    expect(collectionHandles(withCollection({source: {handle: 'shirts'}}))).toEqual([
+      'shirts',
+    ]);
+    expect(collectionHandles(withCollection({}))).toEqual([]);
+    expect(collectionPageSize(withCollection({count: 24}))).toBe(24);
+    expect(collectionPageSize(withCollection({source: {handle: 'shirts'}}))).toBe(0);
   });
 });
 

@@ -156,6 +156,26 @@ export const HARNESS: Layout = {
         ],
       },
     ),
+
+    block(
+      'catalogue',
+      {
+        a: {col: 1, colSpan: 12, row: 10, rowSpan: 10},
+        b: {col: 1, colSpan: 8, row: 14, rowSpan: 7},
+        c: {col: 1, colSpan: 4, row: 21, rowSpan: 4},
+      },
+      {
+        children: [
+          {
+            id: 'catalogue-grid',
+            kind: 'collection',
+            source: 'context',
+            columns: 4,
+            count: 8,
+          },
+        ],
+      },
+    ),
   ],
 };
 
@@ -200,3 +220,28 @@ export const DEMO_PRODUCTS = [
     images: shots('demo-lamp', 3),
   },
 ];
+
+// and a collection for the repeater, paged so the Next control has something to
+// render. eight products, so four columns is two whole rows.
+const CATALOGUE: [string, string][] = [
+  ['Cantilever chair', '£420.00'],
+  ['Column lamp', '£180.00'],
+  ['Slab table', '£960.00'],
+  ['Rail shelf', '£240.00'],
+  ['Drum stool', '£150.00'],
+  ['Grid mirror', '£310.00'],
+  ['Plane desk', '£780.00'],
+  ['Bracket light', '£95.00'],
+];
+
+export const DEMO_COLLECTION = {
+  handle: 'demo-all',
+  title: 'Everything',
+  products: CATALOGUE.map(([title, price], i) => ({
+    handle: `demo-item-${i + 1}`,
+    title,
+    price,
+    images: shots(`demo-item-${i + 1}`, i),
+  })),
+  next: '#',
+};
