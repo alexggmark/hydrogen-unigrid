@@ -2,6 +2,7 @@ import {useState, type CSSProperties} from 'react';
 import {useLinkRender} from './link';
 import {useMenu} from './menu';
 import {CollectionGrid, useCollection} from './collection';
+import {useShop} from './shop';
 import {ProductDetails, ProductMedia, useProduct} from './product';
 import {
   isGroup,
@@ -127,6 +128,32 @@ function Collection({node}: {node: Extract<Element, {kind: 'collection'}>}) {
   );
 }
 
+function Cart({node}: {node: Extract<Element, {kind: 'cart'}>}) {
+  const {cartCount, onOpenCart} = useShop();
+  // a button either way: without an opener it is inert rather than disabled, so
+  // the admin sees what the storefront renders
+  return (
+    <button className="u-shop-link" type="button" onClick={onOpenCart}>
+      {node.label}
+      {cartCount ? <span className="u-shop-count">{cartCount}</span> : null}
+    </button>
+  );
+}
+
+function Account({node}: {node: Extract<Element, {kind: 'account'}>}) {
+  const Link = useLinkRender();
+  const {accountHref, loggedIn} = useShop();
+  return (
+    <Link
+      className="u-shop-link"
+      href={accountHref ?? '/account'}
+      data-in={loggedIn ? '' : undefined}
+    >
+      {node.label}
+    </Link>
+  );
+}
+
 function Leaf({node}: {node: Element}) {
   const Link = useLinkRender();
   switch (node.kind) {
@@ -158,6 +185,10 @@ function Leaf({node}: {node: Element}) {
       return <Product node={node} />;
     case 'collection':
       return <Collection node={node} />;
+    case 'cart':
+      return <Cart node={node} />;
+    case 'account':
+      return <Account node={node} />;
   }
 }
 

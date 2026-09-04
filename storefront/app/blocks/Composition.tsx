@@ -1,4 +1,4 @@
-import {Suspense, type ReactNode} from 'react';
+import {Suspense, useEffect, useMemo, useState, type ReactNode} from 'react';
 import {Await, useRouteLoaderData} from 'react-router';
 import {Analytics} from '@shopify/hydrogen';
 import type {RootLoader} from '~/root';
@@ -10,12 +10,13 @@ import type {
   Menus,
   ProductData,
   Products,
+  ShopState,
 } from '@unigrid/blocks';
 import type {Layout, Palette} from '@unigrid/core';
 import {DEV} from '~/blocks/grid-dev';
 import {StoreImage} from '~/blocks/image';
 import {StoreLink} from '~/blocks/link';
-import {Aside} from '~/components/Aside';
+import {Aside, useAside} from '~/components/Aside';
 import {CartMain} from '~/components/CartMain';
 
 // every unigrid route renders through here, so there is one assembly of a page
@@ -30,6 +31,7 @@ function Region({
   collection,
   collections,
   media,
+  shop,
 }: {
   layout: Layout;
   palette: Palette;
@@ -39,6 +41,7 @@ function Region({
   collection?: CollectionData;
   collections?: Collections;
   media?: MediaUrls;
+  shop?: ShopState;
 }) {
   const at = deriveAll(layout);
   return (
@@ -53,6 +56,7 @@ function Region({
       collection={collection}
       collections={collections}
       media={media}
+      shop={shop}
     >
       {layout.blocks.map((block) => {
         const placement = at.get(block.id);
@@ -81,6 +85,42 @@ function CartDrawer({cart}: {cart: RootData['cart'] | undefined}) {
 
 type RootData = NonNullable<ReturnType<typeof useRouteLoaderData<RootLoader>>>;
 
+// the cart is a promise and the grid must not wait on it: the count arrives
+// after hydration, exactly as the skeleton's badge does.
+function useCartCount(cart: RootData['cart'] | undefined): number {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    let live = true;
+    Promise.resolve(cart)
+      .then((c) => live && setCount(c?.totalQuantity ?? 0))
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [cart]);
+  return count;
+}
+
+function useShopState(root: RootData | undefined): ShopState {
+  const {open} = useAside();
+  const cartCount = useCartCount(root?.cart);
+  const [loggedIn, setLoggedIn] = useState(false);
+  useEffect(() => {
+    let live = true;
+    Promise.resolve(root?.isLoggedIn)
+      .then((yes) => live && setLoggedIn(Boolean(yes)))
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [root?.isLoggedIn]);
+
+  return useMemo(
+    () => ({cartCount, onOpenCart: () => open('cart'), loggedIn}),
+    [cartCount, loggedIn, open],
+  );
+}
+
 // the view events the product and collection routes already render do nothing
 // without this: hydrogen's analytics context has a non-null default, so a
 // missing provider is silent rather than an error.
@@ -107,7 +147,7 @@ function Shell({children}: {children: ReactNode}) {
   );
 }
 
-export function Composition({
+function Page({
   header,
   body,
   footer,
@@ -135,53 +175,66 @@ export function Composition({
   // what to render in place of the body when there is no layout for it
   children?: ReactNode;
 }) {
+  const shop = useShopState(useRouteLoaderData<RootLoader>('root'));
+
   // separate grids on purpose: each region is its own composition, so row
   // numbering and margins in one cannot reach into another. the stack holds the
   // page's vertical rhythm, so it does not change with which regions exist.
   return (
-    <Shell>
-      <div className="unigrid-demo u-page">
-        <div className="u-stack">
-          {header ? (
-            <Region
-              layout={header}
-              menus={menus}
-              palette={palette}
-              product={product}
-              products={products}
-              collection={collection}
-              collections={collections}
-              media={media}
-            />
-          ) : null}
-          {body ? (
-            <Region
-              layout={body}
-              menus={menus}
-              palette={palette}
-              product={product}
-              products={products}
-              collection={collection}
-              collections={collections}
-              media={media}
-            />
-          ) : (
-            children
-          )}
-          {footer ? (
-            <Region
-              layout={footer}
-              menus={menus}
-              palette={palette}
-              product={product}
-              products={products}
-              collection={collection}
-              collections={collections}
-              media={media}
-            />
-          ) : null}
-        </div>
+    <div className="unigrid-demo u-page">
+      <div className="u-stack">
+        {header ? (
+          <Region
+            layout={header}
+            menus={menus}
+            palette={palette}
+            product={product}
+            products={products}
+            collection={collection}
+            collections={collections}
+            media={media}
+            shop={shop}
+          />
+        ) : null}
+        {body ? (
+          <Region
+            layout={body}
+            menus={menus}
+            palette={palette}
+            product={product}
+            products={products}
+            collection={collection}
+            collections={collections}
+            media={media}
+            shop={shop}
+          />
+        ) : (
+          children
+        )}
+        {footer ? (
+          <Region
+            layout={footer}
+            menus={menus}
+            palette={palette}
+            product={product}
+            products={products}
+            collection={collection}
+            collections={collections}
+            media={media}
+            shop={shop}
+          />
+        ) : null}
       </div>
+    </div>
+  );
+}
+
+// the shell is separate so the page can read the aside context it mounts: a
+// cart button has to be able to open a drawer that is above it in the tree.
+export function Composition(props: Parameters<typeof Page>[0]) {
+  return (
+    <Shell>
+      <Page {...props} />
     </Shell>
   );
 }

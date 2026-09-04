@@ -35,7 +35,7 @@ import type {
 //   {v, b:[block]}
 //   block   = {i, a:cell, b?:cell, c?:cell, f?:fill, x?:flex, n?:1, k?:[node]}
 //   cell    = [col, row] | [col, row, colSpan] | [col, row, colSpan, rowSpan]
-//   node    = {i, k:'h'|'t'|'x'|'b'|'m'|'p'|'c'|'g', ...}
+//   node    = {i, k:'h'|'t'|'x'|'b'|'m'|'p'|'c'|'r'|'a'|'g', ...}
 //   fill    = {c?:hex, m?:[kind, url | gid], o?:[hex, opacity]}
 
 const encodeCell = (c: Cell): number[] =>
@@ -177,6 +177,10 @@ function encodeNode(n: Node): Obj {
         w: n.view === 'details' ? 'd' : 'm',
         ...(n.source !== 'context' ? {v: n.source.handle} : {}),
       };
+    case 'cart':
+      return {i: n.id, k: 'r', v: n.label};
+    case 'account':
+      return {i: n.id, k: 'a', v: n.label};
     case 'collection':
       return {
         i: n.id,
@@ -239,6 +243,10 @@ function decodeNode(w: unknown): Node | undefined {
       const source: ProductRef = value ? {handle: value} : 'context';
       return {id, kind: 'product', view, source};
     }
+    case 'r':
+      return {id, kind: 'cart', label: value};
+    case 'a':
+      return {id, kind: 'account', label: value};
     case 'c': {
       const source: CollectionRef = value ? {handle: value} : 'context';
       const columns = COLUMN_CHOICES.includes(o.n as Columns)

@@ -58,6 +58,17 @@ export const HARNESS: Layout = {
       {
         flex: flex({justify: 'end', gap: 1}),
         children: [
+          // the shopper's controls sit in a row group, not inside the menu:
+          // siblings keep their own alignment and stay put when a menu folds
+          {
+            id: 'masthead-shop',
+            kind: 'group',
+            flex: flex({direction: 'row', justify: 'end', gap: 2}),
+            children: [
+              {id: 'masthead-account', kind: 'account', label: 'Account'},
+              {id: 'masthead-cart', kind: 'cart', label: 'Cart'},
+            ],
+          },
           hl('masthead-h', 1, 'Zoom, not reflow.'),
           text('masthead-t', 'lg', 'A storefront on a strict modular grid.'),
         ],

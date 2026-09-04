@@ -11,6 +11,7 @@ import {
 import {ImageRenderer, type ImageRender} from './image';
 import {LinkRenderer, type LinkRender} from './link';
 import {MediaSource, type MediaUrls} from './media';
+import {ShopSource, type ShopState} from './shop';
 import {MenuSource, type Menus} from './menu';
 import {ProductSource, type ProductData, type Products} from './product';
 
@@ -28,6 +29,7 @@ export function Grid({
   collection,
   collections,
   media,
+  shop,
 }: {
   children?: ReactNode;
   probes?: boolean;
@@ -48,6 +50,8 @@ export function Grid({
   collections?: Collections;
   // gid to url for any block fill that references a file
   media?: MediaUrls;
+  // cart count, the drawer opener, and whether anyone is signed in
+  shop?: ShopState;
 }) {
   return (
     <div className="u-frame" style={paletteVars(palette) as CSSProperties}>
@@ -62,7 +66,9 @@ export function Grid({
                   collection={collection}
                   collections={collections}
                 >
-                  <MediaSource media={media}>{children}</MediaSource>
+                  <MediaSource media={media}>
+                    <ShopSource shop={shop}>{children}</ShopSource>
+                  </MediaSource>
                 </CollectionSource>
               </ProductSource>
             </MenuSource>

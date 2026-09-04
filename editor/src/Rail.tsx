@@ -82,6 +82,8 @@ const ADDABLE: AddKey[] = [
   'productMedia',
   'productDetails',
   'collection',
+  'cart',
+  'account',
   'group',
 ];
 
@@ -95,6 +97,8 @@ export const LABEL: Record<string, string> = {
   productMedia: 'Product carousel',
   productDetails: 'Product details',
   collection: 'Collection',
+  cart: 'Cart',
+  account: 'Account',
   group: 'Group',
 };
 
@@ -529,7 +533,7 @@ function Inspector({found, props}: {found: Found; props: RailProps}) {
         />
       ) : null}
 
-      <Field label={node.kind === 'button' ? 'Label' : 'Content'}>
+      <Field label={'label' in node ? 'Label' : 'Content'}>
         {node.kind === 'richText' ? (
           <TextArea
             size="1"
@@ -540,10 +544,10 @@ function Inspector({found, props}: {found: Found; props: RailProps}) {
         ) : (
           <TextField.Root
             size="1"
-            value={node.kind === 'button' ? node.label : node.value}
+            value={'label' in node ? node.label : node.value}
             onChange={(e) =>
               patch(
-                node.kind === 'button'
+                'label' in node
                   ? {label: e.target.value}
                   : {value: e.target.value},
               )

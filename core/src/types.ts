@@ -69,6 +69,10 @@ export type Element =
   // a reference, never the product. geometry is identical to every other
   // element; only the binding differs.
   | {id: string; kind: 'product'; view: ProductView; source: ProductRef}
+  // the shopper's own two controls. no reference to resolve: the shell knows the
+  // cart count and whether anyone is signed in, and hands both in.
+  | {id: string; kind: 'cart'; label: string}
+  | {id: string; kind: 'account'; label: string}
   // a repeater with fixed internals: the merchant sizes the block and chooses
   // the grid, the card inside is code. count stays a multiple of columns, so
   // only the last page can have a short row. narrow is band c's column count,

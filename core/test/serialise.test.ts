@@ -277,6 +277,34 @@ describe('collection repeater', () => {
   });
 });
 
+describe('shopper controls', () => {
+  const withNode = (node: Node): Layout => ({
+    version: 1,
+    blocks: [
+      {
+        ...emptyBlock('x', {a: {col: 1, colSpan: 2, row: 1, rowSpan: 1}}),
+        children: [node],
+      },
+    ],
+  });
+
+  it('roundtrips a cart and an account control', () => {
+    for (const node of [
+      {id: 'n', kind: 'cart' as const, label: 'Bag'},
+      {id: 'n', kind: 'account' as const, label: 'Sign in'},
+    ]) {
+      expect(decode(encode(withNode(node)))).toEqual(withNode(node));
+    }
+  });
+
+  // neither holds a reference: the shell knows the count and the session, so a
+  // saved layout says nothing about either
+  it('writes the label and nothing else', () => {
+    const wire = JSON.parse(encode(withNode({id: 'n', kind: 'cart', label: 'Bag'})));
+    expect(wire.b[0].k[0]).toEqual({i: 'n', k: 'r', v: 'Bag'});
+  });
+});
+
 describe('block media', () => {
   const withMedia = (media: NonNullable<Fill['media']>): Layout => ({
     version: 1,

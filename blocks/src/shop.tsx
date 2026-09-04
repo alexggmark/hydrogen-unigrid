@@ -1,0 +1,26 @@
+import {createContext, useContext, type ReactNode} from 'react';
+
+// what the shell knows about the shopper. the cart count, the drawer opener and
+// the account state are all hydrogen or router things, so blocks/ takes them the
+// way it takes the image and link renderers rather than reaching for them.
+export type ShopState = {
+  cartCount?: number;
+  // absent means nothing can be opened — the admin has no cart to show
+  onOpenCart?: () => void;
+  accountHref?: string;
+  loggedIn?: boolean;
+};
+
+const Ctx = createContext<ShopState>({});
+
+export const useShop = (): ShopState => useContext(Ctx);
+
+export function ShopSource({
+  shop,
+  children,
+}: {
+  shop?: ShopState;
+  children: ReactNode;
+}) {
+  return <Ctx.Provider value={shop ?? {}}>{children}</Ctx.Provider>;
+}

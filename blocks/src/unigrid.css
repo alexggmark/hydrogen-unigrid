@@ -234,6 +234,31 @@
   letter-spacing: 0.14em;
   font-weight: 700;
 }
+/* the cart and account controls read as nav, not as buttons: they sit in a row
+   beside menu links and have to match them */
+.u-shop-link {
+  align-items: center;
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: var(--t-micro);
+  gap: calc(var(--u) * 0.5);
+  letter-spacing: 0.14em;
+  padding: 0;
+  text-decoration: none;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.u-shop-count::before {
+  content: '(';
+}
+.u-shop-count::after {
+  content: ')';
+}
+
 .u-menu-toggle {
   align-self: start;
   background: none;

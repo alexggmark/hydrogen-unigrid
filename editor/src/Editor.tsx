@@ -129,6 +129,8 @@ const NEW_NODE: Record<AddKey, (id: string) => Node> = {
     narrow: DEFAULT_COLUMNS,
     count: DEFAULT_COUNT,
   }),
+  cart: (id) => ({id, kind: 'cart', label: 'Cart'}),
+  account: (id) => ({id, kind: 'account', label: 'Account'}),
   group: (id) => ({
     id,
     kind: 'group',
