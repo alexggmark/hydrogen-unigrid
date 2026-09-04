@@ -1,4 +1,11 @@
-import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react';
 import {DragDropProvider} from '@dnd-kit/react';
 import {
   Accessibility,
@@ -21,6 +28,7 @@ import {
   findNode,
   DEFAULT_COLUMNS,
   DEFAULT_COUNT,
+  DEFAULT_METRICS,
   history,
   insertAfter,
   isBand,
@@ -40,12 +48,14 @@ import {
   type Band,
   type Cell,
   type History as LayoutHistory,
+  type Metrics,
   type Node,
 } from '@unigrid/core';
 import {
   Block,
   Grid,
   deriveAll,
+  metricVars,
   overflowing,
   sameOverflow,
   type MenuLink,
@@ -158,6 +168,10 @@ export type EditorProps = {
   busy?: boolean;
   version?: number;
   initialPalette?: Palette;
+  // the theme's measurements. absent is the default, which is what the
+  // stylesheet does on its own.
+  initialMetrics?: Metrics;
+  onSaveTheme?: (palette: Palette, metrics: Metrics) => void;
   menus?: StoreMenu[];
   // the store's products. one hydrates a contextual element so the template can
   // be seen against something; the rest are what a pinned element picks from.
@@ -195,6 +209,8 @@ export function Editor({
   busy,
   version,
   initialPalette,
+  initialMetrics,
+  onSaveTheme,
   menus,
   products,
   collections,
@@ -250,6 +266,7 @@ export function Editor({
   const [pickedMedia, setPickedMedia] = useState<MediaUrls>({});
   const [tab, setTab] = useState<Tab>('editor');
   const [palette, setPalette] = useState(initialPalette ?? DEFAULT_PALETTE);
+  const [metrics, setMetrics] = useState(initialMetrics ?? DEFAULT_METRICS);
   const resolved: Menus = useMemo(
     () => Object.fromEntries((menus ?? []).map((m) => [m.handle, m.items])),
     [menus],
@@ -604,7 +621,12 @@ export function Editor({
       onDragEnd={onDragEnd}
     >
       <div className="e-shell">
-        <div className="e-stage u-page" ref={hostRef} data-band={band}>
+        <div
+          className="e-stage u-page"
+          ref={hostRef}
+          data-band={band}
+          style={metricVars(metrics) as CSSProperties}
+        >
           <div className="e-canvas u-stack">
             {/* inert regions: rendered so the page reads whole, but no chrome,
                 no selection and no drag. clicking one makes it the active one. */}
@@ -639,6 +661,7 @@ export function Editor({
                       collections={byCollection}
                       media={mediaUrls}
                       palette={palette}
+                      metrics={metrics}
                     >
                       {blocks.map((b) => {
                         const cell = deriveAll(layoutOf).get(b.id);
@@ -665,6 +688,7 @@ export function Editor({
               collections={byCollection}
               media={mediaUrls}
               palette={palette}
+              metrics={metrics}
             >
               {layout.blocks.map((b) => {
                 const p = at.get(b.id);
@@ -750,8 +774,16 @@ export function Editor({
           onOpen={onOpen}
           tab={tab}
           onTab={setTab}
+          metrics={metrics}
+          onMetrics={setMetrics}
           onPalette={setPalette}
-          onSavePalette={onSavePalette ? () => onSavePalette(palette) : undefined}
+          onSavePalette={
+            onSaveTheme
+              ? () => onSaveTheme(palette, metrics)
+              : onSavePalette
+                ? () => onSavePalette(palette)
+                : undefined
+          }
           error={outerError ?? error}
           bytes={bytes}
           canUndo={canUndo(hist)}

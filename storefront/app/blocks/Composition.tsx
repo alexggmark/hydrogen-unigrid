@@ -1,5 +1,6 @@
 import {
   Suspense,
+  type CSSProperties,
   useCallback,
   useEffect,
   useMemo,
@@ -9,7 +10,7 @@ import {
 import {Await, useFetcher, useRouteLoaderData} from 'react-router';
 import {Analytics, CartForm} from '@shopify/hydrogen';
 import type {RootLoader} from '~/root';
-import {Block, Grid, deriveAll} from '@unigrid/blocks';
+import {Block, Grid, deriveAll, metricVars} from '@unigrid/blocks';
 import type {
   CollectionData,
   Collections,
@@ -19,7 +20,7 @@ import type {
   Products,
   ShopState,
 } from '@unigrid/blocks';
-import type {Layout, Palette} from '@unigrid/core';
+import type {Layout, Metrics, Palette} from '@unigrid/core';
 import {DEV} from '~/blocks/grid-dev';
 import {StoreImage} from '~/blocks/image';
 import {StoreLink} from '~/blocks/link';
@@ -39,6 +40,7 @@ function Region({
   collections,
   media,
   shop,
+  metrics,
 }: {
   layout: Layout;
   palette: Palette;
@@ -49,6 +51,7 @@ function Region({
   collections?: Collections;
   media?: MediaUrls;
   shop?: ShopState;
+  metrics?: Metrics;
 }) {
   const at = deriveAll(layout);
   return (
@@ -64,6 +67,7 @@ function Region({
       collections={collections}
       media={media}
       shop={shop}
+      metrics={metrics}
     >
       {layout.blocks.map((block) => {
         const placement = at.get(block.id);
@@ -186,6 +190,7 @@ function Page({
   body,
   footer,
   palette,
+  metrics,
   menus,
   product,
   products,
@@ -198,6 +203,7 @@ function Page({
   body: Layout | null;
   footer: Layout | null;
   palette: Palette;
+  metrics?: Metrics;
   menus: Menus;
   // the product this route renders, if it renders one, and any the layout pinned
   product?: ProductData;
@@ -215,7 +221,10 @@ function Page({
   // numbering and margins in one cannot reach into another. the stack holds the
   // page's vertical rhythm, so it does not change with which regions exist.
   return (
-    <div className="unigrid-demo u-page">
+    <div
+      className="unigrid-demo u-page"
+      style={metricVars(metrics) as CSSProperties}
+    >
       <div className="u-stack">
         {header ? (
           <Region
@@ -228,6 +237,7 @@ function Page({
             collections={collections}
             media={media}
             shop={shop}
+            metrics={metrics}
           />
         ) : null}
         {body ? (
@@ -241,6 +251,7 @@ function Page({
             collections={collections}
             media={media}
             shop={shop}
+            metrics={metrics}
           />
         ) : (
           children
@@ -256,6 +267,7 @@ function Page({
             collections={collections}
             media={media}
             shop={shop}
+            metrics={metrics}
           />
         ) : null}
       </div>

@@ -6,11 +6,14 @@ import {
 } from '@unigrid/blocks';
 import {
   DEFAULT_PALETTE,
+  metricsDiff,
+  metricsFrom,
   SLOTS,
   decode,
   emptyLayout,
   encode,
   type Layout,
+  type Metrics,
   type Palette,
 } from '@unigrid/core';
 
@@ -174,6 +177,24 @@ export async function loadPalette(admin: Admin): Promise<Palette> {
   return out;
 }
 
+// every measurement in one json field: a knob added later then needs no change
+// to the metaobject definition, and an older entry falls back per key.
+export async function loadMetrics(admin: Admin): Promise<Metrics> {
+  const response = await admin.graphql(THEME_READ);
+  const body = (await response.json()) as {
+    data?: {metaobjectByHandle?: {fields: Fields} | null};
+  };
+  const raw = body.data?.metaobjectByHandle?.fields?.find(
+    (f) => f.key === 'metrics',
+  )?.value;
+  if (!raw) return metricsFrom(undefined);
+  try {
+    return metricsFrom(JSON.parse(raw));
+  } catch {
+    return metricsFrom(undefined);
+  }
+}
+
 // the theme has no draft. it is referenced by every layout, so a half-applied
 // palette would be visible everywhere at once — saving is publishing.
 export async function savePalette(admin: Admin, palette: Palette): Promise<Result> {
@@ -189,6 +210,26 @@ export async function savePalette(admin: Admin, palette: Palette): Promise<Resul
     id,
     SLOTS.map((slot) => ({key: `c${slot}`, value: palette[slot]})),
   );
+}
+
+export async function saveTheme(
+  admin: Admin,
+  palette: Palette,
+  metrics: Metrics,
+): Promise<Result> {
+  const response = await admin.graphql(THEME_READ);
+  const body = (await response.json()) as {
+    data?: {metaobjectByHandle?: {id: string} | null};
+  };
+  const id = body.data?.metaobjectByHandle?.id;
+  if (!id) return {ok: false, message: 'no theme entry found'};
+
+  // only what differs from the default is stored, so a theme nobody has touched
+  // is an empty object rather than a copy of the stylesheet
+  return write(admin, id, [
+    ...SLOTS.map((slot) => ({key: `c${slot}`, value: palette[slot]})),
+    {key: 'metrics', value: JSON.stringify(metricsDiff(metrics))},
+  ]);
 }
 
 const MENUS = `#graphql

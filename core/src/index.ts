@@ -45,6 +45,14 @@ export {
   type TextSize,
 } from './types';
 export {
+  DEFAULT_METRICS,
+  METRIC_KEYS,
+  METRIC_RANGE,
+  metricsDiff,
+  metricsFrom,
+  type Metrics,
+} from './metrics';
+export {
   addNode,
   findNode,
   collectionCounts,

@@ -5,15 +5,23 @@ import type {
   LinksFunction,
   LoaderFunctionArgs,
 } from 'react-router';
-import {useFetcher, useLoaderData, useNavigate, useRouteError} from 'react-router';
+import {
+  useFetcher,
+  useLoaderData,
+  useNavigate,
+  useRouteError,
+} from 'react-router';
 import {boundary} from '@shopify/shopify-app-react-router/server';
 import {Editor} from '@unigrid/editor';
 import {
+  DEFAULT_METRICS,
   DEFAULT_PALETTE,
   decode,
   encode,
   mediaIds,
+  metricsFrom,
   type Layout,
+  type Metrics,
   type Palette,
 } from '@unigrid/core';
 import radixStyles from '@radix-ui/themes/styles.css?url';
@@ -32,7 +40,8 @@ import {
   resolveMedia,
   publishAll,
   saveDraft,
-  savePalette,
+  loadMetrics,
+  saveTheme,
   type PageRow,
   type StoreMenu,
 } from '../lib/layout.server';
@@ -53,16 +62,19 @@ export const loader = async ({request}: LoaderFunctionArgs) => {
   const target = targetOf(request);
   // shared regions have no page of their own. showing them against the homepage
   // avoids a second region with the same target, which collapses to one.
-  const bodyTarget = target === 'header' || target === 'footer' ? 'home' : target;
+  const bodyTarget =
+    target === 'header' || target === 'footer' ? 'home' : target;
 
-  const [regions, palette, pages, menus, products, collections] = await Promise.all([
-    loadComposition(admin, bodyTarget),
-    loadPalette(admin),
-    listPages(admin),
-    loadMenus(admin),
-    listProducts(admin),
-    listCollections(admin),
-  ]);
+  const [regions, palette, pages, menus, products, collections, metrics] =
+    await Promise.all([
+      loadComposition(admin, bodyTarget),
+      loadPalette(admin),
+      listPages(admin),
+      loadMenus(admin),
+      listProducts(admin),
+      listCollections(admin),
+      loadMetrics(admin),
+    ]);
   const empty: Layout = {version: 1, blocks: []};
   const label = pages.find((p) => p.target === bodyTarget)?.title ?? 'Page';
 
@@ -85,11 +97,20 @@ export const loader = async ({request}: LoaderFunctionArgs) => {
     menus,
     products,
     collections,
+    metrics,
     media,
     regions: [
-      {target: 'header', label: 'Header', layout: regions.header?.layout ?? empty},
+      {
+        target: 'header',
+        label: 'Header',
+        layout: regions.header?.layout ?? empty,
+      },
       {target: bodyTarget, label, layout: regions.body?.layout ?? empty},
-      {target: 'footer', label: 'Footer', layout: regions.footer?.layout ?? empty},
+      {
+        target: 'footer',
+        label: 'Footer',
+        layout: regions.footer?.layout ?? empty,
+      },
     ],
     version: regions.body?.version ?? 0,
     // any region, not just the body — a saved header is unpublished work too
@@ -109,12 +130,17 @@ export const action = async ({request}: ActionFunctionArgs) => {
     const body = target === 'header' || target === 'footer' ? 'home' : target;
     return publishAll(admin, ['header', body, 'footer']);
   }
-  if (intent === 'newPage') return createPage(admin, String(form.get('title') || 'Untitled'));
+  if (intent === 'newPage')
+    return createPage(admin, String(form.get('title') || 'Untitled'));
   if (intent === 'attach') return createLayout(admin, target);
 
-  const theme = form.get('palette');
+  const theme = form.get('theme');
   if (typeof theme === 'string') {
-    return savePalette(admin, JSON.parse(theme) as Palette);
+    const {palette, metrics} = JSON.parse(theme) as {
+      palette: Palette;
+      metrics: Metrics;
+    };
+    return saveTheme(admin, palette, metricsFrom(metrics));
   }
 
   // one submit carries every region that changed, so switching region cannot
@@ -143,20 +169,22 @@ export default function Index() {
     menus,
     products,
     collections,
+    metrics,
     media,
     target,
   } = useLoaderData<typeof loader>() as {
-      regions: {target: string; label: string; layout: Layout}[];
-      version: number;
-      unpublished: boolean;
-      palette: Palette;
-      pages: PageRow[];
-      menus: StoreMenu[];
-      products: ProductData[];
-      collections: CollectionData[];
-      media: MediaUrls;
-      target: string;
-    };
+    regions: {target: string; label: string; layout: Layout}[];
+    version: number;
+    unpublished: boolean;
+    palette: Palette;
+    pages: PageRow[];
+    menus: StoreMenu[];
+    products: ProductData[];
+    collections: CollectionData[];
+    metrics: Metrics;
+    media: MediaUrls;
+    target: string;
+  };
   const fetcher = useFetcher<typeof action>();
   const navigate = useNavigate();
 
@@ -180,8 +208,12 @@ export default function Index() {
     [fetcher, target],
   );
 
-  const onSavePalette = useCallback(
-    (next: Palette) => fetcher.submit({palette: JSON.stringify(next)}, {method: 'post'}),
+  const onSaveTheme = useCallback(
+    (palette: Palette, metrics: Metrics) =>
+      fetcher.submit(
+        {theme: JSON.stringify({palette, metrics})},
+        {method: 'post'},
+      ),
     [fetcher],
   );
 
@@ -223,12 +255,13 @@ export default function Index() {
       onSave={onSave}
       onPublish={onPublish}
       initialPalette={palette ?? DEFAULT_PALETTE}
+      initialMetrics={metrics ?? DEFAULT_METRICS}
+      onSaveTheme={onSaveTheme}
       menus={menus}
       products={products}
       collections={collections}
       media={media}
       pickMedia={pickMedia}
-      onSavePalette={onSavePalette}
       busy={fetcher.state !== 'idle'}
       version={version}
       unpublished={unpublished}
@@ -241,4 +274,5 @@ export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
 
-export const headers: HeadersFunction = (headersArgs) => boundary.headers(headersArgs);
+export const headers: HeadersFunction = (headersArgs) =>
+  boundary.headers(headersArgs);

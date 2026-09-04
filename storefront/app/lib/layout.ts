@@ -3,10 +3,12 @@ import {
   SLOTS,
   collectionCounts,
   decode,
+  metricsFrom,
   mediaIds,
   menuHandles,
   productHandles,
   type Layout,
+  type Metrics,
   type Palette,
 } from '@unigrid/core';
 import {
@@ -74,6 +76,18 @@ export function paletteFrom(fields: Fields | null | undefined): Palette {
   return out;
 }
 
+// the numbers live in one json field, so a knob added later needs no metaobject
+// definition change and an older entry simply falls back per key
+export function metricsFromFields(fields: Fields | null | undefined): Metrics {
+  const raw = fields?.find((f) => f.key === 'metrics')?.value;
+  if (!raw) return metricsFrom(undefined);
+  try {
+    return metricsFrom(JSON.parse(raw));
+  } catch {
+    return metricsFrom(undefined);
+  }
+}
+
 export async function loadPalette(storefront: Queryable): Promise<Palette> {
   const data = await storefront.query<{metaobject?: {fields: Fields} | null}>(
     THEME_QUERY,
@@ -105,6 +119,7 @@ export type Composition = {
   body: Layout | null;
   footer: Layout | null;
   palette: Palette;
+  metrics: Metrics;
   menus: Menus;
   // only the ones a layout pinned. the route's own product is not a reference
   // to resolve — it is already here.
@@ -376,6 +391,7 @@ export async function loadComposition(
     body,
     footer,
     palette: paletteFrom(data?.theme?.fields),
+    metrics: metricsFromFields(data?.theme?.fields),
     menus,
     products,
     collections,

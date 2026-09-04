@@ -1,8 +1,8 @@
 import type {CSSProperties, ReactNode} from 'react';
-import {DEFAULT_PALETTE, type Palette} from '@unigrid/core';
+import {DEFAULT_PALETTE, type Metrics, type Palette} from '@unigrid/core';
 import {GridDev} from './GridDev';
 import {GridProbes} from './GridProbes';
-import {paletteVars} from './elements';
+import {metricVars, paletteVars} from './elements';
 import {
   CollectionSource,
   type CollectionData,
@@ -30,6 +30,7 @@ export function Grid({
   collections,
   media,
   shop,
+  metrics,
 }: {
   children?: ReactNode;
   probes?: boolean;
@@ -52,9 +53,17 @@ export function Grid({
   media?: MediaUrls;
   // cart count, the drawer opener, and whether anyone is signed in
   shop?: ShopState;
+  // the theme's numbers. absent is the default, which is what the stylesheet
+  // already does on its own.
+  metrics?: Metrics;
 }) {
   return (
-    <div className="u-frame" style={paletteVars(palette) as CSSProperties}>
+    <div
+      className="u-frame"
+      style={
+        {...paletteVars(palette), ...metricVars(metrics)} as CSSProperties
+      }
+    >
       <div className="u-grid">
         {dev ? <GridDev /> : null}
         {probes || dev ? <GridProbes /> : null}

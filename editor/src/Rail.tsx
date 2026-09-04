@@ -19,6 +19,8 @@ import {
 } from '@radix-ui/themes';
 import {
   BANDS,
+  DEFAULT_METRICS,
+  METRIC_RANGE,
   divisorsOf,
   isMediaRef,
   fitCount,
@@ -40,6 +42,7 @@ import {
   type Group,
   type Layout,
   type MediaKind,
+  type Metrics,
   type Palette as ThemePalette,
 } from '@unigrid/core';
 import {useState} from 'react';
@@ -138,6 +141,8 @@ export type RailProps = {
   tab: Tab;
   onTab: (tab: Tab) => void;
   onPalette?: (palette: ThemePalette) => void;
+  metrics: Metrics;
+  onMetrics?: (metrics: Metrics) => void;
   pages?: PageEntry[];
   target?: string;
   missing?: boolean;
@@ -172,7 +177,9 @@ export type RailProps = {
   onPatchNode: (id: string, patch: Partial<Element> | Partial<Group>) => void;
   onMoveNode: (id: string, delta: number) => void;
   onRemoveNode: (id: string) => void;
-  onPatchBlock: (patch: Partial<Pick<Block, 'fill' | 'flex' | 'invert'>>) => void;
+  onPatchBlock: (
+    patch: Partial<Pick<Block, 'fill' | 'flex' | 'invert'>>,
+  ) => void;
   onFlex: (id: string, patch: Partial<FlexModel>) => void;
 };
 
@@ -187,10 +194,22 @@ function Field({label, children}: {label: string; children: React.ReactNode}) {
   );
 }
 
-function Section({title, children}: {title: string; children: React.ReactNode}) {
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <Box p="3">
-      <Heading as="h3" size="1" mb="2" color="gray" style={{letterSpacing: '0.08em'}}>
+      <Heading
+        as="h3"
+        size="1"
+        mb="2"
+        color="gray"
+        style={{letterSpacing: '0.08em'}}
+      >
         {title.toUpperCase()}
       </Heading>
       <Flex direction="column" gap="3">
@@ -302,7 +321,10 @@ function Inspector({found, props}: {found: Found; props: RailProps}) {
   if (isGroup(node)) {
     return (
       <>
-        <FlexFields flex={node.flex} onChange={(p) => props.onFlex(node.id, p)} />
+        <FlexFields
+          flex={node.flex}
+          onChange={(p) => props.onFlex(node.id, p)}
+        />
         <AddMenu parentId={node.id} onAdd={props.onAddChild} />
       </>
     );
@@ -320,7 +342,10 @@ function Inspector({found, props}: {found: Found; props: RailProps}) {
             value={node.handle || undefined}
             onValueChange={(handle) => patch({handle})}
           >
-            <Select.Trigger placeholder="Choose a menu" style={{width: '100%'}} />
+            <Select.Trigger
+              placeholder="Choose a menu"
+              style={{width: '100%'}}
+            />
             <Select.Content>
               {menus.map((m) => (
                 <Select.Item key={m.handle} value={m.handle}>
@@ -388,7 +413,10 @@ function Inspector({found, props}: {found: Found; props: RailProps}) {
             value={handle || undefined}
             onValueChange={(h) => patch({source: {handle: h}})}
           >
-            <Select.Trigger placeholder="Choose a product" style={{width: '100%'}} />
+            <Select.Trigger
+              placeholder="Choose a product"
+              style={{width: '100%'}}
+            />
             <Select.Content>
               {products.map((p) => (
                 <Select.Item key={p.handle} value={p.handle}>
@@ -442,7 +470,10 @@ function Inspector({found, props}: {found: Found; props: RailProps}) {
             value={handle || undefined}
             onValueChange={(h) => patch({source: {handle: h}})}
           >
-            <Select.Trigger placeholder="Choose a collection" style={{width: '100%'}} />
+            <Select.Trigger
+              placeholder="Choose a collection"
+              style={{width: '100%'}}
+            />
             <Select.Content>
               {collections.map((c) => (
                 <Select.Item key={c.handle} value={c.handle}>
@@ -622,7 +653,9 @@ function MediaField({
             setFill({
               media: value
                 ? {
-                    kind: /\.(mp4|webm|mov)(\?|$)/i.test(value) ? 'video' : 'image',
+                    kind: /\.(mp4|webm|mov)(\?|$)/i.test(value)
+                      ? 'video'
+                      : 'image',
                     src: value,
                   }
                 : undefined,
@@ -722,7 +755,11 @@ function Appearance({block, props}: {block: Block; props: RailProps}) {
             palette={props.palette}
             onPick={(color) => setFill({color})}
           />
-          <Button size="1" variant="soft" onClick={() => setFill({color: undefined})}>
+          <Button
+            size="1"
+            variant="soft"
+            onClick={() => setFill({color: undefined})}
+          >
             Clear
           </Button>
         </Flex>
@@ -741,7 +778,11 @@ function Appearance({block, props}: {block: Block; props: RailProps}) {
               setFill({overlay: {color, opacity: fill.overlay?.opacity ?? 0.4}})
             }
           />
-          <Button size="1" variant="soft" onClick={() => setFill({overlay: undefined})}>
+          <Button
+            size="1"
+            variant="soft"
+            onClick={() => setFill({overlay: undefined})}
+          >
             Clear
           </Button>
         </Flex>
@@ -798,39 +839,166 @@ export type PageEntry = {
   layoutId?: string;
 };
 
+// grouped the way a merchant thinks about them rather than the way they are
+// stored. every value is a multiple of --u, which is 1rem at the grid's design
+// width, so the numbers read as rem and still scale.
+const METRIC_GROUPS: {title: string; note?: string; keys: (keyof Metrics)[]}[] =
+  [
+    {
+      title: 'Page',
+      note: 'The only two lengths in the system. Everything else scales with them.',
+      keys: ['pageMax', 'pageMargin'],
+    },
+    {title: 'Gutters', keys: ['gutterX', 'gutterY']},
+    {
+      title: 'Block padding',
+      note: 'A unit is 1% of the grid, so a phone needs its own value where a desktop does not.',
+      keys: ['blockPadX', 'blockPadY', 'blockPadXNarrow', 'blockPadYNarrow'],
+    },
+    {title: 'Corners', keys: ['blockRadius', 'buttonRadius']},
+    {title: 'Buttons', keys: ['buttonPadX', 'buttonPadY']},
+  ];
+
+const METRIC_LABEL: Record<keyof Metrics, string> = {
+  pageMax: 'Max width',
+  pageMargin: 'Side margin',
+  gutterX: 'Horizontal',
+  gutterY: 'Vertical',
+  blockPadX: 'Horizontal',
+  blockPadY: 'Vertical',
+  blockPadXNarrow: 'Horizontal, mobile',
+  blockPadYNarrow: 'Vertical, mobile',
+  blockRadius: 'Blocks',
+  buttonRadius: 'Buttons',
+  buttonPadX: 'Horizontal',
+  buttonPadY: 'Vertical',
+};
+
+// rem for the two page lengths, u for everything else — and at the design width
+// they are the same number, which is why the sliders can read in rem
+const unitOf = (key: keyof Metrics) =>
+  key === 'pageMax' || key === 'pageMargin' ? 'rem' : 'u';
+
+function MetricSlider({
+  metrics,
+  name,
+  onMetrics,
+}: {
+  metrics: Metrics;
+  name: keyof Metrics;
+  onMetrics?: (metrics: Metrics) => void;
+}) {
+  const [min, max, step] = METRIC_RANGE[name];
+  const value = metrics[name];
+  return (
+    <Box>
+      <Flex justify="between" align="baseline" mb="1">
+        <Text as="label" size="1" color="gray">
+          {METRIC_LABEL[name]}
+        </Text>
+        <Text
+          size="1"
+          color={value === DEFAULT_METRICS[name] ? 'gray' : undefined}
+        >
+          {value}
+          {unitOf(name)}
+        </Text>
+      </Flex>
+      <Slider
+        size="1"
+        min={min}
+        max={max}
+        step={step}
+        value={[value]}
+        disabled={!onMetrics}
+        onValueChange={([next]) =>
+          onMetrics?.({...metrics, [name]: next ?? value})
+        }
+      />
+    </Box>
+  );
+}
+
+function MetricsPanel({props}: {props: RailProps}) {
+  const {metrics, onMetrics} = props;
+  const touched = METRIC_KEYS_LOCAL.some(
+    (k) => metrics[k] !== DEFAULT_METRICS[k],
+  );
+  return (
+    <>
+      {METRIC_GROUPS.map((group) => (
+        <Section key={group.title} title={group.title}>
+          {group.note ? (
+            <Text size="1" color="gray">
+              {group.note}
+            </Text>
+          ) : null}
+          {group.keys.map((key) => (
+            <MetricSlider
+              key={key}
+              metrics={metrics}
+              name={key}
+              onMetrics={onMetrics}
+            />
+          ))}
+        </Section>
+      ))}
+      <Section title="Defaults">
+        <Button
+          size="1"
+          variant="soft"
+          disabled={!onMetrics || !touched}
+          onClick={() => onMetrics?.({...DEFAULT_METRICS})}
+        >
+          Reset every measurement
+        </Button>
+      </Section>
+    </>
+  );
+}
+
+const METRIC_KEYS_LOCAL = Object.keys(DEFAULT_METRICS) as (keyof Metrics)[];
+
 function ThemePanel({props}: {props: RailProps}) {
   return (
-    <Section title="Theme colours">
-      <Text size="1" color="gray">
-        Blocks store which colour, not the colour itself — change one here and
-        every block using it moves, published pages included.
-      </Text>
-      {SLOTS.map((slot) => (
-        <Flex key={slot} gap="3" align="center">
-          <input
-            className="e-swatch"
-            type="color"
-            aria-label={`Theme colour ${slot}`}
-            value={props.palette[slot]}
-            disabled={!props.onPalette}
-            onChange={(e) => props.onPalette?.({...props.palette, [slot]: e.target.value})}
-          />
-          <Text size="2">Colour {slot}</Text>
-          <Text size="1" color="gray">
-            {props.palette[slot]}
-          </Text>
-        </Flex>
-      ))}
-      {props.onSavePalette ? (
-        <Button size="1" onClick={props.onSavePalette} loading={props.busy}>
-          Save theme
-        </Button>
-      ) : (
-        <Callout.Root size="1" color="gray">
-          <Callout.Text>Changes are local to this playground.</Callout.Text>
-        </Callout.Root>
-      )}
-    </Section>
+    <>
+      <Section title="Theme colours">
+        <Text size="1" color="gray">
+          Blocks store which colour, not the colour itself — change one here and
+          every block using it moves, published pages included.
+        </Text>
+        {SLOTS.map((slot) => (
+          <Flex key={slot} gap="3" align="center">
+            <input
+              className="e-swatch"
+              type="color"
+              aria-label={`Theme colour ${slot}`}
+              value={props.palette[slot]}
+              disabled={!props.onPalette}
+              onChange={(e) =>
+                props.onPalette?.({...props.palette, [slot]: e.target.value})
+              }
+            />
+            <Text size="2">Colour {slot}</Text>
+            <Text size="1" color="gray">
+              {props.palette[slot]}
+            </Text>
+          </Flex>
+        ))}
+      </Section>
+      <MetricsPanel props={props} />
+      <Section title="Save">
+        {props.onSavePalette ? (
+          <Button size="1" onClick={props.onSavePalette} loading={props.busy}>
+            Save theme
+          </Button>
+        ) : (
+          <Callout.Root size="1" color="gray">
+            <Callout.Text>Changes are local to this playground.</Callout.Text>
+          </Callout.Root>
+        )}
+      </Section>
+    </>
   );
 }
 
@@ -853,19 +1021,16 @@ function PagesPanel({props}: {props: RailProps}) {
     <Section title="Pages">
       <Flex direction="column" gap="2">
         {pages.map((page) => (
-          <Flex
-            key={page.target}
-            direction="column"
-            gap="1"
-            className="e-page"
-          >
+          <Flex key={page.target} direction="column" gap="1" className="e-page">
             <Flex gap="2" align="center">
               <Button
                 size="1"
                 variant={page.target === props.target ? 'solid' : 'soft'}
                 onClick={() => {
                   // already on the canvas: switch locally rather than reloading
-                  const here = props.regions?.some((r) => r.target === page.target);
+                  const here = props.regions?.some(
+                    (r) => r.target === page.target,
+                  );
                   if (here) props.onActivate?.(page.target);
                   else props.onOpen?.(page.target);
                 }}
@@ -910,7 +1075,11 @@ function NewPage({onCreate}: {onCreate: (title: string) => void}) {
           onChange={(e) => setTitle(e.target.value)}
         />
       </Field>
-      <Button size="1" disabled={!title.trim()} onClick={() => onCreate(title.trim())}>
+      <Button
+        size="1"
+        disabled={!title.trim()}
+        onClick={() => onCreate(title.trim())}
+      >
         Create
       </Button>
     </Flex>
@@ -973,216 +1142,239 @@ function ViewAsPicker({props}: {props: RailProps}) {
 }
 
 function EditorPanel({props}: {props: RailProps}) {
-  const {layout, band, selected, authored, editable, clipped, block, node} = props;
+  const {layout, band, selected, authored, editable, clipped, block, node} =
+    props;
   const derived = selected !== null && band !== WIDEST && !authored;
 
   return (
     <>
-        <RegionPicker props={props} />
-        <ViewAsPicker props={props} />
-        <Section title="Band">
-          <SegmentedControl.Root
-            size="1"
-            value={band}
-            onValueChange={(b) => props.onBand(b as Band)}
-            style={{width: '100%'}}
-          >
-            {BANDS.map((b) => (
-              <SegmentedControl.Item key={b} value={b}>
-                {b.toUpperCase()}
-              </SegmentedControl.Item>
-            ))}
-          </SegmentedControl.Root>
-        </Section>
+      <RegionPicker props={props} />
+      <ViewAsPicker props={props} />
+      <Section title="Band">
+        <SegmentedControl.Root
+          size="1"
+          value={band}
+          onValueChange={(b) => props.onBand(b as Band)}
+          style={{width: '100%'}}
+        >
+          {BANDS.map((b) => (
+            <SegmentedControl.Item key={b} value={b}>
+              {b.toUpperCase()}
+            </SegmentedControl.Item>
+          ))}
+        </SegmentedControl.Root>
+      </Section>
 
-        <Section title="Add block">
-          <Palette />
-          <Text size="1" color="gray">
-            Drag onto a module.
-          </Text>
-        </Section>
+      <Section title="Add block">
+        <Palette />
+        <Text size="1" color="gray">
+          Drag onto a module.
+        </Text>
+      </Section>
 
-        <Section title="Blocks">
-          <Flex direction="column" gap="1">
-            {layout.blocks.map((b) => (
-              <Button
-                key={b.id}
-                size="1"
-                variant={b.id === selected ? 'solid' : 'soft'}
-                onClick={() => props.onSelect(b.id === selected ? null : b.id)}
-                style={{justifyContent: 'space-between'}}
-              >
-                <Text truncate>{b.id}</Text>
-                <Badge size="1" variant="surface">
-                  {b.children.length}
-                </Badge>
-              </Button>
-            ))}
-          </Flex>
-        </Section>
-
-        {selected === null || !editable || !block ? (
-          <Box p="3">
-            <Text size="1" color="gray">
-              Nothing selected.
-            </Text>
-          </Box>
-        ) : (
-          <>
-            <Section title="Placement">
-              <Badge
-                size="1"
-                color={band === WIDEST ? 'indigo' : derived ? 'gray' : 'green'}
-              >
-                {band === WIDEST
-                  ? 'widest band — authoritative'
-                  : derived
-                    ? 'derived — editing overrides it'
-                    : 'overridden in this band'}
+      <Section title="Blocks">
+        <Flex direction="column" gap="1">
+          {layout.blocks.map((b) => (
+            <Button
+              key={b.id}
+              size="1"
+              variant={b.id === selected ? 'solid' : 'soft'}
+              onClick={() => props.onSelect(b.id === selected ? null : b.id)}
+              style={{justifyContent: 'space-between'}}
+            >
+              <Text truncate>{b.id}</Text>
+              <Badge size="1" variant="surface">
+                {b.children.length}
               </Badge>
-
-              <Grid columns="2" gap="2">
-                {AXES.map((axis) => (
-                  <Field key={axis.key} label={axis.label}>
-                    <TextField.Root
-                      size="1"
-                      type="number"
-                      min={1}
-                      value={editable[axis.key]}
-                      onChange={(e) => {
-                        const n = Number(e.target.value);
-                        if (Number.isInteger(n) && n >= 1) {
-                          props.onCell({[axis.key]: n});
-                        }
-                      }}
-                    />
-                  </Field>
-                ))}
-              </Grid>
-
-              {clipped > 0 ? (
-                <Callout.Root size="1" color="amber">
-                  <Callout.Text>
-                    Content is clipped — {clipped} more row
-                    {clipped === 1 ? '' : 's'} would fit it.
-                  </Callout.Text>
-                  <Box mt="2">
-                    <Button size="1" variant="soft" color="amber" onClick={props.onFit}>
-                      Add {clipped} row{clipped === 1 ? '' : 's'}
-                    </Button>
-                  </Box>
-                </Callout.Root>
-              ) : null}
-
-              {props.error ? (
-                <Callout.Root size="1" color="red">
-                  <Callout.Text>{props.error}</Callout.Text>
-                </Callout.Root>
-              ) : null}
-
-              <Flex gap="2" wrap="wrap">
-                <Button
-                  size="1"
-                  variant="soft"
-                  onClick={props.onReset}
-                  disabled={band === WIDEST || derived}
-                >
-                  Reset to derived
-                </Button>
-                <Button size="1" variant="soft" color="red" onClick={props.onDelete}>
-                  Delete block
-                </Button>
-              </Flex>
-            </Section>
-
-            <Section title="Appearance">
-              <Appearance block={block} props={props} />
-            </Section>
-
-            <Section title="Layout">
-              <FlexFields flex={block.flex} onChange={(p) => props.onFlex(block.id, p)} />
-            </Section>
-
-            <Section title="Contents">
-              {block.children.length === 0 ? (
-                <Text size="1" color="gray">
-                  Empty. Add an element below.
-                </Text>
-              ) : (
-                <Tree
-                  block={block}
-                  activeNode={node?.node.id ?? null}
-                  dragging={props.dragging}
-                  resync={props.resync}
-                  onPick={props.onPickNode}
-                  onMove={props.onMoveNode}
-                  onRemove={props.onRemoveNode}
-                />
-              )}
-              <AddMenu parentId={null} onAdd={props.onAddChild} />
-            </Section>
-
-            {node ? (
-              <Section title={LABEL[node.node.kind] ?? node.node.kind}>
-                <Inspector found={node} props={props} />
-              </Section>
-            ) : null}
-          </>
-        )}
-
-        <Section title="State">
-          <Flex gap="2" wrap="wrap">
-            <Button size="1" variant="soft" onClick={props.onUndo} disabled={!props.canUndo}>
-              Undo
             </Button>
-            <Button size="1" variant="soft" onClick={props.onRedo} disabled={!props.canRedo}>
-              Redo
-            </Button>
-          </Flex>
+          ))}
+        </Flex>
+      </Section>
+
+      {selected === null || !editable || !block ? (
+        <Box p="3">
           <Text size="1" color="gray">
-            Layout serialises to {(props.bytes / 1024).toFixed(1)}kb
+            Nothing selected.
           </Text>
-          {props.onSave ? (
-            <Flex direction="column" gap="2">
-              <Flex gap="2" align="center">
-                <Button
-                  size="1"
-                  variant="soft"
-                  onClick={props.onSave}
-                  loading={props.busy}
-                  disabled={!props.dirty}
-                >
-                  Save draft
-                </Button>
-                <Button
-                  size="1"
-                  onClick={props.onPublish}
-                  loading={props.busy}
-                  disabled={!props.onPublish}
-                >
-                  Publish
-                </Button>
-              </Flex>
-              <Text size="1" color="gray">
-                {props.unpublished
-                  ? 'Draft differs from what is live'
-                  : `Live — version ${props.version ?? 1}`}
-              </Text>
+        </Box>
+      ) : (
+        <>
+          <Section title="Placement">
+            <Badge
+              size="1"
+              color={band === WIDEST ? 'indigo' : derived ? 'gray' : 'green'}
+            >
+              {band === WIDEST
+                ? 'widest band — authoritative'
+                : derived
+                  ? 'derived — editing overrides it'
+                  : 'overridden in this band'}
+            </Badge>
+
+            <Grid columns="2" gap="2">
+              {AXES.map((axis) => (
+                <Field key={axis.key} label={axis.label}>
+                  <TextField.Root
+                    size="1"
+                    type="number"
+                    min={1}
+                    value={editable[axis.key]}
+                    onChange={(e) => {
+                      const n = Number(e.target.value);
+                      if (Number.isInteger(n) && n >= 1) {
+                        props.onCell({[axis.key]: n});
+                      }
+                    }}
+                  />
+                </Field>
+              ))}
+            </Grid>
+
+            {clipped > 0 ? (
+              <Callout.Root size="1" color="amber">
+                <Callout.Text>
+                  Content is clipped — {clipped} more row
+                  {clipped === 1 ? '' : 's'} would fit it.
+                </Callout.Text>
+                <Box mt="2">
+                  <Button
+                    size="1"
+                    variant="soft"
+                    color="amber"
+                    onClick={props.onFit}
+                  >
+                    Add {clipped} row{clipped === 1 ? '' : 's'}
+                  </Button>
+                </Box>
+              </Callout.Root>
+            ) : null}
+
+            {props.error ? (
+              <Callout.Root size="1" color="red">
+                <Callout.Text>{props.error}</Callout.Text>
+              </Callout.Root>
+            ) : null}
+
+            <Flex gap="2" wrap="wrap">
+              <Button
+                size="1"
+                variant="soft"
+                onClick={props.onReset}
+                disabled={band === WIDEST || derived}
+              >
+                Reset to derived
+              </Button>
+              <Button
+                size="1"
+                variant="soft"
+                color="red"
+                onClick={props.onDelete}
+              >
+                Delete block
+              </Button>
             </Flex>
-          ) : (
-            <Callout.Root size="1" color="gray">
-              <Callout.Text>
-                A playground. Edits live in memory and are lost on reload —
-                nothing is written to a store.
-              </Callout.Text>
-            </Callout.Root>
-          )}
-        </Section>
+          </Section>
+
+          <Section title="Appearance">
+            <Appearance block={block} props={props} />
+          </Section>
+
+          <Section title="Layout">
+            <FlexFields
+              flex={block.flex}
+              onChange={(p) => props.onFlex(block.id, p)}
+            />
+          </Section>
+
+          <Section title="Contents">
+            {block.children.length === 0 ? (
+              <Text size="1" color="gray">
+                Empty. Add an element below.
+              </Text>
+            ) : (
+              <Tree
+                block={block}
+                activeNode={node?.node.id ?? null}
+                dragging={props.dragging}
+                resync={props.resync}
+                onPick={props.onPickNode}
+                onMove={props.onMoveNode}
+                onRemove={props.onRemoveNode}
+              />
+            )}
+            <AddMenu parentId={null} onAdd={props.onAddChild} />
+          </Section>
+
+          {node ? (
+            <Section title={LABEL[node.node.kind] ?? node.node.kind}>
+              <Inspector found={node} props={props} />
+            </Section>
+          ) : null}
+        </>
+      )}
+
+      <Section title="State">
+        <Flex gap="2" wrap="wrap">
+          <Button
+            size="1"
+            variant="soft"
+            onClick={props.onUndo}
+            disabled={!props.canUndo}
+          >
+            Undo
+          </Button>
+          <Button
+            size="1"
+            variant="soft"
+            onClick={props.onRedo}
+            disabled={!props.canRedo}
+          >
+            Redo
+          </Button>
+        </Flex>
+        <Text size="1" color="gray">
+          Layout serialises to {(props.bytes / 1024).toFixed(1)}kb
+        </Text>
+        {props.onSave ? (
+          <Flex direction="column" gap="2">
+            <Flex gap="2" align="center">
+              <Button
+                size="1"
+                variant="soft"
+                onClick={props.onSave}
+                loading={props.busy}
+                disabled={!props.dirty}
+              >
+                Save draft
+              </Button>
+              <Button
+                size="1"
+                onClick={props.onPublish}
+                loading={props.busy}
+                disabled={!props.onPublish}
+              >
+                Publish
+              </Button>
+            </Flex>
+            <Text size="1" color="gray">
+              {props.unpublished
+                ? 'Draft differs from what is live'
+                : `Live — version ${props.version ?? 1}`}
+            </Text>
+          </Flex>
+        ) : (
+          <Callout.Root size="1" color="gray">
+            <Callout.Text>
+              A playground. Edits live in memory and are lost on reload —
+              nothing is written to a store.
+            </Callout.Text>
+          </Callout.Root>
+        )}
+      </Section>
     </>
   );
 }
 export function Rail(props: RailProps) {
-
   return (
     <Theme
       className="e-rail"

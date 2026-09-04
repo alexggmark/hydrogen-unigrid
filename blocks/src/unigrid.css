@@ -13,6 +13,8 @@
   --margin: min(4vw, 6rem);
   --grid-max: 100rem;
   --gutter-u: 1.5;
+  /* the vertical gutter follows the horizontal one unless the theme splits them */
+  --gutter-y-u: var(--gutter-u);
   --pad-u: 4;
 }
 
@@ -43,6 +45,7 @@
   position: relative;
   --u: 1cqw;
   --gutter: calc(var(--u) * var(--gutter-u, 1.5));
+  --gutter-y: calc(var(--u) * var(--gutter-y-u, var(--gutter-u, 1.5)));
   --col: calc((100cqw - (var(--cols) - 1) * var(--gutter)) / var(--cols));
   --ratio: 0.75; /* fixed cell proportion, declared once */
   --row: calc(var(--col) * var(--ratio));
@@ -50,7 +53,7 @@
   display: grid;
   grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
   grid-auto-rows: var(--row);
-  gap: var(--gutter);
+  gap: var(--gutter-y) var(--gutter);
 }
 
 /* three fixed compositions. crossing a bound switches, inside one nothing moves */
@@ -99,7 +102,9 @@
   min-inline-size: 0;
   /* the authored span is the size; content past it is clipped, never grown */
   overflow: hidden;
-  padding: calc(var(--u) * 1);
+  padding: calc(var(--u) * var(--block-pad-y-u, 1))
+    calc(var(--u) * var(--block-pad-x-u, 1));
+  border-radius: calc(var(--u) * var(--block-radius-u, 0));
 }
 @container grid (width < 60rem) {
   .u-block {
@@ -111,6 +116,8 @@
 }
 @container grid (width < 36rem) {
   .u-block {
+    padding: calc(var(--u) * var(--block-pad-y-c-u, var(--block-pad-y-u, 1)))
+      calc(var(--u) * var(--block-pad-x-c-u, var(--block-pad-x-u, 1)));
     --c: var(--cc, var(--ca));
     --cs: var(--csc, var(--csa));
     --r: var(--rc, var(--ra));
@@ -196,8 +203,10 @@
   text-transform: uppercase;
   letter-spacing: 0.14em;
   font-weight: 700;
-  padding: calc(var(--u) * 0.7) calc(var(--u) * 1.4);
+  padding: calc(var(--u) * var(--btn-pad-y-u, 0.7))
+    calc(var(--u) * var(--btn-pad-x-u, 1.4));
   border: 1px solid var(--ink);
+  border-radius: calc(var(--u) * var(--btn-radius-u, 0));
 }
 .u-btn[data-variant='primary'] {
   background: var(--ink);

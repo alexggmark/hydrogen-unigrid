@@ -4,6 +4,7 @@ import {useMenu} from './menu';
 import {CollectionGrid, useCollection} from './collection';
 import {useShop} from './shop';
 import {ProductDetails, ProductMedia, useProduct} from './product';
+import type {Metrics} from '@unigrid/core';
 import {
   isGroup,
   isSlot,
@@ -22,6 +23,28 @@ export const paint = (c: Colour): string =>
 
 export const paletteVars = (palette: Palette): Record<string, string> =>
   Object.fromEntries(SLOTS.map((slot) => [`--theme-${slot}`, palette[slot]]));
+
+// unitless numbers, not lengths: the stylesheet multiplies each by --u so the
+// theme scales with the grid instead of pinning it. the two page boundaries are
+// the exception the grid layer already makes for itself.
+export const metricVars = (metrics?: Metrics): Record<string, string> => {
+  if (!metrics) return {};
+  const m = metrics;
+  return {
+    '--grid-max': `${m.pageMax}rem`,
+    '--margin': `min(4vw, ${m.pageMargin}rem)`,
+    '--gutter-u': String(m.gutterX),
+    '--gutter-y-u': String(m.gutterY),
+    '--block-pad-x-u': String(m.blockPadX),
+    '--block-pad-y-u': String(m.blockPadY),
+    '--block-pad-x-c-u': String(m.blockPadXNarrow),
+    '--block-pad-y-c-u': String(m.blockPadYNarrow),
+    '--block-radius-u': String(m.blockRadius),
+    '--btn-pad-x-u': String(m.buttonPadX),
+    '--btn-pad-y-u': String(m.buttonPadY),
+    '--btn-radius-u': String(m.buttonRadius),
+  };
+};
 
 const JUSTIFY: Record<Flex['justify'], string> = {
   start: 'flex-start',
