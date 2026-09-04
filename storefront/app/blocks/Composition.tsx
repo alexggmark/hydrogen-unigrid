@@ -1,6 +1,13 @@
-import {Suspense, useEffect, useMemo, useState, type ReactNode} from 'react';
-import {Await, useRouteLoaderData} from 'react-router';
-import {Analytics} from '@shopify/hydrogen';
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
+import {Await, useFetcher, useRouteLoaderData} from 'react-router';
+import {Analytics, CartForm} from '@shopify/hydrogen';
 import type {RootLoader} from '~/root';
 import {Block, Grid, deriveAll} from '@unigrid/blocks';
 import type {
@@ -115,9 +122,36 @@ function useShopState(root: RootData | undefined): ShopState {
     };
   }, [root?.isLoggedIn]);
 
+  // the same post the skeleton's <CartForm> makes, without the form: a buy
+  // button inside a block cannot be wrapped in one from out here.
+  const fetcher = useFetcher();
+  const onAddToCart = useCallback(
+    (variantId: string) => {
+      void fetcher.submit(
+        {
+          cartFormInput: JSON.stringify({
+            action: CartForm.ACTIONS.LinesAdd,
+            inputs: {lines: [{merchandiseId: variantId, quantity: 1}]},
+          }),
+        },
+        {method: 'POST', action: '/cart'},
+      );
+      // opened on click rather than on success: the drawer is where the result
+      // shows, and waiting for the round trip reads as nothing happening
+      open('cart');
+    },
+    [fetcher, open],
+  );
+
   return useMemo(
-    () => ({cartCount, onOpenCart: () => open('cart'), loggedIn}),
-    [cartCount, loggedIn, open],
+    () => ({
+      cartCount,
+      onOpenCart: () => open('cart'),
+      loggedIn,
+      onAddToCart,
+      addingToCart: fetcher.state !== 'idle',
+    }),
+    [cartCount, loggedIn, open, onAddToCart, fetcher.state],
   );
 }
 

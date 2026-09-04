@@ -1,6 +1,7 @@
 import {createContext, useContext, type ReactNode} from 'react';
 import type {ProductRef} from '@unigrid/core';
 import {useImageRender} from './image';
+import {useShop} from './shop';
 
 // what a product element renders from. a plain shape, resolved by the route:
 // this package cannot fetch, and money formatting is the storefront's job.
@@ -11,6 +12,10 @@ export type ProductData = {
   title: string;
   price?: string;
   images: ProductImage[];
+  // what a cart line is actually made of. absent means nothing to add — a
+  // product with no variant resolved, or a shell that never fetched one.
+  variantId?: string;
+  availableForSale?: boolean;
 };
 
 export type Products = Record<string, ProductData>;
@@ -80,17 +85,34 @@ export function ProductMedia({product}: {product?: ProductData}) {
 }
 
 export function ProductDetails({product}: {product?: ProductData}) {
+  const {onAddToCart, addingToCart} = useShop();
   // dimmed until one is bound, so an unresolved element reads as a placeholder
   const dim = product ? '' : ' u-dim';
+  const variantId = product?.variantId;
+  const soldOut = product ? product.availableForSale === false : false;
+  // a shell with no cart renders the same span it always did, so the admin and
+  // an unbound element look alike
+  const buyable = Boolean(variantId) && Boolean(onAddToCart) && !soldOut;
+
   return (
     <div className="u-pdetails">
       <p className={`u-hl u-hl-3${dim}`}>{product?.title ?? 'Product title'}</p>
       <p className={`u-text u-text-lg${dim}`}>{product?.price ?? '—'}</p>
-      {/* inert until the cart seam lands, which is what a button with nowhere
-          to go already renders as */}
-      <span className="u-btn" data-variant="primary">
-        Add to cart
-      </span>
+      {buyable ? (
+        <button
+          className="u-btn"
+          data-variant="primary"
+          type="button"
+          disabled={addingToCart}
+          onClick={() => onAddToCart?.(variantId!)}
+        >
+          {addingToCart ? 'Adding…' : 'Add to cart'}
+        </button>
+      ) : (
+        <span className="u-btn" data-variant="primary">
+          {soldOut ? 'Sold out' : 'Add to cart'}
+        </span>
+      )}
     </div>
   );
 }

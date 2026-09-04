@@ -9,6 +9,9 @@ export type ShopState = {
   onOpenCart?: () => void;
   accountHref?: string;
   loggedIn?: boolean;
+  // takes a variant id because a cart line is a variant, never a product
+  onAddToCart?: (variantId: string) => void;
+  addingToCart?: boolean;
 };
 
 const Ctx = createContext<ShopState>({});

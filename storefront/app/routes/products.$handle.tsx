@@ -123,6 +123,14 @@ export default function Product() {
     handle: product.handle,
     title: product.title,
     price: money(selectedVariant?.price),
+    // the variant the shopper is actually looking at, so the buy button adds
+    // what the page is showing rather than the product's first option
+    ...(selectedVariant?.id
+      ? {
+          variantId: selectedVariant.id,
+          availableForSale: selectedVariant.availableForSale ?? true,
+        }
+      : {}),
     images: (product.images?.nodes ?? []).map((image) => ({
       id: image.id ?? image.url,
       url: image.url,

@@ -439,6 +439,9 @@ export type UnigridProductQuery = {
       images: {
         nodes: Array<Pick<StorefrontAPI.Image, 'id' | 'url' | 'altText'>>;
       };
+      selectedOrFirstAvailableVariant?: StorefrontAPI.Maybe<
+        Pick<StorefrontAPI.ProductVariant, 'id' | 'availableForSale'>
+      >;
     }
   >;
 };
@@ -463,6 +466,9 @@ export type UnigridCollectionQuery = {
             images: {
               nodes: Array<Pick<StorefrontAPI.Image, 'id' | 'url' | 'altText'>>;
             };
+            selectedOrFirstAvailableVariant?: StorefrontAPI.Maybe<
+              Pick<StorefrontAPI.ProductVariant, 'id' | 'availableForSale'>
+            >;
           }
         >;
       };
@@ -1376,11 +1382,11 @@ interface GeneratedQueryTypes {
     return: UnigridMenuQuery;
     variables: UnigridMenuQueryVariables;
   };
-  '#graphql\n  query UnigridProduct($handle: String!) {\n    product(handle: $handle) {\n      handle\n      title\n      priceRange { minVariantPrice { amount currencyCode } }\n      images(first: 10) { nodes { id url altText } }\n    }\n  }\n': {
+  '#graphql\n  query UnigridProduct($handle: String!) {\n    product(handle: $handle) {\n      handle\n      title\n      priceRange { minVariantPrice { amount currencyCode } }\n      images(first: 10) { nodes { id url altText } }\n      selectedOrFirstAvailableVariant { id availableForSale }\n    }\n  }\n': {
     return: UnigridProductQuery;
     variables: UnigridProductQueryVariables;
   };
-  '#graphql\n  query UnigridCollection($handle: String!, $first: Int!) {\n    collection(handle: $handle) {\n      handle\n      title\n      products(first: $first) {\n        nodes {\n          handle\n          title\n          priceRange { minVariantPrice { amount currencyCode } }\n          images(first: 1) { nodes { id url altText } }\n        }\n      }\n    }\n  }\n': {
+  '#graphql\n  query UnigridCollection($handle: String!, $first: Int!) {\n    collection(handle: $handle) {\n      handle\n      title\n      products(first: $first) {\n        nodes {\n          handle\n          title\n          priceRange { minVariantPrice { amount currencyCode } }\n          images(first: 1) { nodes { id url altText } }\n          selectedOrFirstAvailableVariant { id availableForSale }\n        }\n      }\n    }\n  }\n': {
     return: UnigridCollectionQuery;
     variables: UnigridCollectionQueryVariables;
   };

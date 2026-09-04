@@ -166,6 +166,7 @@ export const PRODUCT_REF_QUERY = `#graphql
       title
       priceRange { minVariantPrice { amount currencyCode } }
       images(first: 10) { nodes { id url altText } }
+      selectedOrFirstAvailableVariant { id availableForSale }
     }
   }
 ` as const;
@@ -175,6 +176,10 @@ type RawProduct = {
   title: string;
   priceRange?: {minVariantPrice?: {amount: string; currencyCode: string}};
   images?: {nodes: {id: string; url: string; altText?: string | null}[]};
+  selectedOrFirstAvailableVariant?: {
+    id: string;
+    availableForSale?: boolean;
+  } | null;
 };
 
 // formatted here rather than in blocks/, which holds no currency logic and
@@ -201,6 +206,13 @@ export const productData = (p: RawProduct): ProductData => ({
     url: i.url,
     ...(i.altText ? {alt: i.altText} : {}),
   })),
+  ...(p.selectedOrFirstAvailableVariant
+    ? {
+        variantId: p.selectedOrFirstAvailableVariant.id,
+        availableForSale:
+          p.selectedOrFirstAvailableVariant.availableForSale ?? true,
+      }
+    : {}),
 });
 
 type RawCollection = {
@@ -251,6 +263,7 @@ export const COLLECTION_REF_QUERY = `#graphql
           title
           priceRange { minVariantPrice { amount currencyCode } }
           images(first: 1) { nodes { id url altText } }
+          selectedOrFirstAvailableVariant { id availableForSale }
         }
       }
     }
