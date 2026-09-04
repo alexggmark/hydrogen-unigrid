@@ -224,6 +224,8 @@ export function Editor({
   const [drag, setDrag] = useState<Drag | null>(null);
   const [preview, setPreview] = useState<Preview | null>(null);
   const [clipped, setClipped] = useState<Record<string, number>>({});
+  // which product or collection hydrates a contextual element. url state, never
+  const [viewAs, setViewAs] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('editor');
   const [palette, setPalette] = useState(initialPalette ?? DEFAULT_PALETTE);
   const resolved: Menus = useMemo(
@@ -238,9 +240,11 @@ export function Editor({
     () => Object.fromEntries((collections ?? []).map((c) => [c.handle, c])),
     [collections],
   );
-  // the preview never reaches the layout, so which product it is cannot matter
-  const previewProduct = products?.[0];
-  const previewCollection = collections?.[0];
+  // the preview never reaches the layout, so falling back to the first is safe
+  const previewProduct =
+    products?.find((p) => p.handle === viewAs) ?? products?.[0];
+  const previewCollection =
+    collections?.find((c) => c.handle === viewAs) ?? collections?.[0];
   // rail-tree drags are their own gesture: no ghost, no cell, no placement
   const [nodeDrag, setNodeDrag] = useState<NodeDrag | null>(null);
   // dnd-kit reorders the dom mid-drag and does not undo it across groups, so a
@@ -277,8 +281,10 @@ export function Editor({
     const params = new URLSearchParams(window.location.search);
     const b = params.get('band');
     const s = params.get('sel');
+    const as = params.get('as');
     if (isBand(b)) setBand(b);
     if (s) setSelected(s);
+    if (as) setViewAs(as);
   }, []);
 
   useEffect(() => {
@@ -286,8 +292,10 @@ export function Editor({
     params.set('band', band);
     if (selected) params.set('sel', selected);
     else params.delete('sel');
+    if (viewAs) params.set('as', viewAs);
+    else params.delete('as');
     window.history.replaceState(null, '', `?${params.toString()}`);
-  }, [band, selected]);
+  }, [band, selected, viewAs]);
 
   // re-read on every layout edit: a span change is what starts or stops clipping
   useEffect(() => {
@@ -695,6 +703,8 @@ export function Editor({
           menus={menus}
           products={products}
           collections={collections}
+          viewAs={viewAs ?? undefined}
+          onViewAs={setViewAs}
           pages={pages}
           target={target}
           missing={missing}

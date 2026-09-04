@@ -116,6 +116,10 @@ export type RailProps = {
   products?: ProductEntry[];
   // the store's collections, for pinning one to a repeater
   collections?: CollectionEntry[];
+  // which one hydrates the preview. url state on the editor's side, so it can
+  // never reach a block.
+  viewAs?: string;
+  onViewAs?: (handle: string) => void;
   tab: Tab;
   onTab: (tab: Tab) => void;
   onPalette?: (palette: ThemePalette) => void;
@@ -813,6 +817,41 @@ function RegionPicker({props}: {props: RailProps}) {
   );
 }
 
+// one template serves the whole catalogue, so the merchant needs to see it
+// against more than one. the choice is a preview and nothing else.
+function ViewAsPicker({props}: {props: RailProps}) {
+  const {target} = props;
+  const entries =
+    target === 'product'
+      ? props.products
+      : target === 'collection'
+        ? props.collections
+        : undefined;
+  if (!entries || entries.length < 2) return null;
+  const current = props.viewAs || entries[0]!.handle;
+  return (
+    <Section title="Preview">
+      <Select.Root
+        size="1"
+        value={current}
+        onValueChange={(handle) => props.onViewAs?.(handle)}
+      >
+        <Select.Trigger style={{width: '100%'}} />
+        <Select.Content>
+          {entries.map((e) => (
+            <Select.Item key={e.handle} value={e.handle}>
+              {e.title}
+            </Select.Item>
+          ))}
+        </Select.Content>
+      </Select.Root>
+      <Text size="1" color="gray">
+        Switching changes the content, never the composition. Not saved.
+      </Text>
+    </Section>
+  );
+}
+
 function EditorPanel({props}: {props: RailProps}) {
   const {layout, band, selected, authored, editable, clipped, block, node} = props;
   const derived = selected !== null && band !== WIDEST && !authored;
@@ -820,6 +859,7 @@ function EditorPanel({props}: {props: RailProps}) {
   return (
     <>
         <RegionPicker props={props} />
+        <ViewAsPicker props={props} />
         <Section title="Band">
           <SegmentedControl.Root
             size="1"
