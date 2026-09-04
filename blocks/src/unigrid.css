@@ -10,11 +10,11 @@
 /* the page measure and the two scalars every rhythm is a multiple of */
 .u-frame,
 .u-page {
-  --margin: min(4vw, 6rem);
+  /* a rate, not a length: the margin is part of the composition below the cap,
+     and --grid-max already absorbs the surplus above it */
+  --margin: calc(var(--margin-vw, 4) * 1vw);
   --grid-max: 100rem;
   --gutter-u: 1.5;
-  /* the vertical gutter follows the horizontal one unless the theme splits them */
-  --gutter-y-u: var(--gutter-u);
   --pad-u: 4;
 }
 
@@ -32,6 +32,17 @@
    reading it: a cq unit out here measures the page box, not the frame. */
 .u-page {
   container-type: inline-size;
+  container-name: page;
+}
+
+/* the page's own band, queried on the page rather than the grid: the margin
+   decides the frame's width, so the frame cannot be asked about it. roughly
+   band c — the page is wider than the frame by two margins. */
+@container page (width < 40rem) {
+  .u-stack,
+  .u-frame {
+    --margin: calc(var(--margin-narrow-vw, var(--margin-vw, 4)) * 1vw);
+  }
 }
 .u-stack {
   --u-page: calc(min(100cqw - var(--margin) * 2, var(--grid-max)) / 100);
@@ -45,7 +56,6 @@
   position: relative;
   --u: 1cqw;
   --gutter: calc(var(--u) * var(--gutter-u, 1.5));
-  --gutter-y: calc(var(--u) * var(--gutter-y-u, var(--gutter-u, 1.5)));
   --col: calc((100cqw - (var(--cols) - 1) * var(--gutter)) / var(--cols));
   --ratio: 0.75; /* fixed cell proportion, declared once */
   --row: calc(var(--col) * var(--ratio));
@@ -53,7 +63,7 @@
   display: grid;
   grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
   grid-auto-rows: var(--row);
-  gap: var(--gutter-y) var(--gutter);
+  gap: var(--gutter);
 }
 
 /* three fixed compositions. crossing a bound switches, inside one nothing moves */
@@ -435,6 +445,13 @@
 }
 
 /* background and tint fill the block behind the content, so neither is content */
+/* every image except a block's background, whose corner is the block's own */
+.u-pmain,
+.u-pthumb,
+.u-card-img {
+  border-radius: calc(var(--u) * var(--image-radius-u, 0));
+}
+
 .u-bg {
   position: absolute;
   inset: 0;

@@ -846,29 +846,30 @@ const METRIC_GROUPS: {title: string; note?: string; keys: (keyof Metrics)[]}[] =
   [
     {
       title: 'Page',
-      note: 'The only two lengths in the system. Everything else scales with them.',
-      keys: ['pageMax', 'pageMargin'],
+      note: 'Margins are a rate, so they already scale — the mobile value is for when proportional is too tight.',
+      keys: ['pageMax', 'pageMargin', 'pageMarginNarrow'],
     },
-    {title: 'Gutters', keys: ['gutterX', 'gutterY']},
+    {title: 'Gutter', keys: ['gutter']},
     {
       title: 'Block padding',
       note: 'A unit is 1% of the grid, so a phone needs its own value where a desktop does not.',
       keys: ['blockPadX', 'blockPadY', 'blockPadXNarrow', 'blockPadYNarrow'],
     },
-    {title: 'Corners', keys: ['blockRadius', 'buttonRadius']},
+    {title: 'Corners', keys: ['blockRadius', 'imageRadius', 'buttonRadius']},
     {title: 'Buttons', keys: ['buttonPadX', 'buttonPadY']},
   ];
 
 const METRIC_LABEL: Record<keyof Metrics, string> = {
   pageMax: 'Max width',
   pageMargin: 'Side margin',
-  gutterX: 'Horizontal',
-  gutterY: 'Vertical',
+  pageMarginNarrow: 'Side margin, mobile',
+  gutter: 'Between blocks',
   blockPadX: 'Horizontal',
   blockPadY: 'Vertical',
   blockPadXNarrow: 'Horizontal, mobile',
   blockPadYNarrow: 'Vertical, mobile',
   blockRadius: 'Blocks',
+  imageRadius: 'Images',
   buttonRadius: 'Buttons',
   buttonPadX: 'Horizontal',
   buttonPadY: 'Vertical',
@@ -876,8 +877,11 @@ const METRIC_LABEL: Record<keyof Metrics, string> = {
 
 // rem for the two page lengths, u for everything else — and at the design width
 // they are the same number, which is why the sliders can read in rem
-const unitOf = (key: keyof Metrics) =>
-  key === 'pageMax' || key === 'pageMargin' ? 'rem' : 'u';
+const unitOf = (key: keyof Metrics) => {
+  if (key === 'pageMax') return 'rem';
+  if (key === 'pageMargin' || key === 'pageMarginNarrow') return 'vw';
+  return 'u';
+};
 
 function MetricSlider({
   metrics,

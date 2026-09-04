@@ -32,14 +32,15 @@ export const metricVars = (metrics?: Metrics): Record<string, string> => {
   const m = metrics;
   return {
     '--grid-max': `${m.pageMax}rem`,
-    '--margin': `min(4vw, ${m.pageMargin}rem)`,
-    '--gutter-u': String(m.gutterX),
-    '--gutter-y-u': String(m.gutterY),
+    '--margin-vw': String(m.pageMargin),
+    '--margin-narrow-vw': String(m.pageMarginNarrow),
+    '--gutter-u': String(m.gutter),
     '--block-pad-x-u': String(m.blockPadX),
     '--block-pad-y-u': String(m.blockPadY),
     '--block-pad-x-c-u': String(m.blockPadXNarrow),
     '--block-pad-y-c-u': String(m.blockPadYNarrow),
     '--block-radius-u': String(m.blockRadius),
+    '--image-radius-u': String(m.imageRadius),
     '--btn-pad-x-u': String(m.buttonPadX),
     '--btn-pad-y-u': String(m.buttonPadY),
     '--btn-radius-u': String(m.buttonRadius),

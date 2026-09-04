@@ -8,10 +8,14 @@ export type Metrics = {
   // page boundaries. rem and vw on purpose: a boundary is not composition, and
   // this is the one exception the grid layer already made for itself.
   pageMax: number;
+  // a rate, not a length. margins scale with the viewport below the cap, which
+  // is what the grid does — and a fixed margin is the one that would not.
   pageMargin: number;
+  // the page is a fraction of a phone, so the same rate that reads as generous
+  // on a desktop is a few px there
+  pageMarginNarrow: number;
 
-  gutterX: number;
-  gutterY: number;
+  gutter: number;
 
   blockPadX: number;
   blockPadY: number;
@@ -20,6 +24,9 @@ export type Metrics = {
   blockPadXNarrow: number;
   blockPadYNarrow: number;
   blockRadius: number;
+  // every image the grid renders except a block's own background, which is the
+  // block's shape rather than the image's
+  imageRadius: number;
 
   buttonPadX: number;
   buttonPadY: number;
@@ -30,14 +37,15 @@ export type Metrics = {
 // theme renders identically rather than approximately
 export const DEFAULT_METRICS: Metrics = {
   pageMax: 100,
-  pageMargin: 6,
-  gutterX: 1.5,
-  gutterY: 1.5,
+  pageMargin: 4,
+  pageMarginNarrow: 4,
+  gutter: 1.5,
   blockPadX: 1,
   blockPadY: 1,
   blockPadXNarrow: 1,
   blockPadYNarrow: 1,
   blockRadius: 0,
+  imageRadius: 0,
   buttonPadX: 1.4,
   buttonPadY: 0.7,
   buttonRadius: 0,
@@ -47,14 +55,15 @@ export const DEFAULT_METRICS: Metrics = {
 // from this, so a bound lives in one place rather than in the ui.
 export const METRIC_RANGE: Record<keyof Metrics, [number, number, number]> = {
   pageMax: [60, 140, 2],
-  pageMargin: [0, 12, 0.5],
-  gutterX: [0, 4, 0.1],
-  gutterY: [0, 4, 0.1],
+  pageMargin: [0, 10, 0.25],
+  pageMarginNarrow: [0, 10, 0.25],
+  gutter: [0, 4, 0.1],
   blockPadX: [0, 6, 0.2],
   blockPadY: [0, 6, 0.2],
   blockPadXNarrow: [0, 6, 0.2],
   blockPadYNarrow: [0, 6, 0.2],
   blockRadius: [0, 3, 0.2],
+  imageRadius: [0, 3, 0.2],
   buttonPadX: [0, 4, 0.2],
   buttonPadY: [0, 4, 0.2],
   buttonRadius: [0, 2, 0.2],

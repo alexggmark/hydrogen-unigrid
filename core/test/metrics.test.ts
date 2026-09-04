@@ -22,9 +22,9 @@ describe('theme metrics', () => {
   });
 
   it('clamps a value outside its range and ignores a non-number', () => {
-    const out = metricsFrom({blockRadius: 99, gutterX: -4, pageMax: 'wide'});
+    const out = metricsFrom({blockRadius: 99, gutter: -4, pageMax: 'wide'});
     expect(out.blockRadius).toBe(METRIC_RANGE.blockRadius[1]);
-    expect(out.gutterX).toBe(METRIC_RANGE.gutterX[0]);
+    expect(out.gutter).toBe(METRIC_RANGE.gutter[0]);
     expect(out.pageMax).toBe(DEFAULT_METRICS.pageMax);
   });
 
@@ -38,7 +38,7 @@ describe('theme metrics', () => {
   });
 
   it('roundtrips through what gets written to the store', () => {
-    const theme = {...DEFAULT_METRICS, blockRadius: 2, gutterY: 0.4};
+    const theme = {...DEFAULT_METRICS, blockRadius: 2, gutter: 0.4};
     expect(metricsFrom(JSON.parse(JSON.stringify(metricsDiff(theme))))).toEqual(
       theme,
     );
