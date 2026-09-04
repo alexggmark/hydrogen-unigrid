@@ -1,4 +1,7 @@
-import type {ReactNode} from 'react';
+import {Suspense, type ReactNode} from 'react';
+import {Await, useRouteLoaderData} from 'react-router';
+import {Analytics} from '@shopify/hydrogen';
+import type {RootLoader} from '~/root';
 import {Block, Grid, deriveAll} from '@unigrid/blocks';
 import type {
   CollectionData,
@@ -12,6 +15,8 @@ import type {Layout, Palette} from '@unigrid/core';
 import {DEV} from '~/blocks/grid-dev';
 import {StoreImage} from '~/blocks/image';
 import {StoreLink} from '~/blocks/link';
+import {Aside} from '~/components/Aside';
+import {CartMain} from '~/components/CartMain';
 
 // every unigrid route renders through here, so there is one assembly of a page
 // rather than one per route.
@@ -59,6 +64,49 @@ function Region({
   );
 }
 
+// bare routes return <Outlet /> straight from root, so PageLayout — and with it
+// Aside.Provider and the cart drawer — never mounts. the unigrid shell has to
+// bring its own or nothing on the page can open one.
+function CartDrawer({cart}: {cart: RootData['cart'] | undefined}) {
+  return (
+    <Aside type="cart" heading="Cart">
+      <Suspense fallback={<p>Loading cart…</p>}>
+        <Await resolve={cart ?? Promise.resolve(null)}>
+          {(cart) => <CartMain cart={cart} layout="aside" />}
+        </Await>
+      </Suspense>
+    </Aside>
+  );
+}
+
+type RootData = NonNullable<ReturnType<typeof useRouteLoaderData<RootLoader>>>;
+
+// the view events the product and collection routes already render do nothing
+// without this: hydrogen's analytics context has a non-null default, so a
+// missing provider is silent rather than an error.
+function Shell({children}: {children: ReactNode}) {
+  const root = useRouteLoaderData<RootLoader>('root');
+
+  const page = (
+    <Aside.Provider>
+      <CartDrawer cart={root?.cart} />
+      {children}
+    </Aside.Provider>
+  );
+
+  return root ? (
+    <Analytics.Provider
+      cart={root.cart}
+      shop={root.shop}
+      consent={root.consent}
+    >
+      {page}
+    </Analytics.Provider>
+  ) : (
+    page
+  );
+}
+
 export function Composition({
   header,
   body,
@@ -91,47 +139,49 @@ export function Composition({
   // numbering and margins in one cannot reach into another. the stack holds the
   // page's vertical rhythm, so it does not change with which regions exist.
   return (
-    <div className="unigrid-demo u-page">
-      <div className="u-stack">
-        {header ? (
-          <Region
-            layout={header}
-            menus={menus}
-            palette={palette}
-            product={product}
-            products={products}
-            collection={collection}
-            collections={collections}
-            media={media}
-          />
-        ) : null}
-        {body ? (
-          <Region
-            layout={body}
-            menus={menus}
-            palette={palette}
-            product={product}
-            products={products}
-            collection={collection}
-            collections={collections}
-            media={media}
-          />
-        ) : (
-          children
-        )}
-        {footer ? (
-          <Region
-            layout={footer}
-            menus={menus}
-            palette={palette}
-            product={product}
-            products={products}
-            collection={collection}
-            collections={collections}
-            media={media}
-          />
-        ) : null}
+    <Shell>
+      <div className="unigrid-demo u-page">
+        <div className="u-stack">
+          {header ? (
+            <Region
+              layout={header}
+              menus={menus}
+              palette={palette}
+              product={product}
+              products={products}
+              collection={collection}
+              collections={collections}
+              media={media}
+            />
+          ) : null}
+          {body ? (
+            <Region
+              layout={body}
+              menus={menus}
+              palette={palette}
+              product={product}
+              products={products}
+              collection={collection}
+              collections={collections}
+              media={media}
+            />
+          ) : (
+            children
+          )}
+          {footer ? (
+            <Region
+              layout={footer}
+              menus={menus}
+              palette={palette}
+              product={product}
+              products={products}
+              collection={collection}
+              collections={collections}
+              media={media}
+            />
+          ) : null}
+        </div>
       </div>
-    </div>
+    </Shell>
   );
 }

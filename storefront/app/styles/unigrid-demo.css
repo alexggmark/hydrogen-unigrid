@@ -1,3 +1,6 @@
+/* the cart drawer, imported rather than linked per route */
+@import './unigrid-aside.css';
+
 /* colour only, no geometry — keeps unigrid.css provably px-free */
 
 .unigrid-demo {
