@@ -1,6 +1,7 @@
 import {
   DEFAULT_PALETTE,
   SLOTS,
+  collectionCounts,
   decode,
   menuHandles,
   productHandles,
@@ -9,6 +10,8 @@ import {
 } from '@unigrid/core';
 import {
   menuPath,
+  type CollectionData,
+  type Collections,
   type MenuLink,
   type Menus,
   type ProductData,
@@ -104,6 +107,7 @@ export type Composition = {
   // only the ones a layout pinned. the route's own product is not a reference
   // to resolve — it is already here.
   products: Products;
+  collections: Collections;
 };
 
 export const MENU_QUERY = `#graphql
@@ -194,6 +198,18 @@ export const productData = (p: RawProduct): ProductData => ({
   })),
 });
 
+type RawCollection = {
+  handle: string;
+  title: string;
+  products?: {nodes: RawProduct[]};
+};
+
+export const collectionData = (c: RawCollection): CollectionData => ({
+  handle: c.handle,
+  title: c.title,
+  products: (c.products?.nodes ?? []).map(productData),
+});
+
 // one query per pinned handle, for the same reason menus take one each: a
 // featured product on the homepage caches separately from the layout.
 async function loadProducts(
@@ -215,6 +231,55 @@ async function loadProducts(
   for (const result of results) {
     const product = result?.product;
     if (product) out[product.handle] = productData(product);
+  }
+  return out;
+}
+
+export const COLLECTION_REF_QUERY = `#graphql
+  query UnigridCollection($handle: String!, $first: Int!) {
+    collection(handle: $handle) {
+      handle
+      title
+      products(first: $first) {
+        nodes {
+          handle
+          title
+          priceRange { minVariantPrice { amount currencyCode } }
+          images(first: 1) { nodes { id url altText } }
+        }
+      }
+    }
+  }
+` as const;
+
+// a pinned collection is fetched at the size the element asks for, so nothing
+// is dropped on the way in. the route's own collection is paged instead.
+async function loadCollections(
+  storefront: Queryable,
+  layouts: (Layout | null)[],
+): Promise<Collections> {
+  const wanted: Record<string, number> = {};
+  for (const layout of layouts) {
+    if (!layout) continue;
+    for (const [handle, count] of Object.entries(collectionCounts(layout))) {
+      wanted[handle] = Math.max(wanted[handle] ?? 0, count);
+    }
+  }
+  const handles = Object.keys(wanted);
+  if (!handles.length) return {};
+
+  const results = await Promise.all(
+    handles.map((handle) =>
+      storefront.query<{collection?: RawCollection | null}>(COLLECTION_REF_QUERY, {
+        variables: {handle, first: wanted[handle]},
+      }),
+    ),
+  );
+
+  const out: Collections = {};
+  for (const result of results) {
+    const collection = result?.collection;
+    if (collection) out[collection.handle] = collectionData(collection);
   }
   return out;
 }
@@ -246,9 +311,10 @@ export async function loadComposition(
   const footer = layoutFrom(data?.footer, which);
 
   const regions = [header, body, footer];
-  const [menus, products] = await Promise.all([
+  const [menus, products, collections] = await Promise.all([
     loadMenus(storefront, regions, domains),
     loadProducts(storefront, regions),
+    loadCollections(storefront, regions),
   ]);
 
   return {
@@ -258,6 +324,7 @@ export async function loadComposition(
     palette: paletteFrom(data?.theme?.fields),
     menus,
     products,
+    collections,
   };
 }
 

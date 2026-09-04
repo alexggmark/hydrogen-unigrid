@@ -1,6 +1,12 @@
 import type {ReactNode} from 'react';
 import {Block, Grid, deriveAll} from '@unigrid/blocks';
-import type {Menus, ProductData, Products} from '@unigrid/blocks';
+import type {
+  CollectionData,
+  Collections,
+  Menus,
+  ProductData,
+  Products,
+} from '@unigrid/blocks';
 import type {Layout, Palette} from '@unigrid/core';
 import {DEV} from '~/blocks/grid-dev';
 import {StoreImage} from '~/blocks/image';
@@ -15,12 +21,16 @@ function Region({
   menus,
   product,
   products,
+  collection,
+  collections,
 }: {
   layout: Layout;
   palette: Palette;
   menus: Menus;
   product?: ProductData;
   products?: Products;
+  collection?: CollectionData;
+  collections?: Collections;
 }) {
   const at = deriveAll(layout);
   return (
@@ -32,6 +42,8 @@ function Region({
       palette={palette}
       product={product}
       products={products}
+      collection={collection}
+      collections={collections}
     >
       {layout.blocks.map((block) => {
         const placement = at.get(block.id);
@@ -51,6 +63,8 @@ export function Composition({
   menus,
   product,
   products,
+  collection,
+  collections,
   children,
 }: {
   header: Layout | null;
@@ -61,6 +75,9 @@ export function Composition({
   // the product this route renders, if it renders one, and any the layout pinned
   product?: ProductData;
   products?: Products;
+  // the collection this route is browsing, if it browses one, and any pinned
+  collection?: CollectionData;
+  collections?: Collections;
   // what to render in place of the body when there is no layout for it
   children?: ReactNode;
 }) {
@@ -77,6 +94,8 @@ export function Composition({
             palette={palette}
             product={product}
             products={products}
+            collection={collection}
+            collections={collections}
           />
         ) : null}
         {body ? (
@@ -86,6 +105,8 @@ export function Composition({
             palette={palette}
             product={product}
             products={products}
+            collection={collection}
+            collections={collections}
           />
         ) : (
           children
@@ -97,6 +118,8 @@ export function Composition({
             palette={palette}
             product={product}
             products={products}
+            collection={collection}
+            collections={collections}
           />
         ) : null}
       </div>

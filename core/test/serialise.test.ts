@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import {
-  collectionHandles,
+  collectionCounts,
   collectionPageSize,
   productHandles,
 } from '../src/content';
@@ -237,11 +237,11 @@ describe('collection repeater', () => {
     expect(node && node.kind === 'collection' && node.count).toBe(12);
   });
 
-  it('lists pinned handles and sizes the page from contextual ones', () => {
-    expect(collectionHandles(withCollection({source: {handle: 'shirts'}}))).toEqual([
-      'shirts',
-    ]);
-    expect(collectionHandles(withCollection({}))).toEqual([]);
+  it('counts pinned collections and sizes the page from contextual ones', () => {
+    expect(
+      collectionCounts(withCollection({source: {handle: 'shirts'}, count: 24})),
+    ).toEqual({shirts: 24});
+    expect(collectionCounts(withCollection({}))).toEqual({});
     expect(collectionPageSize(withCollection({count: 24}))).toBe(24);
     expect(collectionPageSize(withCollection({source: {handle: 'shirts'}}))).toBe(0);
   });

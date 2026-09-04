@@ -190,19 +190,21 @@ export function productHandles(layout: Layout): string[] {
   return [...out];
 }
 
-// pinned collection handles, for the same reason products have one
-export function collectionHandles(layout: Layout): string[] {
-  const out = new Set<string>();
+// pinned collections and how many products each needs. a handle alone is not
+// enough here, unlike a product: the route has to know the page size to fetch.
+export function collectionCounts(layout: Layout): Record<string, number> {
+  const out: Record<string, number> = {};
   const walk = (nodes: readonly Node[]) => {
     for (const n of nodes) {
       if (isGroup(n)) walk(n.children);
       else if (n.kind === 'collection' && n.source !== 'context') {
-        out.add(n.source.handle);
+        const {handle} = n.source;
+        out[handle] = Math.max(out[handle] ?? 0, n.count);
       }
     }
   };
   for (const block of layout.blocks) walk(block.children);
-  return [...out];
+  return out;
 }
 
 // how many products the route has to fetch for the collection it is browsing.

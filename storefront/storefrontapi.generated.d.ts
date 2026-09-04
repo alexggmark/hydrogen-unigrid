@@ -443,6 +443,33 @@ export type UnigridProductQuery = {
   >;
 };
 
+export type UnigridCollectionQueryVariables = StorefrontAPI.Exact<{
+  handle: StorefrontAPI.Scalars['String']['input'];
+  first: StorefrontAPI.Scalars['Int']['input'];
+}>;
+
+export type UnigridCollectionQuery = {
+  collection?: StorefrontAPI.Maybe<
+    Pick<StorefrontAPI.Collection, 'handle' | 'title'> & {
+      products: {
+        nodes: Array<
+          Pick<StorefrontAPI.Product, 'handle' | 'title'> & {
+            priceRange: {
+              minVariantPrice: Pick<
+                StorefrontAPI.MoneyV2,
+                'amount' | 'currencyCode'
+              >;
+            };
+            images: {
+              nodes: Array<Pick<StorefrontAPI.Image, 'id' | 'url' | 'altText'>>;
+            };
+          }
+        >;
+      };
+    }
+  >;
+};
+
 export type ArticleQueryVariables = StorefrontAPI.Exact<{
   articleHandle: StorefrontAPI.Scalars['String']['input'];
   blogHandle: StorefrontAPI.Scalars['String']['input'];
@@ -1298,6 +1325,10 @@ interface GeneratedQueryTypes {
   '#graphql\n  query UnigridProduct($handle: String!) {\n    product(handle: $handle) {\n      handle\n      title\n      priceRange { minVariantPrice { amount currencyCode } }\n      images(first: 10) { nodes { id url altText } }\n    }\n  }\n': {
     return: UnigridProductQuery;
     variables: UnigridProductQueryVariables;
+  };
+  '#graphql\n  query UnigridCollection($handle: String!, $first: Int!) {\n    collection(handle: $handle) {\n      handle\n      title\n      products(first: $first) {\n        nodes {\n          handle\n          title\n          priceRange { minVariantPrice { amount currencyCode } }\n          images(first: 1) { nodes { id url altText } }\n        }\n      }\n    }\n  }\n': {
+    return: UnigridCollectionQuery;
+    variables: UnigridCollectionQueryVariables;
   };
   '#graphql\n  query Article(\n    $articleHandle: String!\n    $blogHandle: String!\n    $country: CountryCode\n    $language: LanguageCode\n  ) @inContext(language: $language, country: $country) {\n    blog(handle: $blogHandle) {\n      handle\n      articleByHandle(handle: $articleHandle) {\n        handle\n        title\n        contentHtml\n        publishedAt\n        author: authorV2 {\n          name\n        }\n        image {\n          id\n          altText\n          url\n          width\n          height\n        }\n        seo {\n          description\n          title\n        }\n      }\n    }\n  }\n': {
     return: ArticleQuery;

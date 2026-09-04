@@ -411,9 +411,12 @@ export const REGIONS = [
   {target: 'footer', title: 'Footer'},
 ] as const;
 
-// one layout renders the whole catalogue, so the product template is a fixed
-// row too — there is nothing per-product for a merchant to create
-export const TEMPLATES = [{target: 'product', title: 'Product template'}] as const;
+// one layout renders the whole catalogue, so the templates are fixed rows too —
+// there is nothing per-product or per-collection for a merchant to create
+export const TEMPLATES = [
+  {target: 'product', title: 'Product template'},
+  {target: 'collection', title: 'Collection template'},
+] as const;
 
 export type PageRow = {
   target: string;

@@ -42,7 +42,7 @@ export {
 export {
   addNode,
   findNode,
-  collectionHandles,
+  collectionCounts,
   collectionPageSize,
   menuHandles,
   productHandles,

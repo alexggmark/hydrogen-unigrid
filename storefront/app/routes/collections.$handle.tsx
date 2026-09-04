@@ -1,10 +1,27 @@
+import type {LinksFunction} from 'react-router';
 import {redirect, useLoaderData} from 'react-router';
 import type {Route} from './+types/collections.$handle';
 import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
+
+import type {CollectionData} from '@unigrid/blocks';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {ProductItem} from '~/components/ProductItem';
+import {Composition} from '~/blocks/Composition';
+import {gridDevLinks} from '~/blocks/grid-dev';
+import {loadComposition, money} from '~/lib/layout';
+import {collectionPageBy, pageHrefs} from '~/lib/paging';
 import type {ProductItemFragment} from 'storefrontapi.generated';
+import unigridStyles from '@unigrid/blocks/unigrid.css?url';
+import demoStyles from '~/styles/unigrid-demo.css?url';
+
+export const handle = {bare: true};
+
+export const links: LinksFunction = () => [
+  {rel: 'stylesheet', href: unigridStyles},
+  {rel: 'stylesheet', href: demoStyles},
+  ...gridDevLinks(),
+];
 
 export const meta: Route.MetaFunction = ({data}) => {
   return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
@@ -27,20 +44,28 @@ export async function loader(args: Route.LoaderArgs) {
 async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
   const {handle} = params;
   const {storefront} = context;
-  const paginationVariables = getPaginationVariables(request, {
-    pageBy: 8,
-  });
 
   if (!handle) {
     throw redirect('/collections');
   }
 
-  const [{collection}] = await Promise.all([
-    storefront.query(COLLECTION_QUERY, {
-      variables: {handle, ...paginationVariables},
-      // Add other queries here, so that they are loaded in parallel
-    }),
+  // sequential on purpose: the layout owns the page size, so it cannot be
+  // fetched alongside the products it is sizing. one template, target
+  // 'collection', for the whole store.
+  const composition = await loadComposition(storefront, 'collection', 'published', [
+    context.env.PUBLIC_STORE_DOMAIN,
   ]);
+  const paginationVariables = getPaginationVariables(request, {
+    pageBy: collectionPageBy([
+      composition.header,
+      composition.body,
+      composition.footer,
+    ]),
+  });
+
+  const {collection} = await storefront.query(COLLECTION_QUERY, {
+    variables: {handle, ...paginationVariables},
+  });
 
   if (!collection) {
     throw new Response(`Collection ${handle} not found`, {
@@ -53,6 +78,8 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
 
   return {
     collection,
+    composition,
+    paging: pageHrefs(new URL(request.url), collection.products.pageInfo),
   };
 }
 
@@ -66,9 +93,46 @@ function loadDeferredData({context}: Route.LoaderArgs) {
 }
 
 export default function Collection() {
-  const {collection} = useLoaderData<typeof loader>();
+  const {collection, composition, paging} = useLoaderData<typeof loader>();
 
-  return (
+  // the contextual collection every repeater on the template binds to. one card
+  // takes one image, so the fragment's featuredImage is the whole of it.
+  const bound: CollectionData = {
+    handle: collection.handle,
+    title: collection.title,
+    products: collection.products.nodes.map((product) => ({
+      handle: product.handle,
+      title: product.title,
+      price: money(product.priceRange?.minVariantPrice),
+      images: product.featuredImage
+        ? [
+            {
+              id: product.featuredImage.id ?? product.featuredImage.url,
+              url: product.featuredImage.url,
+              ...(product.featuredImage.altText
+                ? {alt: product.featuredImage.altText}
+                : {}),
+            },
+          ]
+        : [],
+    })),
+    ...paging,
+  };
+
+  const analytics = (
+    <Analytics.CollectionView
+      data={{
+        collection: {
+          id: collection.id,
+          handle: collection.handle,
+        },
+      }}
+    />
+  );
+
+  // no template authored yet: keep the skeleton grid rather than an empty page,
+  // so a store without a layout still sells
+  const fallback = (
     <div className="collection">
       <h1>{collection.title}</h1>
       <p className="collection-description">{collection.description}</p>
@@ -84,15 +148,16 @@ export default function Collection() {
           />
         )}
       </PaginatedResourceSection>
-      <Analytics.CollectionView
-        data={{
-          collection: {
-            id: collection.id,
-            handle: collection.handle,
-          },
-        }}
-      />
     </div>
+  );
+
+  return (
+    <>
+      <Composition {...composition} collection={bound}>
+        {fallback}
+      </Composition>
+      {analytics}
+    </>
   );
 }
 
