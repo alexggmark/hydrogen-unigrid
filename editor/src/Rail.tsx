@@ -463,7 +463,7 @@ function Inspector({found, props}: {found: Found; props: RailProps}) {
         <Text size="1" color="gray">
           The image is set under Theme, so one logo serves every page.
         </Text>
-        <Field label={`Max width — ${node.width}u`}>
+        <Field label={`Width — ${node.width}u`}>
           <Slider
             size="1"
             min={LOGO_RANGE[0]}
@@ -473,7 +473,7 @@ function Inspector({found, props}: {found: Found; props: RailProps}) {
             onValueChange={([width]) => patch({width: width ?? node.width})}
           />
         </Field>
-        <Field label={`Max width on mobile — ${node.narrow}u`}>
+        <Field label={`Width on mobile — ${node.narrow}u`}>
           <Slider
             size="1"
             min={LOGO_RANGE[0]}

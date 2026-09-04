@@ -18,6 +18,7 @@ import {
   ThemeFont,
   deriveAll,
   metricVars,
+  pageIsDark,
   pageVars,
 } from '@unigrid/blocks';
 import type {
@@ -292,6 +293,7 @@ function Page({
   return (
     <div
       className="unigrid-demo u-page"
+      data-page-dark={pageIsDark(palette, settings) ? '' : undefined}
       style={
         {
           ...metricVars(metrics),

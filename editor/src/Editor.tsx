@@ -61,6 +61,7 @@ import {
   deriveAll,
   ThemeFont,
   metricVars,
+  pageIsDark,
   pageVars,
   overflowing,
   sameOverflow,
@@ -668,6 +669,7 @@ export function Editor({
           className="e-stage u-page"
           ref={hostRef}
           data-band={band}
+          data-page-dark={pageIsDark(palette, settings) ? '' : undefined}
           style={
             {
               ...metricVars(metrics),

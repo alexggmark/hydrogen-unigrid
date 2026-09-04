@@ -28,6 +28,7 @@ export function Block({block, at, blockId, selected, chrome}: BlockProps) {
       data-block={blockId}
       data-selected={selected ? '' : undefined}
       data-invert={block.invert ? '' : undefined}
+      {...(!fill.color && !fill.media ? {'data-plain': ''} : {})}
     >
       {fill.media && mediaSrc ? (
         fill.media.kind === 'video' ? (

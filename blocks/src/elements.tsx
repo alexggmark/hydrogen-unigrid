@@ -29,6 +29,27 @@ export const paletteVars = (palette: Palette): Record<string, string> =>
 
 // the page's own background. it sits above the frame, so it needs the palette
 // with it or a slot would have nothing to resolve against.
+// sRGB relative luminance, gamma corrected: a naive channel average calls a
+// saturated blue light and a saturated yellow dark, and both would be wrong
+const luminance = (hex: string): number => {
+  const v = hex.replace('#', '');
+  const channel = (i: number) => {
+    const c = parseInt(v.slice(i * 2, i * 2 + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * channel(0) + 0.7152 * channel(1) + 0.0722 * channel(2);
+};
+
+// a block with no fill of its own sits on the page, so the page decides whether
+// its ink is light or dark. an unset background is the stylesheet's own, which
+// is light.
+export const pageIsDark = (palette: Palette, settings?: Settings): boolean => {
+  const c = settings?.background;
+  if (!c) return false;
+  const hex = isSlot(c) ? palette[c.slot] : c.hex;
+  return /^#[0-9a-f]{6}$/i.test(hex) && luminance(hex) < 0.4;
+};
+
 export const pageVars = (
   palette: Palette,
   settings?: Settings,
@@ -38,6 +59,9 @@ export const pageVars = (
   ...(settings?.headingFont === 'serif'
     ? {'--font-display': DISPLAY_SERIF, '--display-weight': '400'}
     : {}),
+  // anything the page itself renders — a route's fallback content — has to
+  // follow the background too, not just the blocks
+  ...(pageIsDark(palette, settings) ? {'--page-ink': '#fbfbf9'} : {}),
 });
 
 // unitless numbers, not lengths: the stylesheet multiplies each by --u so the

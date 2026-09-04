@@ -1,6 +1,7 @@
 import {describe, expect, it} from 'vitest';
 import {DEFAULT_FLEX, type Flex} from '@unigrid/core';
-import {textAlign} from './elements';
+import {DEFAULT_PALETTE} from '@unigrid/core';
+import {pageIsDark, textAlign} from './elements';
 
 const flex = (patch: Partial<Flex>): Flex => ({...DEFAULT_FLEX, ...patch});
 
@@ -40,5 +41,31 @@ describe('text alignment follows the horizontal axis', () => {
 
   it('leaves the default alone', () => {
     expect(textAlign(DEFAULT_FLEX)).toBe('start');
+  });
+});
+
+describe('the page decides an unfilled block\'s ink', () => {
+  it('an unset background is the stylesheet\'s own, which is light', () => {
+    expect(pageIsDark(DEFAULT_PALETTE, undefined)).toBe(false);
+    expect(pageIsDark(DEFAULT_PALETTE, {})).toBe(false);
+  });
+
+  it('reads a literal either way', () => {
+    expect(pageIsDark(DEFAULT_PALETTE, {background: {hex: '#111110'}})).toBe(true);
+    expect(pageIsDark(DEFAULT_PALETTE, {background: {hex: '#fbfbf9'}})).toBe(false);
+  });
+
+  // a slot is a reference, so the answer moves when the palette does
+  it('resolves a slot through the palette', () => {
+    expect(pageIsDark(DEFAULT_PALETTE, {background: {slot: 1}})).toBe(true);
+    expect(pageIsDark(DEFAULT_PALETTE, {background: {slot: 2}})).toBe(false);
+    const swapped = {...DEFAULT_PALETTE, 2: '#111110'};
+    expect(pageIsDark(swapped, {background: {slot: 2}})).toBe(true);
+  });
+
+  // a channel average calls a saturated blue light and a saturated yellow dark
+  it('weights the channels rather than averaging them', () => {
+    expect(pageIsDark(DEFAULT_PALETTE, {background: {hex: '#1b3fa0'}})).toBe(true);
+    expect(pageIsDark(DEFAULT_PALETTE, {background: {hex: '#f2c200'}})).toBe(false);
   });
 });

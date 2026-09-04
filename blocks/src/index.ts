@@ -4,7 +4,7 @@
 export {Block, type BlockProps} from './Block';
 export {Nodes, flexVars, paint, paletteVars, textAlign} from './elements';
 export {Grid} from './Grid';
-export {metricVars, pageVars} from './elements';
+export {metricVars, pageIsDark, pageVars} from './elements';
 export {ThemeFont, DISPLAY_SERIF} from './font';
 export {LinkRenderer, useLinkRender, type LinkProps, type LinkRender} from './link';
 export {MediaSource, useMediaSrc, type MediaUrls} from './media';

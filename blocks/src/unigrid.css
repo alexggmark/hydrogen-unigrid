@@ -133,6 +133,10 @@
   padding: calc(var(--u) * var(--block-pad-y-u, 1))
     calc(var(--u) * var(--block-pad-x-u, 1));
   border-radius: calc(var(--u) * var(--block-radius-u, 0));
+  /* --u is a share of the grid, so a corner set on a desktop keeps a quarter of
+     its size on a phone. band c multiplies it back up rather than carrying a
+     second control, the ask being a ratio and not a value. */
+  --radius-narrow-f: 3;
 }
 @container grid (width < 60rem) {
   .u-block {
@@ -146,6 +150,9 @@
   .u-block {
     padding: calc(var(--u) * var(--block-pad-y-c-u, var(--block-pad-y-u, 1)))
       calc(var(--u) * var(--block-pad-x-c-u, var(--block-pad-x-u, 1)));
+    border-radius: calc(
+      var(--u) * var(--block-radius-u, 0) * var(--radius-narrow-f, 3)
+    );
     --c: var(--cc, var(--ca));
     --cs: var(--csc, var(--csa));
     --r: var(--rc, var(--ra));
@@ -226,6 +233,15 @@
   color: var(--ink);
 }
 .u-block[data-invert] {
+  --ink: #fbfbf9;
+  --paper: #111110;
+}
+
+/* a block with no fill of its own is sitting on the page, so the page's colour
+   decides its ink rather than the merchant restating it per block. a block with
+   an image or video keeps the manual toggle — a photograph has no luminance we
+   can read from here. */
+[data-page-dark] .u-block[data-plain] {
   --ink: #fbfbf9;
   --paper: #111110;
 }
@@ -687,8 +703,8 @@ button.u-btn[data-variant='outline']:not(:disabled):hover {
    one: a container query carries no specificity. */
 .u-logo {
   display: block;
-  max-inline-size: calc(var(--u) * var(--logo-w, 20));
-  inline-size: 100%;
+  inline-size: calc(var(--u) * var(--logo-w, 20));
+  max-inline-size: 100%;
 }
 .u-logo-img {
   display: block;
@@ -701,15 +717,15 @@ button.u-btn[data-variant='outline']:not(:disabled):hover {
 }
 @container grid (width < 36rem) {
   .u-logo {
-    max-inline-size: calc(var(--u) * var(--logo-w-c, var(--logo-w, 20)));
+    inline-size: calc(var(--u) * var(--logo-w-c, var(--logo-w, 20)));
   }
 }
 [data-band='a'] .u-logo,
 [data-band='b'] .u-logo {
-  max-inline-size: calc(var(--u) * var(--logo-w, 20));
+  inline-size: calc(var(--u) * var(--logo-w, 20));
 }
 [data-band='c'] .u-logo {
-  max-inline-size: calc(var(--u) * var(--logo-w-c, var(--logo-w, 20)));
+  inline-size: calc(var(--u) * var(--logo-w-c, var(--logo-w, 20)));
 }
 
 /* every image except a block's background, whose corner is the block's own */
@@ -791,6 +807,9 @@ button.u-btn[data-variant='outline']:not(:disabled):hover {
   --rs: var(--rsb, var(--rsa));
 }
 [data-band='c'] .u-block {
+  border-radius: calc(
+    var(--u) * var(--block-radius-u, 0) * var(--radius-narrow-f, 3)
+  );
   --c: var(--cc, var(--ca));
   --cs: var(--csc, var(--csa));
   --r: var(--rc, var(--ra));

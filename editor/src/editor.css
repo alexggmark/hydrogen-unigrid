@@ -24,7 +24,7 @@
 .e-canvas {
   /* the theme sets --page-bg, the same var the storefront's page reads */
   background: var(--page-bg, #efece6);
-  color: #111;
+  color: var(--page-ink, #111);
   font-family: 'Helvetica Neue', Helvetica, Inter, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   min-block-size: 100%;
