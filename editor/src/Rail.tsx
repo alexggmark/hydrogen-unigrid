@@ -20,6 +20,7 @@ import {
 import {
   BANDS,
   DEFAULT_METRICS,
+  LOGO_RANGE,
   METRIC_RANGE,
   divisorsOf,
   isMediaRef,
@@ -44,6 +45,7 @@ import {
   type MediaKind,
   type Metrics,
   type Palette as ThemePalette,
+  type Settings,
 } from '@unigrid/core';
 import {useState} from 'react';
 import {Palette} from './Palette';
@@ -85,6 +87,7 @@ const ADDABLE: AddKey[] = [
   'productMedia',
   'productDetails',
   'collection',
+  'logo',
   'cart',
   'account',
   'group',
@@ -100,6 +103,7 @@ export const LABEL: Record<string, string> = {
   productMedia: 'Product carousel',
   productDetails: 'Product details',
   collection: 'Collection',
+  logo: 'Logo',
   cart: 'Cart',
   account: 'Account',
   group: 'Group',
@@ -143,6 +147,8 @@ export type RailProps = {
   onPalette?: (palette: ThemePalette) => void;
   metrics: Metrics;
   onMetrics?: (metrics: Metrics) => void;
+  settings: Settings;
+  onSettings?: (settings: Settings) => void;
   pages?: PageEntry[];
   target?: string;
   missing?: boolean;
@@ -444,6 +450,36 @@ function Inspector({found, props}: {found: Found; props: RailProps}) {
             no product called “{handle}” in this store
           </Text>
         ) : null}
+      </>
+    );
+  }
+
+  if (node.kind === 'logo') {
+    return (
+      <>
+        <Text size="1" color="gray">
+          The image is set under Theme, so one logo serves every page.
+        </Text>
+        <Field label={`Max width — ${node.width}u`}>
+          <Slider
+            size="1"
+            min={LOGO_RANGE[0]}
+            max={LOGO_RANGE[1]}
+            step={LOGO_RANGE[2]}
+            value={[node.width]}
+            onValueChange={([width]) => patch({width: width ?? node.width})}
+          />
+        </Field>
+        <Field label={`Max width on mobile — ${node.narrow}u`}>
+          <Slider
+            size="1"
+            min={LOGO_RANGE[0]}
+            max={LOGO_RANGE[1]}
+            step={LOGO_RANGE[2]}
+            value={[node.narrow]}
+            onValueChange={([narrow]) => patch({narrow: narrow ?? node.narrow})}
+          />
+        </Field>
       </>
     );
   }
@@ -1018,6 +1054,85 @@ function MetricSlider({
   );
 }
 
+// the two theme settings that are not numbers: the mark every logo element
+// renders, and the colour behind every page.
+function SettingsPanel({props}: {props: RailProps}) {
+  const {settings, onSettings, onPickMedia} = props;
+  const logoUrl = settings.logo ? props.media?.[settings.logo] : undefined;
+
+  return (
+    <>
+      <Section title="Logo">
+        <Text size="1" color="gray">
+          One image for every logo element. Each element sets its own width.
+        </Text>
+        {onPickMedia ? (
+          <Flex gap="2" align="center" wrap="wrap">
+            <Button
+              size="1"
+              variant="soft"
+              onClick={async () => {
+                const picked = await onPickMedia();
+                if (picked) onSettings?.({...settings, logo: picked.id});
+              }}
+            >
+              {settings.logo ? 'Replace' : 'Choose file'}
+            </Button>
+            {settings.logo ? (
+              <Button
+                size="1"
+                variant="ghost"
+                onClick={() =>
+                  onSettings?.({...settings, logo: undefined})
+                }
+              >
+                Clear
+              </Button>
+            ) : null}
+          </Flex>
+        ) : (
+          <Callout.Root size="1" color="gray">
+            <Callout.Text>
+              Choosing a file needs the admin app — this playground has no store.
+            </Callout.Text>
+          </Callout.Root>
+        )}
+        {logoUrl ? (
+          <img
+            src={logoUrl}
+            alt=""
+            style={{display: 'block', maxWidth: '100%'}}
+          />
+        ) : null}
+        {settings.logo && !logoUrl ? (
+          <Text size="1" color="orange">
+            this file is no longer in the store
+          </Text>
+        ) : null}
+      </Section>
+
+      <Section title="Page background">
+        <Text size="1" color="gray">
+          A slot follows the palette; a hex is a one-off.
+        </Text>
+        <Swatches
+          value={settings.background}
+          palette={props.palette}
+          onPick={(background) => onSettings?.({...settings, background})}
+        />
+        <Button
+          size="1"
+          variant="soft"
+          disabled={!onSettings || !settings.background}
+          onClick={() => onSettings?.({...settings, background: undefined})}
+        >
+          Clear
+        </Button>
+      </Section>
+    </>
+  );
+}
+
 function MetricsPanel({props}: {props: RailProps}) {
   const {metrics, onMetrics} = props;
   const touched = METRIC_KEYS_LOCAL.some(
@@ -1085,6 +1200,7 @@ function ThemePanel({props}: {props: RailProps}) {
           </Flex>
         ))}
       </Section>
+      <SettingsPanel props={props} />
       <MetricsPanel props={props} />
       <Section title="Save">
         {props.onSavePalette ? (

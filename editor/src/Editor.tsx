@@ -28,6 +28,8 @@ import {
   findNode,
   DEFAULT_COLUMNS,
   DEFAULT_COUNT,
+  DEFAULT_LOGO_NARROW,
+  DEFAULT_LOGO_WIDTH,
   DEFAULT_METRICS,
   history,
   insertAfter,
@@ -50,6 +52,7 @@ import {
   type History as LayoutHistory,
   type Metrics,
   type Node,
+  type Settings,
 } from '@unigrid/core';
 import {
   Block,
@@ -152,6 +155,12 @@ const NEW_NODE: Record<AddKey, (id: string) => Node> = {
     count: DEFAULT_COUNT,
     variant: 'outline',
   }),
+  logo: (id) => ({
+    id,
+    kind: 'logo',
+    width: DEFAULT_LOGO_WIDTH,
+    narrow: DEFAULT_LOGO_NARROW,
+  }),
   cart: (id) => ({id, kind: 'cart', label: 'Cart'}),
   account: (id) => ({id, kind: 'account', label: 'Account'}),
   group: (id) => ({
@@ -184,7 +193,13 @@ export type EditorProps = {
   // the theme's measurements. absent is the default, which is what the
   // stylesheet does on its own.
   initialMetrics?: Metrics;
-  onSaveTheme?: (palette: Palette, metrics: Metrics) => void;
+  // the theme's non-numeric settings: the logo image and the page colour
+  initialSettings?: Settings;
+  onSaveTheme?: (
+    palette: Palette,
+    metrics: Metrics,
+    settings: Settings,
+  ) => void;
   menus?: StoreMenu[];
   // the store's products. one hydrates a contextual element so the template can
   // be seen against something; the rest are what a pinned element picks from.
@@ -223,6 +238,7 @@ export function Editor({
   version,
   initialPalette,
   initialMetrics,
+  initialSettings,
   onSaveTheme,
   menus,
   products,
@@ -280,6 +296,7 @@ export function Editor({
   const [tab, setTab] = useState<Tab>('editor');
   const [palette, setPalette] = useState(initialPalette ?? DEFAULT_PALETTE);
   const [metrics, setMetrics] = useState(initialMetrics ?? DEFAULT_METRICS);
+  const [settings, setSettings] = useState<Settings>(initialSettings ?? {});
   const resolved: Menus = useMemo(
     () => Object.fromEntries((menus ?? []).map((m) => [m.handle, m.items])),
     [menus],
@@ -789,10 +806,12 @@ export function Editor({
           onTab={setTab}
           metrics={metrics}
           onMetrics={setMetrics}
+          settings={settings}
+          onSettings={setSettings}
           onPalette={setPalette}
           onSavePalette={
             onSaveTheme
-              ? () => onSaveTheme(palette, metrics)
+              ? () => onSaveTheme(palette, metrics, settings)
               : onSavePalette
                 ? () => onSavePalette(palette)
                 : undefined

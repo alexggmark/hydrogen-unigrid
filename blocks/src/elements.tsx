@@ -1,8 +1,10 @@
 import {useState, type CSSProperties} from 'react';
+import {useImageRender} from './image';
 import {useLinkRender} from './link';
 import {useMenu} from './menu';
 import {CollectionGrid, useCollection} from './collection';
 import {useShop} from './shop';
+import {useLogo} from './logo';
 import {ProductDetails, ProductMedia, useProduct} from './product';
 import type {Metrics} from '@unigrid/core';
 import {
@@ -23,6 +25,16 @@ export const paint = (c: Colour): string =>
 
 export const paletteVars = (palette: Palette): Record<string, string> =>
   Object.fromEntries(SLOTS.map((slot) => [`--theme-${slot}`, palette[slot]]));
+
+// the page's own background. it sits above the frame, so it needs the palette
+// with it or a slot would have nothing to resolve against.
+export const pageVars = (
+  palette: Palette,
+  background?: Colour,
+): Record<string, string> => ({
+  ...paletteVars(palette),
+  ...(background ? {'--page-bg': paint(background)} : {}),
+});
 
 // unitless numbers, not lengths: the stylesheet multiplies each by --u so the
 // theme scales with the grid instead of pinning it. the two page boundaries are
@@ -160,6 +172,26 @@ function Collection({node}: {node: Extract<Element, {kind: 'collection'}>}) {
   );
 }
 
+function Logo({node}: {node: Extract<Element, {kind: 'logo'}>}) {
+  const Image = useImageRender();
+  const logo = useLogo();
+  const style = {
+    '--logo-w': node.width,
+    '--logo-w-c': node.narrow,
+  } as CSSProperties;
+
+  // no image set is a placeholder, the same as an unbound product
+  return (
+    <span className="u-logo" style={style}>
+      {logo ? (
+        <Image className="u-logo-img" src={logo.url} alt={logo.alt ?? ''} />
+      ) : (
+        <span className="u-logo-img u-dim" data-empty aria-hidden />
+      )}
+    </span>
+  );
+}
+
 function Cart({node}: {node: Extract<Element, {kind: 'cart'}>}) {
   const {cartCount, onOpenCart} = useShop();
   // a button either way: without an opener it is inert rather than disabled, so
@@ -217,6 +249,8 @@ function Leaf({node}: {node: Element}) {
       return <Product node={node} />;
     case 'collection':
       return <Collection node={node} />;
+    case 'logo':
+      return <Logo node={node} />;
     case 'cart':
       return <Cart node={node} />;
     case 'account':

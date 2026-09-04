@@ -4,17 +4,20 @@ import {
   collectionCounts,
   decode,
   metricsFrom,
+  settingsFrom,
   mediaIds,
   menuHandles,
   productHandles,
   type Layout,
   type Metrics,
   type Palette,
+  type Settings,
 } from '@unigrid/core';
 import {
   menuPath,
   type CollectionData,
   type Collections,
+  type LogoData,
   type MediaUrls,
   type MenuLink,
   type Menus,
@@ -88,6 +91,29 @@ export function metricsFromFields(fields: Fields | null | undefined): Metrics {
   }
 }
 
+export function settingsFromFields(fields: Fields | null | undefined): Settings {
+  const raw = fields?.find((f) => f.key === 'settings')?.value;
+  if (!raw) return {};
+  try {
+    return settingsFrom(JSON.parse(raw));
+  } catch {
+    return {};
+  }
+}
+
+// the theme's mark on its own, for a surface that renders no composition
+export async function loadLogo(
+  storefront: Queryable,
+): Promise<LogoData | undefined> {
+  const data = await storefront.query<{metaobject?: {fields: Fields} | null}>(
+    THEME_QUERY,
+  );
+  const {logo} = settingsFromFields(data?.metaobject?.fields);
+  if (!logo) return undefined;
+  const urls = await loadMedia(storefront, [], [logo]);
+  return urls[logo] ? {url: urls[logo]} : undefined;
+}
+
 export async function loadPalette(storefront: Queryable): Promise<Palette> {
   const data = await storefront.query<{metaobject?: {fields: Fields} | null}>(
     THEME_QUERY,
@@ -120,6 +146,9 @@ export type Composition = {
   footer: Layout | null;
   palette: Palette;
   metrics: Metrics;
+  settings: Settings;
+  // the theme's mark, already resolved
+  logo?: LogoData;
   menus: Menus;
   // only the ones a layout pinned. the route's own product is not a reference
   // to resolve — it is already here.
@@ -332,8 +361,11 @@ export const MEDIA_QUERY = `#graphql
 export async function loadMedia(
   storefront: Queryable,
   layouts: (Layout | null)[],
+  extra: string[] = [],
 ): Promise<MediaUrls> {
-  const ids = [...new Set(layouts.flatMap((l) => (l ? mediaIds(l) : [])))];
+  const ids = [
+    ...new Set([...layouts.flatMap((l) => (l ? mediaIds(l) : [])), ...extra]),
+  ];
   if (!ids.length) return {};
 
   const data = await storefront.query<{
@@ -379,12 +411,14 @@ export async function loadComposition(
   const footer = layoutFrom(data?.footer, which);
 
   const regions = [header, body, footer];
+  const settings = settingsFromFields(data?.theme?.fields);
   const [menus, products, collections, media] = await Promise.all([
     loadMenus(storefront, regions, domains),
     loadProducts(storefront, regions),
     loadCollections(storefront, regions),
-    loadMedia(storefront, regions),
+    loadMedia(storefront, regions, settings.logo ? [settings.logo] : []),
   ]);
+  const logoUrl = settings.logo ? media[settings.logo] : undefined;
 
   return {
     header,
@@ -392,6 +426,8 @@ export async function loadComposition(
     footer,
     palette: paletteFrom(data?.theme?.fields),
     metrics: metricsFromFields(data?.theme?.fields),
+    settings,
+    ...(logoUrl ? {logo: {url: logoUrl}} : {}),
     menus,
     products,
     collections,

@@ -4,10 +4,11 @@
 export {Block, type BlockProps} from './Block';
 export {Nodes, flexVars, paint, paletteVars, textAlign} from './elements';
 export {Grid} from './Grid';
-export {metricVars} from './elements';
+export {metricVars, pageVars} from './elements';
 export {LinkRenderer, useLinkRender, type LinkProps, type LinkRender} from './link';
 export {MediaSource, useMediaSrc, type MediaUrls} from './media';
 export {ShopSource, useShop, type ShopState} from './shop';
+export {LogoSource, useLogo, type LogoData} from './logo';
 export {MenuSource, menuPath, useMenu, type MenuLink, type Menus} from './menu';
 export {ImageRenderer, useImageRender, type ImageProps, type ImageRender} from './image';
 export {

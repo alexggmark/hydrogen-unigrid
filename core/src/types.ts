@@ -32,6 +32,11 @@ export type ProductRef = 'context' | {handle: string};
 // collection being browsed.
 export type CollectionRef = 'context' | {handle: string};
 
+export const DEFAULT_LOGO_WIDTH = 20;
+// a logo needs more of a phone than of a desktop to stay legible
+export const DEFAULT_LOGO_NARROW = 40;
+export const LOGO_RANGE: [number, number, number] = [2, 100, 1];
+
 export const DEFAULT_COLUMNS: Columns = 3;
 export const DEFAULT_COUNT = 12;
 export const ROWS_MAX = 20;
@@ -79,6 +84,10 @@ export type Element =
       // the buy button. every element that renders one lets the merchant pick it.
       variant: ButtonVariant;
     }
+  // the image is the theme's, so one logo changes everywhere at once. the width
+  // is the element's, because a header and a footer want different ones. both
+  // are --u multiples, so 20 is a fifth of the grid at any width.
+  | {id: string; kind: 'logo'; width: number; narrow: number}
   // the shopper's own two controls. no reference to resolve: the shell knows the
   // cart count and whether anyone is signed in, and hands both in.
   | {id: string; kind: 'cart'; label: string}

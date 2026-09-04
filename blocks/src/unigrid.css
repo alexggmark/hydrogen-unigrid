@@ -636,6 +636,38 @@ button.u-btn[data-variant='outline']:not(:disabled):hover {
 }
 
 /* background and tint fill the block behind the content, so neither is content */
+/* the logo. the width is a --u multiple like everything else, so 20 is a fifth
+   of the grid at any size, and band c gets its own because a mark that reads at
+   a fifth of a desktop disappears at a fifth of a phone. the forced band rule
+   is beside the container query for the same reason the menu's collapse has
+   one: a container query carries no specificity. */
+.u-logo {
+  display: block;
+  max-inline-size: calc(var(--u) * var(--logo-w, 20));
+  inline-size: 100%;
+}
+.u-logo-img {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+}
+.u-logo-img[data-empty] {
+  aspect-ratio: 3 / 1;
+  background: color-mix(in srgb, var(--ink) 12%, transparent);
+}
+@container grid (width < 36rem) {
+  .u-logo {
+    max-inline-size: calc(var(--u) * var(--logo-w-c, var(--logo-w, 20)));
+  }
+}
+[data-band='a'] .u-logo,
+[data-band='b'] .u-logo {
+  max-inline-size: calc(var(--u) * var(--logo-w, 20));
+}
+[data-band='c'] .u-logo {
+  max-inline-size: calc(var(--u) * var(--logo-w-c, var(--logo-w, 20)));
+}
+
 /* every image except a block's background, whose corner is the block's own */
 .u-pmain,
 .u-pthumb,

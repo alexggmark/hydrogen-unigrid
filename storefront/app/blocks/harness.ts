@@ -65,6 +65,7 @@ export const HARNESS: Layout = {
             kind: 'group',
             flex: flex({direction: 'row', justify: 'end', gap: 2}),
             children: [
+              {id: 'masthead-logo', kind: 'logo', width: 14, narrow: 30},
               {
                 id: 'masthead-menu',
                 kind: 'menu',

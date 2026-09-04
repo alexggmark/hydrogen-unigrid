@@ -66,11 +66,12 @@ export function element(
       | 'product'
       | 'collection'
       | 'cart'
-      | 'account';
+      | 'account'
+      | 'logo';
   }
 > {
   const s = `v${int(r, 0, 9999)} — ünïcode "quotes"`;
-  const pick = int(r, 0, 8);
+  const pick = int(r, 0, 9);
   if (pick === 0) {
     return {id, kind: 'headline', level: int(r, 1, 5) as 1 | 2 | 3 | 4 | 5, value: s};
   }
@@ -97,6 +98,9 @@ export function element(
   }
   if (pick === 5) {
     return {id, kind: 'cart', label: s};
+  }
+  if (pick === 8) {
+    return {id, kind: 'logo', width: int(r, 2, 100), narrow: int(r, 2, 100)};
   }
   if (pick === 6) {
     return {id, kind: 'account', label: s};

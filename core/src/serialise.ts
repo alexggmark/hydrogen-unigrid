@@ -5,6 +5,9 @@ import {
   DEFAULT_COLUMNS,
   DEFAULT_COUNT,
   DEFAULT_FLEX,
+  DEFAULT_LOGO_NARROW,
+  DEFAULT_LOGO_WIDTH,
+  LOGO_RANGE,
   fitCount,
   fitNarrow,
 } from './types';
@@ -36,7 +39,7 @@ import type {
 //   {v, b:[block]}
 //   block   = {i, a:cell, b?:cell, c?:cell, f?:fill, x?:flex, n?:1, k?:[node]}
 //   cell    = [col, row] | [col, row, colSpan] | [col, row, colSpan, rowSpan]
-//   node    = {i, k:'h'|'t'|'x'|'b'|'m'|'p'|'c'|'r'|'a'|'g', ...}
+//   node    = {i, k:'h'|'t'|'x'|'b'|'m'|'p'|'c'|'r'|'a'|'l'|'g', ...}
 //   fill    = {c?:hex, m?:[kind, url | gid], o?:[hex, opacity]}
 
 const encodeCell = (c: Cell): number[] =>
@@ -179,6 +182,13 @@ function encodeNode(n: Node): Obj {
         ...(n.source !== 'context' ? {v: n.source.handle} : {}),
         ...(n.variant !== 'primary' ? {p: n.variant} : {}),
       };
+    case 'logo':
+      return {
+        i: n.id,
+        k: 'l',
+        ...(n.width !== DEFAULT_LOGO_WIDTH ? {w: n.width} : {}),
+        ...(n.narrow !== DEFAULT_LOGO_NARROW ? {m: n.narrow} : {}),
+      };
     case 'cart':
       return {i: n.id, k: 'r', v: n.label};
     case 'account':
@@ -255,6 +265,18 @@ function decodeNode(w: unknown): Node | undefined {
       const view: ProductView = o.w === 'd' ? 'details' : 'media';
       const source: ProductRef = value ? {handle: value} : 'context';
       return {id, kind: 'product', view, source, variant: readVariant(o.p, 'primary')};
+    }
+    case 'l': {
+      const size = (raw: unknown, fallback: number) =>
+        typeof raw === 'number' && Number.isFinite(raw)
+          ? Math.min(LOGO_RANGE[1], Math.max(LOGO_RANGE[0], raw))
+          : fallback;
+      return {
+        id,
+        kind: 'logo',
+        width: size(o.w, DEFAULT_LOGO_WIDTH),
+        narrow: size(o.m, DEFAULT_LOGO_NARROW),
+      };
     }
     case 'r':
       return {id, kind: 'cart', label: value};

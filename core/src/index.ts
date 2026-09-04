@@ -38,6 +38,9 @@ export {
   fitNarrow,
   DEFAULT_COLUMNS,
   DEFAULT_COUNT,
+  DEFAULT_LOGO_NARROW,
+  DEFAULT_LOGO_WIDTH,
+  LOGO_RANGE,
   fitCount,
   BUTTON_VARIANTS,
   type ProductRef,
@@ -45,6 +48,7 @@ export {
   type TextAlign,
   type TextSize,
 } from './types';
+export {settingsFrom, type Settings} from './settings';
 export {
   DEFAULT_METRICS,
   METRIC_KEYS,

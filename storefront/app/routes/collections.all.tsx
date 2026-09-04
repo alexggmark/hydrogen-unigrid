@@ -1,9 +1,25 @@
+import type {LinksFunction} from 'react-router';
 import type {Route} from './+types/collections.all';
 import {useLoaderData} from 'react-router';
-import {getPaginationVariables, Image, Money} from '@shopify/hydrogen';
+import {getPaginationVariables} from '@shopify/hydrogen';
+import type {CollectionData} from '@unigrid/blocks';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {ProductItem} from '~/components/ProductItem';
+import {Composition} from '~/blocks/Composition';
+import {gridDevLinks} from '~/blocks/grid-dev';
+import {loadComposition, money} from '~/lib/layout';
+import {collectionPageBy, pageHrefs} from '~/lib/paging';
 import type {CollectionItemFragment} from 'storefrontapi.generated';
+import unigridStyles from '@unigrid/blocks/unigrid.css?url';
+import demoStyles from '~/styles/unigrid-demo.css?url';
+
+export const handle = {bare: true};
+
+export const links: LinksFunction = () => [
+  {rel: 'stylesheet', href: unigridStyles},
+  {rel: 'stylesheet', href: demoStyles},
+  ...gridDevLinks(),
+];
 
 export const meta: Route.MetaFunction = () => {
   return [{title: `Hydrogen | Products`}];
@@ -25,17 +41,30 @@ export async function loader(args: Route.LoaderArgs) {
  */
 async function loadCriticalData({context, request}: Route.LoaderArgs) {
   const {storefront} = context;
+
+  // every product is a collection with no collection behind it, so it renders
+  // the collection template like any other. sequential for the same reason
+  // collections.$handle is: the layout owns the page size.
+  const composition = await loadComposition(storefront, 'collection', 'published', [
+    context.env.PUBLIC_STORE_DOMAIN,
+  ]);
   const paginationVariables = getPaginationVariables(request, {
-    pageBy: 8,
+    pageBy: collectionPageBy([
+      composition.header,
+      composition.body,
+      composition.footer,
+    ]),
   });
 
-  const [{products}] = await Promise.all([
-    storefront.query(CATALOG_QUERY, {
-      variables: {...paginationVariables},
-    }),
-    // Add other queries here, so that they are loaded in parallel
-  ]);
-  return {products};
+  const {products} = await storefront.query(CATALOG_QUERY, {
+    variables: {...paginationVariables},
+  });
+
+  return {
+    products,
+    composition,
+    paging: pageHrefs(new URL(request.url), products.pageInfo),
+  };
 }
 
 /**
@@ -48,9 +77,32 @@ function loadDeferredData({context}: Route.LoaderArgs) {
 }
 
 export default function Collection() {
-  const {products} = useLoaderData<typeof loader>();
+  const {products, composition, paging} = useLoaderData<typeof loader>();
 
-  return (
+  // no collection record behind this one, so the handle is the route's own
+  const bound: CollectionData = {
+    handle: 'all',
+    title: 'Products',
+    products: products.nodes.map((product) => ({
+      handle: product.handle,
+      title: product.title,
+      price: money(product.priceRange?.minVariantPrice),
+      images: product.featuredImage
+        ? [
+            {
+              id: product.featuredImage.id ?? product.featuredImage.url,
+              url: product.featuredImage.url,
+              ...(product.featuredImage.altText
+                ? {alt: product.featuredImage.altText}
+                : {}),
+            },
+          ]
+        : [],
+    })),
+    ...paging,
+  };
+
+  const fallback = (
     <div className="collection">
       <h1>Products</h1>
       <PaginatedResourceSection<CollectionItemFragment>
@@ -66,6 +118,12 @@ export default function Collection() {
         )}
       </PaginatedResourceSection>
     </div>
+  );
+
+  return (
+    <Composition {...composition} collection={bound}>
+      {fallback}
+    </Composition>
   );
 }
 

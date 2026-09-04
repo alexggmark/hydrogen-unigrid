@@ -34,6 +34,7 @@ export default function Playground() {
       menus={DEMO_MENUS}
       products={DEMO_PRODUCTS}
       collections={[DEMO_COLLECTION]}
+      initialSettings={{}}
     />
   );
 }

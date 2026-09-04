@@ -26,6 +26,7 @@ const LABEL: Record<string, string> = {
   menu: 'Menu',
   product: 'Product',
   collection: 'Collection',
+  logo: 'Logo',
   cart: 'Cart',
   account: 'Account',
   group: 'Group',
@@ -35,6 +36,7 @@ const preview = (node: Node): string => {
   if (isGroup(node)) return `${node.children.length} inside`;
   if (node.kind === 'button') return node.label;
   if (node.kind === 'cart' || node.kind === 'account') return node.label;
+  if (node.kind === 'logo') return `${node.width} / ${node.narrow}`;
   if (node.kind === 'menu') return node.handle || 'no menu chosen';
   if (node.kind === 'product') {
     const which = node.source === 'context' ? 'on this page' : node.source.handle;

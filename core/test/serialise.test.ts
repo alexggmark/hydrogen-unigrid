@@ -9,6 +9,9 @@ import {decode, encode} from '../src/serialise';
 import {
   BUTTON_VARIANTS,
   COLUMN_CHOICES,
+  DEFAULT_LOGO_NARROW,
+  DEFAULT_LOGO_WIDTH,
+  LOGO_RANGE,
   divisorsOf,
   fitCount,
 } from '../src/types';
@@ -310,6 +313,47 @@ describe('shopper controls', () => {
   it('writes the label and nothing else', () => {
     const wire = JSON.parse(encode(withNode({id: 'n', kind: 'cart', label: 'Bag'})));
     expect(wire.b[0].k[0]).toEqual({i: 'n', k: 'r', v: 'Bag'});
+  });
+});
+
+describe('logo', () => {
+  const withLogo = (patch: {width?: number; narrow?: number} = {}): Layout => ({
+    version: 1,
+    blocks: [
+      {
+        ...emptyBlock('x', {a: {col: 1, colSpan: 3, row: 1, rowSpan: 1}}),
+        children: [
+          {
+            id: 'l1',
+            kind: 'logo' as const,
+            width: DEFAULT_LOGO_WIDTH,
+            narrow: DEFAULT_LOGO_NARROW,
+            ...patch,
+          },
+        ],
+      },
+    ],
+  });
+
+  it('roundtrips both widths', () => {
+    const layout = withLogo({width: 12, narrow: 55});
+    expect(decode(encode(layout))).toEqual(layout);
+  });
+
+  it('costs nothing on the wire at its defaults', () => {
+    expect(JSON.parse(encode(withLogo())).b[0].k[0]).toEqual({i: 'l1', k: 'l'});
+  });
+
+  // the image is the theme's, so a saved layout never names one
+  it('writes no image reference', () => {
+    expect(encode(withLogo({width: 12}))).not.toContain('gid://');
+  });
+
+  it('clamps a width outside its range', () => {
+    const wire = JSON.parse(encode(withLogo({width: 12})));
+    wire.b[0].k[0].w = 900;
+    const node = decode(JSON.stringify(wire))?.blocks[0]?.children[0];
+    expect(node && node.kind === 'logo' && node.width).toBe(LOGO_RANGE[1]);
   });
 });
 

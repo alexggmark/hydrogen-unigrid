@@ -20,9 +20,11 @@ import {
   encode,
   mediaIds,
   metricsFrom,
+  settingsFrom,
   type Layout,
   type Metrics,
   type Palette,
+  type Settings,
 } from '@unigrid/core';
 import radixStyles from '@radix-ui/themes/styles.css?url';
 import unigridStyles from '@unigrid/blocks/unigrid.css?url';
@@ -41,6 +43,7 @@ import {
   publishAll,
   saveDraft,
   loadMetrics,
+  loadSettings,
   saveTheme,
   type PageRow,
   type StoreMenu,
@@ -65,8 +68,16 @@ export const loader = async ({request}: LoaderFunctionArgs) => {
   const bodyTarget =
     target === 'header' || target === 'footer' ? 'home' : target;
 
-  const [regions, palette, pages, menus, products, collections, metrics] =
-    await Promise.all([
+  const [
+    regions,
+    palette,
+    pages,
+    menus,
+    products,
+    collections,
+    metrics,
+    settings,
+  ] = await Promise.all([
       loadComposition(admin, bodyTarget),
       loadPalette(admin),
       listPages(admin),
@@ -74,6 +85,7 @@ export const loader = async ({request}: LoaderFunctionArgs) => {
       listProducts(admin),
       listCollections(admin),
       loadMetrics(admin),
+      loadSettings(admin),
     ]);
   const empty: Layout = {version: 1, blocks: []};
   const label = pages.find((p) => p.target === bodyTarget)?.title ?? 'Page';
@@ -98,6 +110,7 @@ export const loader = async ({request}: LoaderFunctionArgs) => {
     products,
     collections,
     metrics,
+    settings,
     media,
     regions: [
       {
@@ -136,11 +149,17 @@ export const action = async ({request}: ActionFunctionArgs) => {
 
   const theme = form.get('theme');
   if (typeof theme === 'string') {
-    const {palette, metrics} = JSON.parse(theme) as {
+    const {palette, metrics, settings} = JSON.parse(theme) as {
       palette: Palette;
       metrics: Metrics;
+      settings: Settings;
     };
-    return saveTheme(admin, palette, metricsFrom(metrics));
+    return saveTheme(
+      admin,
+      palette,
+      metricsFrom(metrics),
+      settingsFrom(settings),
+    );
   }
 
   // one submit carries every region that changed, so switching region cannot
@@ -170,6 +189,7 @@ export default function Index() {
     products,
     collections,
     metrics,
+    settings,
     media,
     target,
   } = useLoaderData<typeof loader>() as {
@@ -182,6 +202,7 @@ export default function Index() {
     products: ProductData[];
     collections: CollectionData[];
     metrics: Metrics;
+    settings: Settings;
     media: MediaUrls;
     target: string;
   };
@@ -209,9 +230,9 @@ export default function Index() {
   );
 
   const onSaveTheme = useCallback(
-    (palette: Palette, metrics: Metrics) =>
+    (palette: Palette, metrics: Metrics, settings: Settings) =>
       fetcher.submit(
-        {theme: JSON.stringify({palette, metrics})},
+        {theme: JSON.stringify({palette, metrics, settings})},
         {method: 'post'},
       ),
     [fetcher],
@@ -256,6 +277,7 @@ export default function Index() {
       onPublish={onPublish}
       initialPalette={palette ?? DEFAULT_PALETTE}
       initialMetrics={metrics ?? DEFAULT_METRICS}
+      initialSettings={settings ?? {}}
       onSaveTheme={onSaveTheme}
       menus={menus}
       products={products}

@@ -12,17 +12,18 @@ import {
 import {Await, Link, useFetcher, useRouteLoaderData} from 'react-router';
 import {Analytics, CartForm} from '@shopify/hydrogen';
 import type {RootLoader} from '~/root';
-import {Block, Grid, deriveAll, metricVars} from '@unigrid/blocks';
+import {Block, Grid, deriveAll, metricVars, pageVars} from '@unigrid/blocks';
 import type {
   CollectionData,
   Collections,
+  LogoData,
   MediaUrls,
   Menus,
   ProductData,
   Products,
   ShopState,
 } from '@unigrid/blocks';
-import type {Layout, Metrics, Palette} from '@unigrid/core';
+import type {Layout, Metrics, Palette, Settings} from '@unigrid/core';
 import {DEV} from '~/blocks/grid-dev';
 import {StoreImage} from '~/blocks/image';
 import {StoreLink} from '~/blocks/link';
@@ -43,6 +44,7 @@ function Region({
   media,
   shop,
   metrics,
+  logo,
 }: {
   layout: Layout;
   palette: Palette;
@@ -54,6 +56,7 @@ function Region({
   media?: MediaUrls;
   shop?: ShopState;
   metrics?: Metrics;
+  logo?: LogoData;
 }) {
   const at = deriveAll(layout);
   return (
@@ -70,6 +73,7 @@ function Region({
       media={media}
       shop={shop}
       metrics={metrics}
+      logo={logo}
     >
       {layout.blocks.map((block) => {
         const placement = at.get(block.id);
@@ -247,6 +251,8 @@ function Page({
   footer,
   palette,
   metrics,
+  settings,
+  logo,
   menus,
   product,
   products,
@@ -260,6 +266,8 @@ function Page({
   footer: Layout | null;
   palette: Palette;
   metrics?: Metrics;
+  settings?: Settings;
+  logo?: LogoData;
   menus: Menus;
   // the product this route renders, if it renders one, and any the layout pinned
   product?: ProductData;
@@ -279,7 +287,12 @@ function Page({
   return (
     <div
       className="unigrid-demo u-page"
-      style={metricVars(metrics) as CSSProperties}
+      style={
+        {
+          ...metricVars(metrics),
+          ...pageVars(palette, settings?.background),
+        } as CSSProperties
+      }
     >
       <div className="u-stack">
         {header ? (
@@ -294,6 +307,7 @@ function Page({
             media={media}
             shop={shop}
             metrics={metrics}
+            logo={logo}
           />
         ) : null}
         {body ? (
@@ -308,6 +322,7 @@ function Page({
             media={media}
             shop={shop}
             metrics={metrics}
+            logo={logo}
           />
         ) : (
           children
@@ -324,6 +339,7 @@ function Page({
             media={media}
             shop={shop}
             metrics={metrics}
+            logo={logo}
           />
         ) : null}
       </div>

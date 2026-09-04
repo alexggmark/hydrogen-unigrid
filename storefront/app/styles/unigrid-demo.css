@@ -4,7 +4,8 @@
 /* colour only, no geometry — keeps unigrid.css provably px-free */
 
 .unigrid-demo {
-  background: #efece6;
+  /* the theme sets --page-bg; this is what it was before one could */
+  background: var(--page-bg, #efece6);
   color: #111;
   font-family: 'Helvetica Neue', Helvetica, Inter, system-ui, sans-serif;
   font-weight: 400;

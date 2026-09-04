@@ -12,6 +12,7 @@ import {ImageRenderer, type ImageRender} from './image';
 import {LinkRenderer, type LinkRender} from './link';
 import {MediaSource, type MediaUrls} from './media';
 import {ShopSource, type ShopState} from './shop';
+import {LogoSource, type LogoData} from './logo';
 import {MenuSource, type Menus} from './menu';
 import {ProductSource, type ProductData, type Products} from './product';
 
@@ -31,6 +32,7 @@ export function Grid({
   media,
   shop,
   metrics,
+  logo,
 }: {
   children?: ReactNode;
   probes?: boolean;
@@ -56,6 +58,8 @@ export function Grid({
   // the theme's numbers. absent is the default, which is what the stylesheet
   // already does on its own.
   metrics?: Metrics;
+  // the theme's mark, for any logo element on the page
+  logo?: LogoData;
 }) {
   return (
     <div
@@ -76,7 +80,9 @@ export function Grid({
                   collections={collections}
                 >
                   <MediaSource media={media}>
-                    <ShopSource shop={shop}>{children}</ShopSource>
+                    <ShopSource shop={shop}>
+                      <LogoSource logo={logo}>{children}</LogoSource>
+                    </ShopSource>
                   </MediaSource>
                 </CollectionSource>
               </ProductSource>

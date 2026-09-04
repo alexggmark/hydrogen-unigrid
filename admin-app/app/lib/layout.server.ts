@@ -8,6 +8,7 @@ import {
   DEFAULT_PALETTE,
   metricsDiff,
   metricsFrom,
+  settingsFrom,
   SLOTS,
   decode,
   emptyLayout,
@@ -15,6 +16,7 @@ import {
   type Layout,
   type Metrics,
   type Palette,
+  type Settings,
 } from '@unigrid/core';
 
 // the metaobject's field shape stops here, exactly as it does on the storefront
@@ -195,6 +197,22 @@ export async function loadMetrics(admin: Admin): Promise<Metrics> {
   }
 }
 
+export async function loadSettings(admin: Admin): Promise<Settings> {
+  const response = await admin.graphql(THEME_READ);
+  const body = (await response.json()) as {
+    data?: {metaobjectByHandle?: {fields: Fields} | null};
+  };
+  const raw = body.data?.metaobjectByHandle?.fields?.find(
+    (f) => f.key === 'settings',
+  )?.value;
+  if (!raw) return {};
+  try {
+    return settingsFrom(JSON.parse(raw));
+  } catch {
+    return {};
+  }
+}
+
 // the theme has no draft. it is referenced by every layout, so a half-applied
 // palette would be visible everywhere at once — saving is publishing.
 export async function savePalette(admin: Admin, palette: Palette): Promise<Result> {
@@ -216,6 +234,7 @@ export async function saveTheme(
   admin: Admin,
   palette: Palette,
   metrics: Metrics,
+  settings: Settings,
 ): Promise<Result> {
   const response = await admin.graphql(THEME_READ);
   const body = (await response.json()) as {
@@ -229,6 +248,7 @@ export async function saveTheme(
   return write(admin, id, [
     ...SLOTS.map((slot) => ({key: `c${slot}`, value: palette[slot]})),
     {key: 'metrics', value: JSON.stringify(metricsDiff(metrics))},
+    {key: 'settings', value: JSON.stringify(settings)},
   ]);
 }
 
