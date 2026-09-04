@@ -145,7 +145,15 @@ export function block(r: () => number, id: string): Block {
             // after it, and seeded layouts are fixtures other tests rely on.
             color: colour(int(r, 0, 0xffffff)),
             ...(r() < 0.5
-              ? {media: {kind: r() < 0.5 ? 'image' : 'video', src: `gid://m/${int(r, 0, 999)}`} as const}
+              ? {
+                  media: {
+                    kind: r() < 0.5 ? ('image' as const) : ('video' as const),
+                    // both shapes, because both have to survive the wire
+                    ...(int(r, 0, 1)
+                      ? {id: `gid://shopify/MediaImage/${int(r, 0, 999)}`}
+                      : {src: `https://cdn.test/${int(r, 0, 999)}.jpg`}),
+                  },
+                }
               : {}),
             ...(r() < 0.5
               ? {overlay: {color: {hex: '#000000'}, opacity: int(r, 0, 100) / 100}}

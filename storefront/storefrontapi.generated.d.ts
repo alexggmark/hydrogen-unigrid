@@ -470,6 +470,60 @@ export type UnigridCollectionQuery = {
   >;
 };
 
+export type UnigridMediaQueryVariables = StorefrontAPI.Exact<{
+  ids:
+    | Array<StorefrontAPI.Scalars['ID']['input']>
+    | StorefrontAPI.Scalars['ID']['input'];
+}>;
+
+export type UnigridMediaQuery = {
+  nodes: Array<
+    StorefrontAPI.Maybe<
+      | Pick<StorefrontAPI.AppliedGiftCard, 'id'>
+      | Pick<StorefrontAPI.Article, 'id'>
+      | Pick<StorefrontAPI.Blog, 'id'>
+      | Pick<StorefrontAPI.Cart, 'id'>
+      | Pick<StorefrontAPI.CartLine, 'id'>
+      | Pick<StorefrontAPI.Collection, 'id'>
+      | Pick<StorefrontAPI.Comment, 'id'>
+      | Pick<StorefrontAPI.Company, 'id'>
+      | Pick<StorefrontAPI.CompanyContact, 'id'>
+      | Pick<StorefrontAPI.CompanyLocation, 'id'>
+      | Pick<StorefrontAPI.ComponentizableCartLine, 'id'>
+      | Pick<StorefrontAPI.ExternalVideo, 'id'>
+      | Pick<StorefrontAPI.GenericFile, 'id'>
+      | Pick<StorefrontAPI.Location, 'id'>
+      | Pick<StorefrontAPI.MailingAddress, 'id'>
+      | Pick<StorefrontAPI.Market, 'id'>
+      | (Pick<StorefrontAPI.MediaImage, 'id'> & {
+          image?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>>;
+        })
+      | Pick<StorefrontAPI.MediaPresentation, 'id'>
+      | Pick<StorefrontAPI.Menu, 'id'>
+      | Pick<StorefrontAPI.MenuItem, 'id'>
+      | Pick<StorefrontAPI.Metafield, 'id'>
+      | Pick<StorefrontAPI.Metaobject, 'id'>
+      | Pick<StorefrontAPI.Model3d, 'id'>
+      | Pick<StorefrontAPI.Order, 'id'>
+      | Pick<StorefrontAPI.Page, 'id'>
+      | Pick<StorefrontAPI.Product, 'id'>
+      | Pick<StorefrontAPI.ProductOption, 'id'>
+      | Pick<StorefrontAPI.ProductOptionValue, 'id'>
+      | Pick<StorefrontAPI.ProductVariant, 'id'>
+      | Pick<StorefrontAPI.Shop, 'id'>
+      | Pick<StorefrontAPI.ShopPayInstallmentsFinancingPlan, 'id'>
+      | Pick<StorefrontAPI.ShopPayInstallmentsFinancingPlanTerm, 'id'>
+      | Pick<StorefrontAPI.ShopPayInstallmentsProductVariantPricing, 'id'>
+      | Pick<StorefrontAPI.ShopPolicy, 'id'>
+      | Pick<StorefrontAPI.TaxonomyCategory, 'id'>
+      | Pick<StorefrontAPI.UrlRedirect, 'id'>
+      | (Pick<StorefrontAPI.Video, 'id'> & {
+          sources: Array<Pick<StorefrontAPI.VideoSource, 'url'>>;
+        })
+    >
+  >;
+};
+
 export type ArticleQueryVariables = StorefrontAPI.Exact<{
   articleHandle: StorefrontAPI.Scalars['String']['input'];
   blogHandle: StorefrontAPI.Scalars['String']['input'];
@@ -1329,6 +1383,10 @@ interface GeneratedQueryTypes {
   '#graphql\n  query UnigridCollection($handle: String!, $first: Int!) {\n    collection(handle: $handle) {\n      handle\n      title\n      products(first: $first) {\n        nodes {\n          handle\n          title\n          priceRange { minVariantPrice { amount currencyCode } }\n          images(first: 1) { nodes { id url altText } }\n        }\n      }\n    }\n  }\n': {
     return: UnigridCollectionQuery;
     variables: UnigridCollectionQueryVariables;
+  };
+  '#graphql\n  query UnigridMedia($ids: [ID!]!) {\n    nodes(ids: $ids) {\n      id\n      ... on MediaImage { image { url } }\n      ... on Video { sources { url } }\n    }\n  }\n': {
+    return: UnigridMediaQuery;
+    variables: UnigridMediaQueryVariables;
   };
   '#graphql\n  query Article(\n    $articleHandle: String!\n    $blogHandle: String!\n    $country: CountryCode\n    $language: LanguageCode\n  ) @inContext(language: $language, country: $country) {\n    blog(handle: $blogHandle) {\n      handle\n      articleByHandle(handle: $articleHandle) {\n        handle\n        title\n        contentHtml\n        publishedAt\n        author: authorV2 {\n          name\n        }\n        image {\n          id\n          altText\n          url\n          width\n          height\n        }\n        seo {\n          description\n          title\n        }\n      }\n    }\n  }\n': {
     return: ArticleQuery;

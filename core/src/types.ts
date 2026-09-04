@@ -100,7 +100,16 @@ export type Group = {id: string; kind: 'group'; flex: Flex; children: Element[]}
 // one level only: nested groups make this a page builder
 export type Node = Element | Group;
 
-export type Media = {kind: 'image' | 'video'; src: string};
+export type MediaKind = 'image' | 'video';
+
+// a url is what layouts authored before the file picker hold; a gid is what the
+// picker gives. both render, so nothing already saved needs migrating.
+export type Media =
+  | {kind: MediaKind; src: string}
+  | {kind: MediaKind; id: string};
+
+export const isMediaRef = (m: Media): m is {kind: MediaKind; id: string} =>
+  'id' in m;
 
 export const SLOTS = [1, 2, 3, 4, 5] as const;
 export type Slot = (typeof SLOTS)[number];

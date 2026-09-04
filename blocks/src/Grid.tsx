@@ -10,6 +10,7 @@ import {
 } from './collection';
 import {ImageRenderer, type ImageRender} from './image';
 import {LinkRenderer, type LinkRender} from './link';
+import {MediaSource, type MediaUrls} from './media';
 import {MenuSource, type Menus} from './menu';
 import {ProductSource, type ProductData, type Products} from './product';
 
@@ -26,6 +27,7 @@ export function Grid({
   products,
   collection,
   collections,
+  media,
 }: {
   children?: ReactNode;
   probes?: boolean;
@@ -44,6 +46,8 @@ export function Grid({
   // the collection this route is browsing, if any, and any the layout pinned
   collection?: CollectionData;
   collections?: Collections;
+  // gid to url for any block fill that references a file
+  media?: MediaUrls;
 }) {
   return (
     <div className="u-frame" style={paletteVars(palette) as CSSProperties}>
@@ -58,7 +62,7 @@ export function Grid({
                   collection={collection}
                   collections={collections}
                 >
-                  {children}
+                  <MediaSource media={media}>{children}</MediaSource>
                 </CollectionSource>
               </ProductSource>
             </MenuSource>

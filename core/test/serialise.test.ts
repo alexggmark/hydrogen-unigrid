@@ -2,6 +2,7 @@ import {describe, expect, it} from 'vitest';
 import {
   collectionCounts,
   collectionPageSize,
+  mediaIds,
   productHandles,
 } from '../src/content';
 import {decode, encode} from '../src/serialise';
@@ -10,6 +11,7 @@ import {
   emptyBlock,
   emptyLayout,
   type Block,
+  type Fill,
   type Layout,
   type Node,
 } from '../src/types';
@@ -272,6 +274,45 @@ describe('collection repeater', () => {
     expect(collectionCounts(withCollection({}))).toEqual({});
     expect(collectionPageSize(withCollection({count: 24}))).toBe(24);
     expect(collectionPageSize(withCollection({source: {handle: 'shirts'}}))).toBe(0);
+  });
+});
+
+describe('block media', () => {
+  const withMedia = (media: NonNullable<Fill['media']>): Layout => ({
+    version: 1,
+    blocks: [
+      {
+        ...emptyBlock('x', {a: {col: 1, colSpan: 2, row: 1, rowSpan: 1}}),
+        fill: {media},
+      },
+    ],
+  });
+
+  it('roundtrips a url and a file reference, and keeps them apart', () => {
+    for (const media of [
+      {kind: 'image' as const, src: 'https://cdn.test/a.jpg'},
+      {kind: 'video' as const, src: 'https://cdn.test/a.mp4'},
+      {kind: 'image' as const, id: 'gid://shopify/MediaImage/1'},
+      {kind: 'video' as const, id: 'gid://shopify/Video/2'},
+    ]) {
+      expect(decode(encode(withMedia(media)))).toEqual(withMedia(media));
+    }
+  });
+
+  // the placeholder invited a gid into the url field long before anything could
+  // resolve one, so those layouts exist and decode as references now
+  it('reads a gid typed into the old url field as a reference', () => {
+    const wire = JSON.parse(encode(withMedia({kind: 'image', src: 'x'})));
+    wire.b[0].f.m[1] = 'gid://shopify/MediaImage/9';
+    const fill = decode(JSON.stringify(wire))?.blocks[0]?.fill;
+    expect(fill?.media).toEqual({kind: 'image', id: 'gid://shopify/MediaImage/9'});
+  });
+
+  it('lists the gids a layout references and ignores urls', () => {
+    expect(mediaIds(withMedia({kind: 'image', id: 'gid://shopify/MediaImage/1'}))).toEqual([
+      'gid://shopify/MediaImage/1',
+    ]);
+    expect(mediaIds(withMedia({kind: 'image', src: 'https://cdn.test/a.jpg'}))).toEqual([]);
   });
 });
 

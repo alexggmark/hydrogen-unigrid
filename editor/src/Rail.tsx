@@ -20,6 +20,7 @@ import {
 import {
   BANDS,
   divisorsOf,
+  isMediaRef,
   fitCount,
   fitNarrow,
   isSlot,
@@ -38,6 +39,7 @@ import {
   type Found,
   type Group,
   type Layout,
+  type MediaKind,
   type Palette as ThemePalette,
 } from '@unigrid/core';
 import {useState} from 'react';
@@ -100,6 +102,10 @@ export type MenuEntry = {handle: string; title: string};
 export type ProductEntry = {handle: string; title: string};
 export type CollectionEntry = {handle: string; title: string};
 
+// what the shell's file picker hands back. the editor is shared with the
+// playground, which has no app bridge, so the picker is injected or absent.
+export type PickedMedia = {id: string; url: string; kind: MediaKind};
+
 export type RailProps = {
   layout: Layout;
   band: Band;
@@ -122,6 +128,9 @@ export type RailProps = {
   // never reach a block.
   viewAs?: string;
   onViewAs?: (handle: string) => void;
+  // gid to url, for the thumbnail beside the picker
+  media?: Record<string, string>;
+  onPickMedia?: () => Promise<PickedMedia | null>;
   tab: Tab;
   onTab: (tab: Tab) => void;
   onPalette?: (palette: ThemePalette) => void;
@@ -556,6 +565,110 @@ function Inspector({found, props}: {found: Found; props: RailProps}) {
   );
 }
 
+// the picker when the shell has one, a url when it does not. the playground is
+// the second case: no app bridge, so nothing can open the store's files.
+function MediaField({
+  props,
+  fill,
+  setFill,
+}: {
+  props: RailProps;
+  fill: Fill;
+  setFill: (patch: Partial<Fill>) => void;
+}) {
+  const {media} = fill;
+  const src = media
+    ? isMediaRef(media)
+      ? props.media?.[media.id]
+      : media.src
+    : undefined;
+
+  const preview = (
+    <>
+      {src ? (
+        <img
+          src={src}
+          alt=""
+          style={{
+            display: 'block',
+            width: '100%',
+            aspectRatio: '16 / 9',
+            objectFit: 'cover',
+            borderRadius: 'var(--radius-2)',
+          }}
+        />
+      ) : null}
+      {media && isMediaRef(media) && !src ? (
+        <Text size="1" color="orange">
+          this file is no longer in the store
+        </Text>
+      ) : null}
+    </>
+  );
+
+  if (!props.onPickMedia) {
+    return (
+      <>
+        <TextField.Root
+          size="1"
+          placeholder="https://…"
+          value={media && !isMediaRef(media) ? media.src : ''}
+          onChange={(e) => {
+            const value = e.target.value;
+            setFill({
+              media: value
+                ? {
+                    kind: /\.(mp4|webm|mov)(\?|$)/i.test(value) ? 'video' : 'image',
+                    src: value,
+                  }
+                : undefined,
+            });
+          }}
+        />
+        {/* a reference cannot be typed, so without this there is no way to
+            remove one from a shell that has no picker */}
+        {media && isMediaRef(media) ? (
+          <Button
+            size="1"
+            variant="ghost"
+            onClick={() => setFill({media: undefined})}
+          >
+            Clear file
+          </Button>
+        ) : null}
+        {preview}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Flex gap="2" align="center" wrap="wrap">
+        <Button
+          size="1"
+          variant="soft"
+          onClick={async () => {
+            const picked = await props.onPickMedia?.();
+            if (picked) setFill({media: {kind: picked.kind, id: picked.id}});
+          }}
+        >
+          {media ? 'Replace' : 'Choose file'}
+        </Button>
+        {media ? (
+          <Button
+            size="1"
+            variant="ghost"
+            onClick={() => setFill({media: undefined})}
+          >
+            Clear
+          </Button>
+        ) : null}
+      </Flex>
+      {preview}
+    </>
+  );
+}
+
 function Swatches({
   value,
   palette,
@@ -611,20 +724,8 @@ function Appearance({block, props}: {block: Block; props: RailProps}) {
         </Flex>
       </Field>
 
-      <Field label="Image or video URL">
-        <TextField.Root
-          size="1"
-          placeholder="https://… or gid://…"
-          value={fill.media?.src ?? ''}
-          onChange={(e) => {
-            const src = e.target.value;
-            setFill({
-              media: src
-                ? {kind: /\.(mp4|webm|mov)(\?|$)/i.test(src) ? 'video' : 'image', src}
-                : undefined,
-            });
-          }}
-        />
+      <Field label="Background file">
+        <MediaField props={props} fill={fill} setFill={setFill} />
       </Field>
 
       <Field label="Overlay">

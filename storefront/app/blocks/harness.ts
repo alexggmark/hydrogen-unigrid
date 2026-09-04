@@ -126,6 +126,9 @@ export const HARNESS: Layout = {
       {
         fill: {
           color: {slot: 4},
+          // a real file in the dev store, resolved by the route rather than
+          // stored as a cdn path
+          media: {kind: 'image', id: 'gid://shopify/MediaImage/33216148897974'},
           overlay: {color: {hex: '#000000'}, opacity: 0.35},
         },
         invert: true,

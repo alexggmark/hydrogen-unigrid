@@ -52,6 +52,7 @@ import {
   type Menus,
   type CollectionData,
   type Collections,
+  type MediaUrls,
   type ProductData,
   type Products,
 } from '@unigrid/blocks';
@@ -60,7 +61,13 @@ import {InertLink} from './link';
 import {NEW_SPAN} from './Palette';
 import {cellAt, gridUnits, moved, resized, snap, type Edge} from './geometry';
 import {dropTarget, type NodeDrag} from './Tree';
-import {Rail, type AddKey, type PageEntry, type Tab} from './Rail';
+import {
+  Rail,
+  type AddKey,
+  type PageEntry,
+  type PickedMedia,
+  type Tab,
+} from './Rail';
 import {DEFAULT_PALETTE, type Layout, type Palette} from '@unigrid/core';
 
 
@@ -156,6 +163,13 @@ export type EditorProps = {
   // and the same for collections: one hydrates a contextual repeater, the rest
   // are what a pinned one picks from
   collections?: CollectionData[];
+  // gid to url for every file the layout already references, resolved by the
+  // shell. absent means a block with a file fill renders nothing, not a broken
+  // image.
+  media?: MediaUrls;
+  // the shell's file picker. the admin app has one through app bridge; the
+  // playground has none, and the rail falls back to a url.
+  pickMedia?: () => Promise<PickedMedia | null>;
   // the shell owns pages; the editor only shows them and reports intent
   pages?: PageEntry[];
   target?: string;
@@ -182,6 +196,8 @@ export function Editor({
   menus,
   products,
   collections,
+  media,
+  pickMedia,
   pages,
   target,
   missing,
@@ -227,6 +243,9 @@ export function Editor({
   const [clipped, setClipped] = useState<Record<string, number>>({});
   // which product or collection hydrates a contextual element. url state, never
   const [viewAs, setViewAs] = useState<string | null>(null);
+  // a file picked during this session is not in the loader's map yet, so its url
+  // is kept here until the next save reloads one
+  const [pickedMedia, setPickedMedia] = useState<MediaUrls>({});
   const [tab, setTab] = useState<Tab>('editor');
   const [palette, setPalette] = useState(initialPalette ?? DEFAULT_PALETTE);
   const resolved: Menus = useMemo(
@@ -246,6 +265,18 @@ export function Editor({
     products?.find((p) => p.handle === viewAs) ?? products?.[0];
   const previewCollection =
     collections?.find((c) => c.handle === viewAs) ?? collections?.[0];
+  const mediaUrls = useMemo(
+    () => ({...media, ...pickedMedia}),
+    [media, pickedMedia],
+  );
+  // the shell resolves the url; remembering it is the editor's job
+  const onPickMedia = pickMedia
+    ? async () => {
+        const file = await pickMedia();
+        if (file) setPickedMedia((m) => ({...m, [file.id]: file.url}));
+        return file;
+      }
+    : undefined;
   // rail-tree drags are their own gesture: no ghost, no cell, no placement
   const [nodeDrag, setNodeDrag] = useState<NodeDrag | null>(null);
   // dnd-kit reorders the dom mid-drag and does not undo it across groups, so a
@@ -604,6 +635,7 @@ export function Editor({
                       products={byHandle}
                       collection={previewCollection}
                       collections={byCollection}
+                      media={mediaUrls}
                       palette={palette}
                     >
                       {blocks.map((b) => {
@@ -629,6 +661,7 @@ export function Editor({
               products={byHandle}
               collection={previewCollection}
               collections={byCollection}
+              media={mediaUrls}
               palette={palette}
             >
               {layout.blocks.map((b) => {
@@ -706,6 +739,8 @@ export function Editor({
           collections={collections}
           viewAs={viewAs ?? undefined}
           onViewAs={setViewAs}
+          media={mediaUrls}
+          onPickMedia={onPickMedia}
           pages={pages}
           target={target}
           missing={missing}

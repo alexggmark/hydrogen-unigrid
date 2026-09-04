@@ -8,7 +8,14 @@ import type {
 import {useFetcher, useLoaderData, useNavigate, useRouteError} from 'react-router';
 import {boundary} from '@shopify/shopify-app-react-router/server';
 import {Editor} from '@unigrid/editor';
-import {DEFAULT_PALETTE, decode, encode, type Layout, type Palette} from '@unigrid/core';
+import {
+  DEFAULT_PALETTE,
+  decode,
+  encode,
+  mediaIds,
+  type Layout,
+  type Palette,
+} from '@unigrid/core';
 import radixStyles from '@radix-ui/themes/styles.css?url';
 import unigridStyles from '@unigrid/blocks/unigrid.css?url';
 import editorStyles from '@unigrid/editor/editor.css?url';
@@ -22,13 +29,14 @@ import {
   loadComposition,
   loadMenus,
   loadPalette,
+  resolveMedia,
   publishAll,
   saveDraft,
   savePalette,
   type PageRow,
   type StoreMenu,
 } from '../lib/layout.server';
-import type {CollectionData, ProductData} from '@unigrid/blocks';
+import type {CollectionData, MediaUrls, ProductData} from '@unigrid/blocks';
 
 export const links: LinksFunction = () => [
   {rel: 'stylesheet', href: radixStyles},
@@ -58,6 +66,18 @@ export const loader = async ({request}: LoaderFunctionArgs) => {
   const empty: Layout = {version: 1, blocks: []};
   const label = pages.find((p) => p.target === bodyTarget)?.title ?? 'Page';
 
+  // after the layouts, because which files to resolve is authored in them
+  const ids = [
+    ...new Set(
+      [regions.header, regions.body, regions.footer].flatMap((r) =>
+        r ? mediaIds(r.layout) : [],
+      ),
+    ),
+  ];
+  const media: MediaUrls = Object.fromEntries(
+    (await resolveMedia(admin, ids)).map((m) => [m.id, m.url]),
+  );
+
   return {
     target,
     pages,
@@ -65,6 +85,7 @@ export const loader = async ({request}: LoaderFunctionArgs) => {
     menus,
     products,
     collections,
+    media,
     regions: [
       {target: 'header', label: 'Header', layout: regions.header?.layout ?? empty},
       {target: bodyTarget, label, layout: regions.body?.layout ?? empty},
@@ -122,6 +143,7 @@ export default function Index() {
     menus,
     products,
     collections,
+    media,
     target,
   } = useLoaderData<typeof loader>() as {
       regions: {target: string; label: string; layout: Layout}[];
@@ -132,6 +154,7 @@ export default function Index() {
       menus: StoreMenu[];
       products: ProductData[];
       collections: CollectionData[];
+      media: MediaUrls;
       target: string;
     };
   const fetcher = useFetcher<typeof action>();
@@ -162,6 +185,24 @@ export default function Index() {
     [fetcher],
   );
 
+  // app bridge's own file browser, so there is no picker of ours to build. it
+  // returns ids, so the url comes back from our own resource route.
+  const pickMedia = useCallback(async () => {
+    const activity = await shopify.intents.invoke('pick:shopify/File', {
+      data: {mediaTypes: ['MediaImage', 'Video'], multiSelect: false},
+    });
+    const response = await activity.complete;
+    // closed is the merchant cancelling, which is not a failure
+    if (!response || response.code !== 'ok') return null;
+    const [id] = response.data?.ids ?? [];
+    if (!id) return null;
+    const found = await fetch(`/app/media?id=${encodeURIComponent(id)}`);
+    const {media: resolved} = (await found.json()) as {
+      media: {id: string; url: string; kind: 'image' | 'video'}[];
+    };
+    return resolved[0] ?? null;
+  }, []);
+
   const onPublish = useCallback(
     () => fetcher.submit({intent: 'publish'}, {method: 'post'}),
     [fetcher],
@@ -185,6 +226,8 @@ export default function Index() {
       menus={menus}
       products={products}
       collections={collections}
+      media={media}
+      pickMedia={pickMedia}
       onSavePalette={onSavePalette}
       busy={fetcher.state !== 'idle'}
       version={version}

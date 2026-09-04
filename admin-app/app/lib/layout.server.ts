@@ -354,6 +354,49 @@ export async function listCollections(admin: Admin): Promise<CollectionData[]> {
   }));
 }
 
+const MEDIA = `#graphql
+  query AdminMedia($ids: [ID!]!) {
+    nodes(ids: $ids) {
+      id
+      __typename
+      ... on MediaImage { image { url } }
+      ... on Video { sources { url } }
+    }
+  }
+`;
+
+export type ResolvedMedia = {id: string; url: string; kind: 'image' | 'video'};
+
+// the file picker hands back ids, so both the editor's preview and the loader
+// need the same lookup. the layout stores the id and never the cdn path.
+export async function resolveMedia(
+  admin: Admin,
+  ids: string[],
+): Promise<ResolvedMedia[]> {
+  if (!ids.length) return [];
+  const response = await admin.graphql(MEDIA, {variables: {ids}});
+  const nodes = ((await response.json()) as {
+    data?: {
+      nodes?: ({
+        id: string;
+        __typename: string;
+        image?: {url: string} | null;
+        sources?: {url: string}[] | null;
+      } | null)[];
+    };
+  }).data?.nodes ?? [];
+
+  const out: ResolvedMedia[] = [];
+  for (const node of nodes) {
+    if (!node) continue;
+    const url = node.image?.url ?? node.sources?.[0]?.url;
+    if (url) {
+      out.push({id: node.id, url, kind: node.__typename === 'Video' ? 'video' : 'image'});
+    }
+  }
+  return out;
+}
+
 // formatted here, because blocks/ holds no currency logic and <Money> is
 // hydrogen's, which the admin app cannot import
 const money = (m?: {amount: string; currencyCode: string}): string | undefined => {

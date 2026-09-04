@@ -1,5 +1,5 @@
 import type {Block, Element, Flex, Group, Layout, Node} from './types';
-import {isGroup} from './types';
+import {isGroup, isMediaRef} from './types';
 
 export type Found = {block: Block; group?: Group; node: Node; index: number};
 
@@ -222,6 +222,17 @@ export function collectionPageSize(layout: Layout): number {
   };
   for (const block of layout.blocks) walk(block.children);
   return most;
+}
+
+// the file gids a layout references. block fills, not children — media is the
+// block's, and the route resolves it the way it resolves every other reference.
+export function mediaIds(layout: Layout): string[] {
+  const out = new Set<string>();
+  for (const block of layout.blocks) {
+    const {media} = block.fill;
+    if (media && isMediaRef(media)) out.add(media.id);
+  }
+  return [...out];
 }
 
 // which menus a layout references. the route resolves these; blocks/ cannot

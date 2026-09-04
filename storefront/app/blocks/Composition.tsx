@@ -3,6 +3,7 @@ import {Block, Grid, deriveAll} from '@unigrid/blocks';
 import type {
   CollectionData,
   Collections,
+  MediaUrls,
   Menus,
   ProductData,
   Products,
@@ -23,6 +24,7 @@ function Region({
   products,
   collection,
   collections,
+  media,
 }: {
   layout: Layout;
   palette: Palette;
@@ -31,6 +33,7 @@ function Region({
   products?: Products;
   collection?: CollectionData;
   collections?: Collections;
+  media?: MediaUrls;
 }) {
   const at = deriveAll(layout);
   return (
@@ -44,6 +47,7 @@ function Region({
       products={products}
       collection={collection}
       collections={collections}
+      media={media}
     >
       {layout.blocks.map((block) => {
         const placement = at.get(block.id);
@@ -65,6 +69,7 @@ export function Composition({
   products,
   collection,
   collections,
+  media,
   children,
 }: {
   header: Layout | null;
@@ -78,6 +83,7 @@ export function Composition({
   // the collection this route is browsing, if it browses one, and any pinned
   collection?: CollectionData;
   collections?: Collections;
+  media?: MediaUrls;
   // what to render in place of the body when there is no layout for it
   children?: ReactNode;
 }) {
@@ -96,6 +102,7 @@ export function Composition({
             products={products}
             collection={collection}
             collections={collections}
+            media={media}
           />
         ) : null}
         {body ? (
@@ -107,6 +114,7 @@ export function Composition({
             products={products}
             collection={collection}
             collections={collections}
+            media={media}
           />
         ) : (
           children
@@ -120,6 +128,7 @@ export function Composition({
             products={products}
             collection={collection}
             collections={collections}
+            media={media}
           />
         ) : null}
       </div>

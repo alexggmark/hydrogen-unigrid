@@ -3,6 +3,7 @@ import {
   SLOTS,
   collectionCounts,
   decode,
+  mediaIds,
   menuHandles,
   productHandles,
   type Layout,
@@ -12,6 +13,7 @@ import {
   menuPath,
   type CollectionData,
   type Collections,
+  type MediaUrls,
   type MenuLink,
   type Menus,
   type ProductData,
@@ -108,6 +110,9 @@ export type Composition = {
   // to resolve — it is already here.
   products: Products;
   collections: Collections;
+  // gid to url. the layout holds the reference, never the cdn path, which would
+  // go stale the moment the file is replaced in the admin.
+  media: MediaUrls;
 };
 
 export const MENU_QUERY = `#graphql
@@ -284,6 +289,41 @@ async function loadCollections(
   return out;
 }
 
+export const MEDIA_QUERY = `#graphql
+  query UnigridMedia($ids: [ID!]!) {
+    nodes(ids: $ids) {
+      id
+      ... on MediaImage { image { url } }
+      ... on Video { sources { url } }
+    }
+  }
+` as const;
+
+// one query for every file a layout references. the storefront api resolves a
+// bare file gid, so nothing has to be denormalised into the layout to render it.
+export async function loadMedia(
+  storefront: Queryable,
+  layouts: (Layout | null)[],
+): Promise<MediaUrls> {
+  const ids = [...new Set(layouts.flatMap((l) => (l ? mediaIds(l) : [])))];
+  if (!ids.length) return {};
+
+  const data = await storefront.query<{
+    nodes?: ({
+      id: string;
+      image?: {url: string} | null;
+      sources?: {url: string}[] | null;
+    } | null)[];
+  }>(MEDIA_QUERY, {variables: {ids}});
+
+  const out: MediaUrls = {};
+  for (const node of data?.nodes ?? []) {
+    const url = node?.image?.url ?? node?.sources?.[0]?.url;
+    if (node && url) out[node.id] = url;
+  }
+  return out;
+}
+
 const layoutFrom = (
   region: {fields: Fields} | null | undefined,
   which: 'draft' | 'published',
@@ -311,10 +351,11 @@ export async function loadComposition(
   const footer = layoutFrom(data?.footer, which);
 
   const regions = [header, body, footer];
-  const [menus, products, collections] = await Promise.all([
+  const [menus, products, collections, media] = await Promise.all([
     loadMenus(storefront, regions, domains),
     loadProducts(storefront, regions),
     loadCollections(storefront, regions),
+    loadMedia(storefront, regions),
   ]);
 
   return {
@@ -325,6 +366,7 @@ export async function loadComposition(
     menus,
     products,
     collections,
+    media,
   };
 }
 

@@ -7,7 +7,7 @@ import {
   fitCount,
   fitNarrow,
 } from './types';
-import {isSlot, SLOTS} from './types';
+import {isMediaRef, isSlot, SLOTS} from './types';
 import type {
   Block,
   Colour,
@@ -19,7 +19,7 @@ import type {
   Group,
   HeadingLevel,
   Layout,
-  Media,
+  MediaKind,
   Slot,
   CollectionRef,
   Columns,
@@ -36,7 +36,7 @@ import type {
 //   block   = {i, a:cell, b?:cell, c?:cell, f?:fill, x?:flex, n?:1, k?:[node]}
 //   cell    = [col, row] | [col, row, colSpan] | [col, row, colSpan, rowSpan]
 //   node    = {i, k:'h'|'t'|'x'|'b'|'m'|'p'|'c'|'g', ...}
-//   fill    = {c?:hex, m?:[kind, src], o?:[hex, opacity]}
+//   fill    = {c?:hex, m?:[kind, url | gid], o?:[hex, opacity]}
 
 const encodeCell = (c: Cell): number[] =>
   c.rowSpan !== 1
@@ -102,7 +102,13 @@ function decodeColour(w: unknown): Colour | undefined {
 function encodeFill(f: Fill): Obj | undefined {
   const out: Obj = {};
   if (f.color) out.c = encodeColour(f.color);
-  if (f.media) out.m = [f.media.kind === 'video' ? 'v' : 'i', f.media.src];
+  // the gid goes in the same slot as the url and is told apart by its scheme,
+  // so an old layout and a new one are the same two-element shape
+  if (f.media)
+    out.m = [
+      f.media.kind === 'video' ? 'v' : 'i',
+      isMediaRef(f.media) ? f.media.id : f.media.src,
+    ];
   if (f.overlay) out.o = [encodeColour(f.overlay.color), f.overlay.opacity];
   return Object.keys(out).length ? out : undefined;
 }
@@ -114,8 +120,11 @@ function decodeFill(w: unknown): Fill {
   const color = decodeColour(o.c);
   if (color) out.color = color;
   if (Array.isArray(o.m) && o.m.length === 2) {
-    const src = str(o.m[1]);
-    if (src) out.media = {kind: o.m[0] === 'v' ? 'video' : 'image', src} as Media;
+    const value = str(o.m[1]);
+    const kind: MediaKind = o.m[0] === 'v' ? 'video' : 'image';
+    if (value) {
+      out.media = value.startsWith('gid://') ? {kind, id: value} : {kind, src: value};
+    }
   }
   if (Array.isArray(o.o) && o.o.length === 2) {
     const color2 = decodeColour(o.o[0]);

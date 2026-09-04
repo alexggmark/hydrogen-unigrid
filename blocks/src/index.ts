@@ -5,6 +5,7 @@ export {Block, type BlockProps} from './Block';
 export {Nodes, flexVars, paint, paletteVars, textAlign} from './elements';
 export {Grid} from './Grid';
 export {LinkRenderer, useLinkRender, type LinkProps, type LinkRender} from './link';
+export {MediaSource, useMediaSrc, type MediaUrls} from './media';
 export {MenuSource, menuPath, useMenu, type MenuLink, type Menus} from './menu';
 export {ImageRenderer, useImageRender, type ImageProps, type ImageRender} from './image';
 export {

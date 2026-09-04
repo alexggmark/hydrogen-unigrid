@@ -2,6 +2,7 @@ import type {CSSProperties, ReactNode} from 'react';
 import type {Block as BlockModel} from '@unigrid/core';
 import {placementVars, type Placement} from './placement';
 import {flexVars, Nodes, paint} from './elements';
+import {useMediaSrc} from './media';
 
 export type BlockProps = {
   block: BlockModel;
@@ -14,6 +15,7 @@ export type BlockProps = {
 
 export function Block({block, at, blockId, selected, chrome}: BlockProps) {
   const {fill} = block;
+  const mediaSrc = useMediaSrc(fill.media);
   const style = {
     ...placementVars(at),
     ...(fill.color ? {'--fill': paint(fill.color)} : {}),
@@ -27,18 +29,18 @@ export function Block({block, at, blockId, selected, chrome}: BlockProps) {
       data-selected={selected ? '' : undefined}
       data-invert={block.invert ? '' : undefined}
     >
-      {fill.media ? (
+      {fill.media && mediaSrc ? (
         fill.media.kind === 'video' ? (
           <video
             className="u-bg"
-            src={fill.media.src}
+            src={mediaSrc}
             autoPlay
             muted
             loop
             playsInline
           />
         ) : (
-          <img className="u-bg" src={fill.media.src} alt="" />
+          <img className="u-bg" src={mediaSrc} alt="" />
         )
       ) : null}
       {fill.overlay ? (
