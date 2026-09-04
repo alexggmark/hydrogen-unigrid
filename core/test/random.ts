@@ -1,5 +1,6 @@
 import {COLUMNS, type Band} from '../src/bands';
 import {
+  divisorsOf,
   emptyBlock,
   type Block,
   type Cell,
@@ -99,11 +100,15 @@ export function element(
     };
   }
   const columns = int(r, 1, 6) as 1 | 2 | 3 | 4 | 5 | 6;
+  const legal = divisorsOf(columns);
   return {
     id,
     kind: 'collection',
     source: r() < 0.5 ? 'context' : {handle: `c-${int(r, 0, 99)}`},
     columns,
+    // a divisor, for the same reason the count is a whole number of rows: the
+    // model is never allowed to hold a grid that ragged one of its bands
+    narrow: legal[int(r, 0, legal.length - 1)]!,
     // only ever generated as a whole number of rows, because that is the only
     // state the model is allowed to hold
     count: columns * int(r, 1, 8),

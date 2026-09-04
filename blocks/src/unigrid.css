@@ -347,6 +347,23 @@
   grid-template-columns: repeat(var(--cols-in, 3), minmax(0, 1fr));
   gap: calc(var(--u) * 1.5) calc(var(--u) * 1);
 }
+
+/* band c gets its own column count: four cards across a phone are unreadable
+   however wide the block is. the same rule twice, once for the real width and
+   once for the editor's forced band, exactly as the menu's collapse does — a
+   container query carries no specificity, so the forced band has to say it. */
+@container grid (width < 36rem) {
+  .u-repeat-grid {
+    grid-template-columns: repeat(var(--cols-c, var(--cols-in, 3)), minmax(0, 1fr));
+  }
+}
+[data-band='a'] .u-repeat-grid,
+[data-band='b'] .u-repeat-grid {
+  grid-template-columns: repeat(var(--cols-in, 3), minmax(0, 1fr));
+}
+[data-band='c'] .u-repeat-grid {
+  grid-template-columns: repeat(var(--cols-c, var(--cols-in, 3)), minmax(0, 1fr));
+}
 .u-card {
   display: flex;
   flex-direction: column;

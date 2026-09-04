@@ -39,7 +39,11 @@ const preview = (node: Node): string => {
   }
   if (node.kind === 'collection') {
     const which = node.source === 'context' ? 'on this page' : node.source.handle;
-    return `${node.count} in ${node.columns} — ${which}`;
+    const grid =
+      node.narrow === node.columns
+        ? `${node.columns}`
+        : `${node.columns}/${node.narrow}`;
+    return `${node.count} in ${grid} — ${which}`;
   }
   return node.value;
 };

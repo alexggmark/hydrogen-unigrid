@@ -119,6 +119,7 @@ const NEW_NODE: Record<AddKey, (id: string) => Node> = {
     kind: 'collection',
     source: 'context',
     columns: DEFAULT_COLUMNS,
+    narrow: DEFAULT_COLUMNS,
     count: DEFAULT_COUNT,
   }),
   group: (id) => ({

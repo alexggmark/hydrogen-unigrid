@@ -5,6 +5,7 @@ import {
   productHandles,
 } from '../src/content';
 import {decode, encode} from '../src/serialise';
+import {COLUMN_CHOICES, divisorsOf, fitCount} from '../src/types';
 import {
   emptyBlock,
   emptyLayout,
@@ -208,6 +209,7 @@ describe('collection repeater', () => {
             kind: 'collection' as const,
             source: 'context' as const,
             columns: 3 as const,
+            narrow: 3 as const,
             count: 12,
             ...patch,
           },
@@ -235,6 +237,32 @@ describe('collection repeater', () => {
     wire.b[0].k[0].q = 13;
     const node = decode(JSON.stringify(wire))?.blocks[0]?.children[0];
     expect(node && node.kind === 'collection' && node.count).toBe(12);
+  });
+
+  it('keeps the narrow band off the wire until it differs', () => {
+    const same = JSON.parse(encode(withCollection({})));
+    expect(same.b[0].k[0]).toEqual({i: 'c1', k: 'c'});
+    const differs = JSON.parse(encode(withCollection({narrow: 1})));
+    expect(differs.b[0].k[0]).toEqual({i: 'c1', k: 'c', m: 1});
+  });
+
+  // a narrow count that does not divide the wide one ragged every page in band
+  // c, not just the last, so it is repaired the way the count is
+  it('repairs a narrow band that does not divide the wide one', () => {
+    const wire = JSON.parse(encode(withCollection({columns: 6, narrow: 3, count: 12})));
+    wire.b[0].k[0].m = 4;
+    const node = decode(JSON.stringify(wire))?.blocks[0]?.children[0];
+    expect(node && node.kind === 'collection' && node.narrow).toBe(3);
+  });
+
+  it('renders whole rows in both bands, for every legal pair', () => {
+    for (const columns of COLUMN_CHOICES) {
+      for (const narrow of divisorsOf(columns)) {
+        const count = fitCount(13, columns);
+        expect(count % columns).toBe(0);
+        expect(count % narrow).toBe(0);
+      }
+    }
   });
 
   it('counts pinned collections and sizes the page from contextual ones', () => {

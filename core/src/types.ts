@@ -19,6 +19,7 @@ export type ProductView = 'media' | 'details';
 
 export const COLUMNS_MAX = 6;
 export type Columns = 1 | 2 | 3 | 4 | 5 | 6;
+export const COLUMN_CHOICES: Columns[] = [1, 2, 3, 4, 5, 6];
 
 // 'context' is whatever product the route is rendering, so one template serves
 // the whole catalogue. a handle pins one product, for a feature elsewhere.
@@ -37,6 +38,17 @@ export const ROWS_MAX = 20;
 export const fitCount = (count: number, columns: number): number => {
   const rows = Math.round(count / columns);
   return Math.min(ROWS_MAX, Math.max(1, rows)) * columns;
+};
+
+// the narrow band's columns have to divide the wide band's, or a count that is
+// a whole number of rows in one is ragged in the other. picking from divisors
+// is what keeps one count correct in every band.
+export const divisorsOf = (columns: number): Columns[] =>
+  COLUMN_CHOICES.filter((c) => columns % c === 0);
+
+export const fitNarrow = (narrow: number, columns: number): Columns => {
+  const legal = divisorsOf(columns).filter((c) => c <= narrow);
+  return legal.at(-1) ?? 1;
 };
 
 export type Element =
@@ -59,12 +71,15 @@ export type Element =
   | {id: string; kind: 'product'; view: ProductView; source: ProductRef}
   // a repeater with fixed internals: the merchant sizes the block and chooses
   // the grid, the card inside is code. count stays a multiple of columns, so
-  // only the last page can have a short row.
+  // only the last page can have a short row. narrow is band c's column count,
+  // the one place a composition is authored twice — four across is unreadable
+  // on a phone whatever the block is doing.
   | {
       id: string;
       kind: 'collection';
       source: CollectionRef;
       columns: Columns;
+      narrow: Columns;
       count: number;
     };
 

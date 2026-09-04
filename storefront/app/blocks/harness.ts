@@ -171,6 +171,8 @@ export const HARNESS: Layout = {
             kind: 'collection',
             source: 'context',
             columns: 4,
+            // two across on a phone, so the demo shows the band split
+            narrow: 2,
             count: 8,
           },
         ],

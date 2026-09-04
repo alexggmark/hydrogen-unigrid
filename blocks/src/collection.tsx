@@ -78,10 +78,13 @@ const placeholders = (n: number) => new Array<null>(n).fill(null);
 export function CollectionGrid({
   collection,
   columns,
+  narrow,
   count,
 }: {
   collection?: CollectionData;
   columns: Columns;
+  // band c's grid. the same count either way, because narrow divides columns
+  narrow: Columns;
   count: number;
 }) {
   const Link = useLinkRender();
@@ -89,7 +92,10 @@ export function CollectionGrid({
   const cards = products.length ? products : placeholders(count);
 
   return (
-    <div className="u-repeat" style={{'--cols-in': columns} as CSSProperties}>
+    <div
+      className="u-repeat"
+      style={{'--cols-in': columns, '--cols-c': narrow} as CSSProperties}
+    >
       <div className="u-repeat-grid">
         {cards.map((product, i) => (
           <Card key={product ? product.handle : i} product={product ?? undefined} />

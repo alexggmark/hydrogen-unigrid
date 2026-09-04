@@ -1,5 +1,12 @@
 import {BANDS, type Band} from './bands';
-import {DEFAULT_COLUMNS, DEFAULT_COUNT, DEFAULT_FLEX, fitCount} from './types';
+import {
+  COLUMN_CHOICES,
+  DEFAULT_COLUMNS,
+  DEFAULT_COUNT,
+  DEFAULT_FLEX,
+  fitCount,
+  fitNarrow,
+} from './types';
 import {isSlot, SLOTS} from './types';
 import type {
   Block,
@@ -167,13 +174,15 @@ function encodeNode(n: Node): Obj {
         k: 'c',
         ...(n.source !== 'context' ? {v: n.source.handle} : {}),
         ...(n.columns !== DEFAULT_COLUMNS ? {n: n.columns} : {}),
+        // absent means the narrow band keeps the same grid, which is what an
+        // element that has never been touched on mobile should do
+        ...(n.narrow !== n.columns ? {m: n.narrow} : {}),
         ...(n.count !== DEFAULT_COUNT ? {q: n.count} : {}),
       };
   }
 }
 
 const LEVELS: HeadingLevel[] = [1, 2, 3, 4, 5];
-const COLUMN_CHOICES: Columns[] = [1, 2, 3, 4, 5, 6];
 
 function decodeNode(w: unknown): Node | undefined {
   const o = obj(w);
@@ -229,7 +238,20 @@ function decodeNode(w: unknown): Node | undefined {
       // a count that is not a multiple of columns would ragged the last row of
       // every page, so it is repaired on the way in rather than trusted
       const raw = Number.isInteger(o.q) ? (o.q as number) : DEFAULT_COUNT;
-      return {id, kind: 'collection', source, columns, count: fitCount(raw, columns)};
+      // and a narrow count that does not divide the wide one is repaired for
+      // the same reason: the page has to be whole rows in every band
+      const narrow = fitNarrow(
+        Number.isInteger(o.m) ? (o.m as number) : columns,
+        columns,
+      );
+      return {
+        id,
+        kind: 'collection',
+        source,
+        columns,
+        narrow,
+        count: fitCount(raw, columns),
+      };
     }
     default:
       return undefined;

@@ -19,7 +19,9 @@ import {
 } from '@radix-ui/themes';
 import {
   BANDS,
+  divisorsOf,
   fitCount,
+  fitNarrow,
   isSlot,
   SLOTS,
   isGroup,
@@ -454,10 +456,23 @@ function Inspector({found, props}: {found: Found; props: RailProps}) {
           onPick={(c) => {
             const columns = Number(c) as Columns;
             // the count is a whole number of rows, so a new grid re-fits it
-            // rather than leaving every page ragged
-            patch({columns, count: fitCount(node.count, columns)});
+            // rather than leaving every page ragged. the narrow band goes with
+            // it: it has to keep dividing the wide one.
+            patch({
+              columns,
+              narrow: fitNarrow(node.narrow, columns),
+              count: fitCount(node.count, columns),
+            });
           }}
         />
+        {divisorsOf(node.columns).length > 1 ? (
+          <Segment
+            label="Columns on mobile"
+            value={String(node.narrow)}
+            options={divisorsOf(node.columns).map(String)}
+            onPick={(c) => patch({narrow: Number(c) as Columns})}
+          />
+        ) : null}
         <Field label="Rows per page">
           <Select.Root
             size="1"

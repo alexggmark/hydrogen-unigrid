@@ -121,6 +121,7 @@ function Collection({node}: {node: Extract<Element, {kind: 'collection'}>}) {
     <CollectionGrid
       collection={collection}
       columns={node.columns}
+      narrow={node.narrow}
       count={node.count}
     />
   );
