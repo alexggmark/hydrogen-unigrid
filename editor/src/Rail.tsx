@@ -1012,7 +1012,11 @@ const METRIC_GROUPS: {title: string; note?: string; keys: (keyof Metrics)[]}[] =
       'pagePadYNarrow',
     ],
     },
-    {title: 'Gutter', keys: ['gutter']},
+    {
+    title: 'Gutter',
+    note: 'A unit is a share of the grid, so the desktop value lands much tighter on a phone.',
+    keys: ['gutter', 'gutterNarrow'],
+  },
     {
       title: 'Block padding',
       note: 'A unit is 1% of the grid, so a phone needs its own value where a desktop does not.',
@@ -1033,6 +1037,7 @@ const METRIC_LABEL: Record<keyof Metrics, string> = {
   pagePadY: 'Top and bottom space',
   pagePadYNarrow: 'Top and bottom space, mobile',
   gutter: 'Between blocks',
+  gutterNarrow: 'Between blocks, mobile',
   blockPadX: 'Horizontal',
   blockPadY: 'Vertical',
   blockPadXNarrow: 'Horizontal, mobile',

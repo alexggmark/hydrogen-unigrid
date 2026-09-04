@@ -53,6 +53,7 @@ export const metricVars = (metrics?: Metrics): Record<string, string> => {
     '--pad-u': String(m.pagePadY),
     '--pad-narrow-u': String(m.pagePadYNarrow),
     '--gutter-u': String(m.gutter),
+    '--gutter-narrow-u': String(m.gutterNarrow),
     '--block-pad-x-u': String(m.blockPadX),
     '--block-pad-y-u': String(m.blockPadY),
     '--block-pad-x-c-u': String(m.blockPadXNarrow),

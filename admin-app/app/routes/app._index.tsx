@@ -254,7 +254,13 @@ export default function Index() {
     const {media: resolved} = (await found.json()) as {
       media: {id: string; url: string; kind: 'image' | 'video'}[];
     };
-    return resolved[0] ?? null;
+    if (!resolved[0]) {
+      shopify.toast.show('That file is still processing — try again shortly.', {
+        isError: true,
+      });
+      return null;
+    }
+    return resolved[0];
   }, []);
 
   const onPublish = useCallback(

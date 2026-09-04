@@ -38,7 +38,7 @@ describe('theme metrics', () => {
   });
 
   it('roundtrips through what gets written to the store', () => {
-    const theme = {...DEFAULT_METRICS, blockRadius: 2, gutter: 0.4};
+    const theme = {...DEFAULT_METRICS, blockRadius: 2, gutterNarrow: 0.4};
     expect(metricsFrom(JSON.parse(JSON.stringify(metricsDiff(theme))))).toEqual(
       theme,
     );

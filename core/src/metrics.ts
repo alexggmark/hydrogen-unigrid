@@ -20,6 +20,10 @@ export type Metrics = {
   pagePadYNarrow: number;
 
   gutter: number;
+  // a --u multiple is a proportion, so one value that reads as 22px on a desktop
+  // lands at 5px on a phone. this holds about a third of the desktop gutter,
+  // which is a gap without being a gutter of its own.
+  gutterNarrow: number;
 
   blockPadX: number;
   blockPadY: number;
@@ -46,6 +50,7 @@ export const DEFAULT_METRICS: Metrics = {
   pagePadY: 2,
   pagePadYNarrow: 4,
   gutter: 1.5,
+  gutterNarrow: 2,
   blockPadX: 1,
   blockPadY: 1,
   blockPadXNarrow: 1,
@@ -66,6 +71,7 @@ export const METRIC_RANGE: Record<keyof Metrics, [number, number, number]> = {
   pagePadY: [0, 10, 0.25],
   pagePadYNarrow: [0, 10, 0.25],
   gutter: [0, 4, 0.1],
+  gutterNarrow: [0, 8, 0.1],
   blockPadX: [0, 6, 0.2],
   blockPadY: [0, 6, 0.2],
   blockPadXNarrow: [0, 6, 0.2],

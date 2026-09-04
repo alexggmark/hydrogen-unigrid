@@ -61,6 +61,7 @@
 @container page (width < 40rem) {
   .u-stack {
     padding-block: calc(var(--u-page) * var(--pad-narrow-u, var(--pad-u, 2)));
+    gap: calc(var(--u-page) * var(--gutter-narrow-u, 2));
   }
 }
 
@@ -92,7 +93,12 @@
 @container grid (width < 36rem) {
   .u-grid {
     --cols: 4;
-    --f: 2.6;
+    /* 2.9 rather than 2.6: body type was 10.7px on a phone. it is now ~12px,
+     still under the 14px the dev overlay wants — meeting that took 3.4 and
+     read as a large-print edition. the durable fix is the rem floor deferred
+     in the spec, not a bigger multiplier. */
+  --f: 2.9;
+  --gutter-u: var(--gutter-narrow-u, 2);
   }
 }
 
@@ -768,7 +774,8 @@ button.u-btn[data-variant='outline']:not(:disabled):hover {
 }
 [data-band='c'] .u-grid {
   --cols: 4;
-  --f: 2.6;
+  --f: 2.9;
+  --gutter-u: var(--gutter-narrow-u, 2);
 }
 
 [data-band='a'] .u-block {

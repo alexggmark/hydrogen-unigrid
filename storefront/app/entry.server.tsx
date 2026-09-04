@@ -22,6 +22,14 @@ export default async function handleRequest(
     // the theme's serif is a google font, loaded only when a theme asks for it
     styleSrc: ['https://fonts.googleapis.com'],
     fontSrc: ["'self'", 'https://cdn.shopify.com', 'https://fonts.gstatic.com'],
+    // shopify serves uploaded images from cdn.shopify.com, which default-src
+    // already allows, but videos from the store domain — and media has no
+    // default of its own, so a video background was refused
+    mediaSrc: [
+      "'self'",
+      'https://cdn.shopify.com',
+      `https://${context.env.PUBLIC_STORE_DOMAIN}`,
+    ],
   });
 
   const body = await renderToReadableStream(

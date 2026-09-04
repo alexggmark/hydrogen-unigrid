@@ -421,7 +421,7 @@ const MEDIA = `#graphql
       id
       __typename
       ... on MediaImage { image { url } }
-      ... on Video { sources { url } }
+        ... on Video { sources { url height } }
     }
   }
 `;
@@ -442,15 +442,18 @@ export async function resolveMedia(
         id: string;
         __typename: string;
         image?: {url: string} | null;
-        sources?: {url: string}[] | null;
+        sources?: {url: string; height?: number}[] | null;
       } | null)[];
     };
   }).data?.nodes ?? [];
 
+  const best = (sources: {url: string; height?: number}[]) =>
+    [...sources].sort((a, b) => (b.height ?? 0) - (a.height ?? 0))[0]?.url;
+
   const out: ResolvedMedia[] = [];
   for (const node of nodes) {
     if (!node) continue;
-    const url = node.image?.url ?? node.sources?.[0]?.url;
+    const url = node.image?.url ?? best(node.sources ?? []);
     if (url) {
       out.push({id: node.id, url, kind: node.__typename === 'Video' ? 'video' : 'image'});
     }
