@@ -183,7 +183,7 @@ export const HARNESS: Layout = {
       {
         a: {col: 1, colSpan: 12, row: 10, rowSpan: 10},
         b: {col: 1, colSpan: 8, row: 14, rowSpan: 7},
-        c: {col: 1, colSpan: 4, row: 21, rowSpan: 4},
+        c: {col: 1, colSpan: 4, row: 21, rowSpan: 13},
       },
       {
         children: [
