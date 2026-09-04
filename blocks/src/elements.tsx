@@ -141,7 +141,7 @@ function Menu({node}: {node: Extract<Element, {kind: 'menu'}>}) {
 function Product({node}: {node: Extract<Element, {kind: 'product'}>}) {
   const product = useProduct(node.source);
   return node.view === 'details' ? (
-    <ProductDetails product={product} />
+    <ProductDetails product={product} variant={node.variant} />
   ) : (
     <ProductMedia product={product} />
   );
@@ -155,6 +155,7 @@ function Collection({node}: {node: Extract<Element, {kind: 'collection'}>}) {
       columns={node.columns}
       narrow={node.narrow}
       count={node.count}
+      variant={node.variant}
     />
   );
 }

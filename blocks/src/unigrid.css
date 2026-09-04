@@ -213,19 +213,210 @@
   text-transform: uppercase;
   letter-spacing: 0.14em;
   font-weight: 700;
-  padding: calc(var(--u) * var(--btn-pad-y-u, 0.7))
-    calc(var(--u) * var(--btn-pad-x-u, 1.4));
+  padding: calc(var(--u) * var(--btn-pad-y-u, 0.7) * var(--f, 1))
+    calc(var(--u) * var(--btn-pad-x-u, 1.4) * var(--f, 1));
   border: 1px solid var(--ink);
-  border-radius: calc(var(--u) * var(--btn-radius-u, 0));
+  border-radius: calc(var(--u) * var(--btn-radius-u, 0) * var(--f, 1));
 }
 .u-btn[data-variant='primary'] {
   background: var(--ink);
   color: var(--paper);
 }
-.u-btn[data-variant='secondary'] {
+.u-btn[data-variant='outline'] {
   background: transparent;
   color: var(--ink);
 }
+a.u-btn,
+button.u-btn:not(:disabled) {
+  cursor: pointer;
+}
+.u-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* hover only where something happens: a button with no href renders as a span
+   and is a label, not a link. glass has its own. no transition, so the state is
+   where the pointer is rather than catching up with it. */
+a.u-btn[data-variant='primary']:hover,
+button.u-btn[data-variant='primary']:not(:disabled):hover {
+  opacity: 0.9;
+}
+a.u-btn[data-variant='outline']:hover,
+button.u-btn[data-variant='outline']:not(:disabled):hover {
+  opacity: 0.7;
+}
+
+/* glass. the tint is white at both ends: a sheen reads as light whatever it
+   sits on, which is what lets one variant work over any fill without the block
+   changing colour. only the text follows the scheme, and --ink is already the
+   block's own text colour, so inverting a block inverts the label and nothing
+   else.
+
+   the detail is in em rather than --u on purpose: it is relative to the label,
+   which already carries --f, so the border, blur and shadows scale with the
+   button instead of with the page. */
+@property --glass-angle-1 {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: -75deg;
+}
+@property --glass-angle-2 {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: -45deg;
+}
+
+.u-btn[data-variant='glass'] {
+  --glass-tint: 255 255 255;
+  --glass-border-width: clamp(1px, 0.0625em, 4px);
+  --glass-time: 400ms;
+  --glass-ease: cubic-bezier(0.25, 1, 0.5, 1);
+
+  position: relative;
+  isolation: isolate;
+  color: var(--ink);
+  /* the border stays, transparent: glass and outline have to be the same box */
+  border-color: transparent;
+  background: linear-gradient(
+    -75deg,
+    rgb(var(--glass-tint) / 0.05),
+    rgb(var(--glass-tint) / 0.2),
+    rgb(var(--glass-tint) / 0.05)
+  );
+  box-shadow:
+    inset 0 0.125em 0.125em rgb(0 0 0 / 0.05),
+    inset 0 -0.125em 0.125em rgb(var(--glass-tint) / 0.5),
+    inset 0 0 0.1em 0.25em rgb(var(--glass-tint) / 0.2),
+    0 0.25em 0.125em -0.125em rgb(0 0 0 / 0.2);
+  backdrop-filter: blur(clamp(1px, 0.125em, 4px));
+  -webkit-backdrop-filter: blur(clamp(1px, 0.125em, 4px));
+  text-shadow: 0 0.25em 0.05em rgb(0 0 0 / 0.1);
+  transition:
+    transform var(--glass-time) var(--glass-ease),
+    box-shadow var(--glass-time) var(--glass-ease);
+}
+
+/* without a backdrop filter the pane has to carry its own opacity, or it reads
+   as nothing at all */
+@supports not (backdrop-filter: blur(1px)) {
+  .u-btn[data-variant='glass'] {
+    background: linear-gradient(
+      -75deg,
+      rgb(var(--glass-tint) / 0.15),
+      rgb(var(--glass-tint) / 0.35),
+      rgb(var(--glass-tint) / 0.15)
+    );
+  }
+}
+
+/* the rim: a conic gradient masked down to a hairline ring */
+.u-btn[data-variant='glass']::after {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  inset: calc(var(--glass-border-width) / -2);
+  padding: var(--glass-border-width);
+  box-sizing: border-box;
+  border-radius: inherit;
+  background:
+    conic-gradient(
+      from var(--glass-angle-1) at 50% 50%,
+      rgb(0 0 0 / 0.5),
+      rgb(0 0 0 / 0) 5% 40%,
+      rgb(0 0 0 / 0.5) 50%,
+      rgb(0 0 0 / 0) 60% 95%,
+      rgb(0 0 0 / 0.5)
+    ),
+    linear-gradient(
+      180deg,
+      rgb(var(--glass-tint) / 0.5),
+      rgb(var(--glass-tint) / 0.5)
+    );
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  box-shadow: inset 0 0 0 calc(var(--glass-border-width) / 2)
+    rgb(var(--glass-tint) / 0.5);
+  pointer-events: none;
+  transition: --glass-angle-1 500ms ease;
+}
+
+/* the specular sweep */
+.u-btn[data-variant='glass']::before {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  inset: calc(var(--glass-border-width) / 2);
+  border-radius: inherit;
+  background: linear-gradient(
+    var(--glass-angle-2),
+    rgb(var(--glass-tint) / 0) 0%,
+    rgb(var(--glass-tint) / 0.5) 40% 50%,
+    rgb(var(--glass-tint) / 0) 55%
+  );
+  background-size: 200% 200%;
+  background-position: 0% 50%;
+  background-repeat: no-repeat;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  transition:
+    background-position calc(var(--glass-time) * 1.25) var(--glass-ease),
+    --glass-angle-2 calc(var(--glass-time) * 1.25) var(--glass-ease);
+}
+
+.u-btn[data-variant='glass']:hover {
+  transform: scale(0.975);
+  box-shadow:
+    inset 0 0.125em 0.125em rgb(0 0 0 / 0.05),
+    inset 0 -0.125em 0.125em rgb(var(--glass-tint) / 0.5),
+    inset 0 0 0.05em 0.1em rgb(var(--glass-tint) / 0.5),
+    0 0.15em 0.05em -0.1em rgb(0 0 0 / 0.25);
+}
+.u-btn[data-variant='glass']:hover::before {
+  background-position: 25% 50%;
+}
+.u-btn[data-variant='glass']:hover::after {
+  --glass-angle-1: -125deg;
+}
+.u-btn[data-variant='glass']:active::before {
+  --glass-angle-2: -15deg;
+  background-position: 50% 15%;
+}
+.u-btn[data-variant='glass']:active::after {
+  --glass-angle-1: -75deg;
+}
+
+/* a finger has no hover, so the sweep would land on tap and stay */
+@media (hover: none) and (pointer: coarse) {
+  .u-btn[data-variant='glass']::before,
+  .u-btn[data-variant='glass']:active::before {
+    --glass-angle-2: -45deg;
+  }
+  .u-btn[data-variant='glass']::after,
+  .u-btn[data-variant='glass']:hover::after,
+  .u-btn[data-variant='glass']:active::after {
+    --glass-angle-1: -75deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .u-btn[data-variant='glass'],
+  .u-btn[data-variant='glass']::before,
+  .u-btn[data-variant='glass']::after {
+    transition: none;
+  }
+  .u-btn[data-variant='glass']:hover {
+    transform: none;
+  }
+}
+
+/* a button is sized by its label, so it takes the type scale rather than the
+   raw unit. at 1u the padding shrinks four times faster than the text it wraps,
+   and the box closes in on the words as the screen narrows — scaling padding and
+   radius by --f keeps the same button at every band, magnified. */
 
 /* the menu lays out its own links; its box is a grid cell like any other. the
    toggle expands the list inside the block, so a collapsed menu that opens past

@@ -1,5 +1,6 @@
 import {COLUMNS, type Band} from '../src/bands';
 import {
+  BUTTON_VARIANTS,
   divisorsOf,
   emptyBlock,
   type Block,
@@ -79,7 +80,8 @@ export function element(
     return {
       id,
       kind: 'button',
-      variant: r() < 0.5 ? 'primary' : 'secondary',
+      // every variant, so the wire has to carry each of them
+      variant: BUTTON_VARIANTS[int(r, 0, BUTTON_VARIANTS.length - 1)]!,
       label: s,
       href: r() < 0.5 ? `/x/${int(r, 0, 99)}` : '',
     };
@@ -105,6 +107,7 @@ export function element(
       kind: 'product',
       view: r() < 0.5 ? 'media' : 'details',
       source: r() < 0.5 ? 'context' : {handle: `p-${int(r, 0, 99)}`},
+      variant: BUTTON_VARIANTS[int(r, 0, BUTTON_VARIANTS.length - 1)]!,
     };
   }
   const columns = int(r, 1, 6) as 1 | 2 | 3 | 4 | 5 | 6;
@@ -120,6 +123,7 @@ export function element(
     // only ever generated as a whole number of rows, because that is the only
     // state the model is allowed to hold
     count: columns * int(r, 1, 8),
+    variant: BUTTON_VARIANTS[int(r, 0, BUTTON_VARIANTS.length - 1)]!,
   };
 }
 

@@ -12,7 +12,7 @@ const browsing = (count: number): Layout => ({
       flex: {direction: 'column', justify: 'start', align: 'start', gap: 1},
       invert: false,
       children: [
-        {id: 'c', kind: 'collection', source: 'context', columns: 4, narrow: 2, count},
+        {id: 'c', kind: 'collection', source: 'context', columns: 4, narrow: 2, count, variant: 'outline'},
       ],
     },
   ],

@@ -127,8 +127,20 @@ const NEW_NODE: Record<AddKey, (id: string) => Node> = {
   menu: (id) => ({id, kind: 'menu', handle: '', direction: 'row', collapse: false}),
   // one kind, two entries in the palette. bound to the route's own product by
   // default, which is what makes a single template serve the catalogue.
-  productMedia: (id) => ({id, kind: 'product', view: 'media', source: 'context'}),
-  productDetails: (id) => ({id, kind: 'product', view: 'details', source: 'context'}),
+  productMedia: (id) => ({
+    id,
+    kind: 'product',
+    view: 'media',
+    source: 'context',
+    variant: 'primary',
+  }),
+  productDetails: (id) => ({
+    id,
+    kind: 'product',
+    view: 'details',
+    source: 'context',
+    variant: 'primary',
+  }),
   // contextual for the same reason: a collection template binds to whatever
   // collection is being browsed
   collection: (id) => ({
@@ -138,6 +150,7 @@ const NEW_NODE: Record<AddKey, (id: string) => Node> = {
     columns: DEFAULT_COLUMNS,
     narrow: DEFAULT_COLUMNS,
     count: DEFAULT_COUNT,
+    variant: 'outline',
   }),
   cart: (id) => ({id, kind: 'cart', label: 'Cart'}),
   account: (id) => ({id, kind: 'account', label: 'Account'}),

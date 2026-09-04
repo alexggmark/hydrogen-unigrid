@@ -41,7 +41,7 @@ const text = (id: string, size: 'lg' | 'sm', value: string): Node => ({
 });
 const button = (
   id: string,
-  variant: 'primary' | 'secondary',
+  variant: 'primary' | 'outline' | 'glass',
   label: string,
 ): Node => ({id, kind: 'button', variant, label, href: '#'});
 
@@ -127,7 +127,8 @@ export const HARNESS: Layout = {
             flex: flex({direction: 'row', gap: 1, align: 'center'}),
             children: [
               {id: 'essay-b1', kind: 'button', variant: 'primary', label: 'Primary', href: '#'},
-              {id: 'essay-b2', kind: 'button', variant: 'secondary', label: 'Secondary', href: '#'},
+              {id: 'essay-b2', kind: 'button', variant: 'outline', label: 'Outline', href: '#'},
+              {id: 'essay-b3', kind: 'button', variant: 'glass', label: 'Glass', href: '#'},
             ],
           },
         ],
@@ -154,6 +155,9 @@ export const HARNESS: Layout = {
         children: [
           hl('tint-h', 5, 'Overlay'),
           text('tint-t', 'sm', 'Colour, then a tint at any opacity.'),
+          // glass over an image on an inverted block: the label follows the
+          // scheme, the pane does not tint the fill underneath it
+          button('tint-b', 'glass', 'Glass'),
         ],
       },
     ),
@@ -195,6 +199,7 @@ export const HARNESS: Layout = {
             // two across on a phone, so the demo shows the band split
             narrow: 2,
             count: 8,
+            variant: 'outline',
           },
         ],
       },

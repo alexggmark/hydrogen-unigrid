@@ -1,5 +1,5 @@
 import {createContext, useContext, type ReactNode} from 'react';
-import type {ProductRef} from '@unigrid/core';
+import type {ButtonVariant, ProductRef} from '@unigrid/core';
 import {useImageRender} from './image';
 import {useShop} from './shop';
 
@@ -84,7 +84,13 @@ export function ProductMedia({product}: {product?: ProductData}) {
   );
 }
 
-export function ProductDetails({product}: {product?: ProductData}) {
+export function ProductDetails({
+  product,
+  variant = 'primary',
+}: {
+  product?: ProductData;
+  variant?: ButtonVariant;
+}) {
   const {onAddToCart, addingToCart} = useShop();
   // dimmed until one is bound, so an unresolved element reads as a placeholder
   const dim = product ? '' : ' u-dim';
@@ -101,7 +107,7 @@ export function ProductDetails({product}: {product?: ProductData}) {
       {buyable ? (
         <button
           className="u-btn"
-          data-variant="primary"
+          data-variant={variant}
           type="button"
           disabled={addingToCart}
           onClick={() => onAddToCart?.(variantId!)}
@@ -109,7 +115,7 @@ export function ProductDetails({product}: {product?: ProductData}) {
           {addingToCart ? 'Adding…' : 'Add to cart'}
         </button>
       ) : (
-        <span className="u-btn" data-variant="primary">
+        <span className="u-btn" data-variant={variant}>
           {soldOut ? 'Sold out' : 'Add to cart'}
         </span>
       )}

@@ -61,7 +61,7 @@ const JUSTIFY = ['start', 'center', 'end', 'between'] as const;
 const ALIGN = ['start', 'center', 'end', 'stretch'] as const;
 const LEVELS = ['1', '2', '3', '4', '5'] as const;
 const SIZES = ['sm', 'lg'] as const;
-const VARIANTS = ['primary', 'secondary'] as const;
+const VARIANTS = ['primary', 'outline', 'glass'] as const;
 const MENU_DIRECTIONS = ['row', 'column'] as const;
 const PRODUCT_VIEWS = ['media', 'details'] as const;
 const COLUMN_CHOICES = ['1', '2', '3', '4', '5', '6'] as const;
@@ -392,6 +392,14 @@ function Inspector({found, props}: {found: Found; props: RailProps}) {
           options={PRODUCT_VIEWS}
           onPick={(view) => patch({view})}
         />
+        {node.view === 'details' ? (
+          <Segment
+            label="Buy button"
+            value={node.variant}
+            options={VARIANTS}
+            onPick={(variant) => patch({variant})}
+          />
+        ) : null}
         <Field label="Product">
           <SegmentedControl.Root
             size="1"
@@ -517,6 +525,12 @@ function Inspector({found, props}: {found: Found; props: RailProps}) {
             onPick={(c) => patch({narrow: Number(c) as Columns})}
           />
         ) : null}
+        <Segment
+          label="Pager buttons"
+          value={node.variant}
+          options={VARIANTS}
+          onPick={(variant) => patch({variant})}
+        />
         <Field label="Rows per page">
           <Select.Root
             size="1"
@@ -856,7 +870,11 @@ const METRIC_GROUPS: {title: string; note?: string; keys: (keyof Metrics)[]}[] =
       keys: ['blockPadX', 'blockPadY', 'blockPadXNarrow', 'blockPadYNarrow'],
     },
     {title: 'Corners', keys: ['blockRadius', 'imageRadius', 'buttonRadius']},
-    {title: 'Buttons', keys: ['buttonPadX', 'buttonPadY']},
+    {
+    title: 'Buttons',
+    note: 'Buttons scale with their own text, so these are the desktop values and narrower bands follow.',
+    keys: ['buttonPadX', 'buttonPadY'],
+  },
   ];
 
 const METRIC_LABEL: Record<keyof Metrics, string> = {

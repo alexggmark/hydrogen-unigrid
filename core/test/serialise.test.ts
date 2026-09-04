@@ -6,7 +6,12 @@ import {
   productHandles,
 } from '../src/content';
 import {decode, encode} from '../src/serialise';
-import {COLUMN_CHOICES, divisorsOf, fitCount} from '../src/types';
+import {
+  BUTTON_VARIANTS,
+  COLUMN_CHOICES,
+  divisorsOf,
+  fitCount,
+} from '../src/types';
 import {
   emptyBlock,
   emptyLayout,
@@ -127,7 +132,7 @@ describe('wire size', () => {
         flex: {direction: 'row', justify: 'between', align: 'center', gap: 2},
         children: [
           {id: `${id}-g${i}-a`, kind: 'text', size: 'sm', value: LOREM},
-          {id: `${id}-g${i}-b`, kind: 'button', variant: 'secondary', label: 'More', href: '/x'},
+          {id: `${id}-g${i}-b`, kind: 'button', variant: 'outline', label: 'More', href: '/x'},
         ],
       };
     });
@@ -175,7 +180,9 @@ describe('product binding', () => {
     blocks: [
       {
         ...emptyBlock('x', {a: {col: 1, colSpan: 4, row: 1, rowSpan: 4}}),
-        children: [{id: 'p1', kind: 'product', view: 'media', source}],
+        children: [
+          {id: 'p1', kind: 'product', view: 'media', source, variant: 'primary'},
+        ],
       },
     ],
   });
@@ -213,6 +220,7 @@ describe('collection repeater', () => {
             columns: 3 as const,
             narrow: 3 as const,
             count: 12,
+            variant: 'outline' as const,
             ...patch,
           },
         ],
@@ -302,6 +310,78 @@ describe('shopper controls', () => {
   it('writes the label and nothing else', () => {
     const wire = JSON.parse(encode(withNode({id: 'n', kind: 'cart', label: 'Bag'})));
     expect(wire.b[0].k[0]).toEqual({i: 'n', k: 'r', v: 'Bag'});
+  });
+});
+
+describe('element buttons', () => {
+  const wire = (node: Node) =>
+    JSON.parse(
+      encode({
+        version: 1,
+        blocks: [
+          {
+            ...emptyBlock('x', {a: {col: 1, colSpan: 4, row: 1, rowSpan: 4}}),
+            children: [node],
+          },
+        ],
+      }),
+    ).b[0].k[0];
+
+  // the default is what each already rendered, so a layout saved before the
+  // control existed decodes to the same page
+  it('costs nothing on the wire at the variant each already had', () => {
+    expect(
+      wire({id: 'n', kind: 'product', view: 'details', source: 'context', variant: 'primary'}),
+    ).toEqual({i: 'n', k: 'p', w: 'd'});
+    expect(
+      wire({
+        id: 'n',
+        kind: 'collection',
+        source: 'context',
+        columns: 3,
+        narrow: 3,
+        count: 12,
+        variant: 'outline',
+      }),
+    ).toEqual({i: 'n', k: 'c'});
+  });
+
+  it('reads a product and a collection saved before the control existed', () => {
+    const before = JSON.stringify({
+      v: 1,
+      b: [{i: 'x', a: [1, 1], k: [{i: 'n', k: 'p', w: 'd'}]}],
+    });
+    const node = decode(before)?.blocks[0]?.children[0];
+    expect(node && node.kind === 'product' && node.variant).toBe('primary');
+  });
+});
+
+describe('button variants', () => {
+  const withButton = (variant: string): string =>
+    JSON.stringify({
+      v: 1,
+      b: [{i: 'x', a: [1, 1], k: [{i: 'n', k: 'b', v: 'Go', p: variant}]}],
+    });
+
+  const variantOf = (wire: string) => {
+    const node = decode(wire)?.blocks[0]?.children[0];
+    return node && node.kind === 'button' ? node.variant : undefined;
+  };
+
+  it('roundtrips every variant', () => {
+    for (const variant of BUTTON_VARIANTS) {
+      expect(variantOf(withButton(variant))).toBe(variant);
+    }
+  });
+
+  // outline was called secondary until glass arrived, and every layout saved
+  // before the rename still says so
+  it('reads a layout saved before the rename', () => {
+    expect(variantOf(withButton('secondary'))).toBe('outline');
+  });
+
+  it('falls back rather than dropping a variant it cannot read', () => {
+    expect(variantOf(withButton('sparkly'))).toBe('primary');
   });
 });
 

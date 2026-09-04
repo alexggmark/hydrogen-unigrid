@@ -1,5 +1,6 @@
 import {BANDS, type Band} from './bands';
 import {
+  BUTTON_VARIANTS,
   COLUMN_CHOICES,
   DEFAULT_COLUMNS,
   DEFAULT_COUNT,
@@ -176,6 +177,7 @@ function encodeNode(n: Node): Obj {
         k: 'p',
         w: n.view === 'details' ? 'd' : 'm',
         ...(n.source !== 'context' ? {v: n.source.handle} : {}),
+        ...(n.variant !== 'primary' ? {p: n.variant} : {}),
       };
     case 'cart':
       return {i: n.id, k: 'r', v: n.label};
@@ -191,9 +193,20 @@ function encodeNode(n: Node): Obj {
         // element that has never been touched on mobile should do
         ...(n.narrow !== n.columns ? {m: n.narrow} : {}),
         ...(n.count !== DEFAULT_COUNT ? {q: n.count} : {}),
+        ...(n.variant !== 'outline' ? {p: n.variant} : {}),
       };
   }
 }
+
+// 'secondary' is what outline was called before glass existed, and it is still
+// what every layout saved until then holds. an unreadable one falls back rather
+// than dropping the node.
+const readVariant = (raw: unknown, fallback: ButtonVariant): ButtonVariant => {
+  const v = raw === 'secondary' ? 'outline' : raw;
+  return BUTTON_VARIANTS.includes(v as ButtonVariant)
+    ? (v as ButtonVariant)
+    : fallback;
+};
 
 const LEVELS: HeadingLevel[] = [1, 2, 3, 4, 5];
 
@@ -227,7 +240,7 @@ function decodeNode(w: unknown): Node | undefined {
     case 'x':
       return {id, kind: 'richText', size, value};
     case 'b': {
-      const variant: ButtonVariant = o.p === 'secondary' ? 'secondary' : 'primary';
+      const variant = readVariant(o.p, 'primary');
       return {id, kind: 'button', variant, label: value, href: str(o.h) ?? ''};
     }
     case 'm':
@@ -241,7 +254,7 @@ function decodeNode(w: unknown): Node | undefined {
     case 'p': {
       const view: ProductView = o.w === 'd' ? 'details' : 'media';
       const source: ProductRef = value ? {handle: value} : 'context';
-      return {id, kind: 'product', view, source};
+      return {id, kind: 'product', view, source, variant: readVariant(o.p, 'primary')};
     }
     case 'r':
       return {id, kind: 'cart', label: value};
@@ -268,6 +281,7 @@ function decodeNode(w: unknown): Node | undefined {
         columns,
         narrow,
         count: fitCount(raw, columns),
+        variant: readVariant(o.p, 'outline'),
       };
     }
     default:

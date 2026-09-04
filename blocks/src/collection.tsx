@@ -1,5 +1,5 @@
 import {createContext, useContext, type CSSProperties, type ReactNode} from 'react';
-import type {CollectionRef, Columns} from '@unigrid/core';
+import type {ButtonVariant, CollectionRef, Columns} from '@unigrid/core';
 import {useImageRender} from './image';
 import {useLinkRender} from './link';
 import type {ProductData} from './product';
@@ -80,12 +80,14 @@ export function CollectionGrid({
   columns,
   narrow,
   count,
+  variant = 'outline',
 }: {
   collection?: CollectionData;
   columns: Columns;
   // band c's grid. the same count either way, because narrow divides columns
   narrow: Columns;
   count: number;
+  variant?: ButtonVariant;
 }) {
   const Link = useLinkRender();
   const products = collection?.products.slice(0, count) ?? [];
@@ -104,12 +106,12 @@ export function CollectionGrid({
       {collection?.prev || collection?.next ? (
         <div className="u-repeat-pages">
           {collection.prev ? (
-            <Link className="u-btn" href={collection.prev} variant="secondary">
+            <Link className="u-btn" href={collection.prev} variant={variant}>
               Previous
             </Link>
           ) : null}
           {collection.next ? (
-            <Link className="u-btn" href={collection.next} variant="secondary">
+            <Link className="u-btn" href={collection.next} variant={variant}>
               Next
             </Link>
           ) : null}

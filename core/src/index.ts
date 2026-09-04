@@ -39,6 +39,7 @@ export {
   DEFAULT_COLUMNS,
   DEFAULT_COUNT,
   fitCount,
+  BUTTON_VARIANTS,
   type ProductRef,
   type ProductView,
   type TextAlign,

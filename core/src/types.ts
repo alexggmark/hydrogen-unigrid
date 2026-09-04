@@ -12,7 +12,10 @@ export type Placement = {a: Cell} & Partial<Record<Exclude<Band, 'a'>, Cell>>;
 
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5;
 export type TextSize = 'lg' | 'sm';
-export type ButtonVariant = 'primary' | 'secondary';
+// outline was called secondary until the glass variant arrived and made the
+// name describe a rank rather than a shape
+export type ButtonVariant = 'primary' | 'outline' | 'glass';
+export const BUTTON_VARIANTS: ButtonVariant[] = ['primary', 'outline', 'glass'];
 export type MenuDirection = 'row' | 'column';
 
 export type ProductView = 'media' | 'details';
@@ -68,7 +71,14 @@ export type Element =
     }
   // a reference, never the product. geometry is identical to every other
   // element; only the binding differs.
-  | {id: string; kind: 'product'; view: ProductView; source: ProductRef}
+  | {
+      id: string;
+      kind: 'product';
+      view: ProductView;
+      source: ProductRef;
+      // the buy button. every element that renders one lets the merchant pick it.
+      variant: ButtonVariant;
+    }
   // the shopper's own two controls. no reference to resolve: the shell knows the
   // cart count and whether anyone is signed in, and hands both in.
   | {id: string; kind: 'cart'; label: string}
@@ -85,6 +95,8 @@ export type Element =
       columns: Columns;
       narrow: Columns;
       count: number;
+      // the pager's buttons
+      variant: ButtonVariant;
     };
 
 export type ElementKind = Element['kind'];
