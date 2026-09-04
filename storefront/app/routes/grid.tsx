@@ -3,7 +3,7 @@ import {useLoaderData} from 'react-router';
 import type {Route} from './+types/grid';
 import {Block, Grid, deriveAll} from '@unigrid/blocks';
 import {DEV, gridDevLinks} from '~/blocks/grid-dev';
-import {DEMO_COLLECTION, HARNESS} from '~/blocks/harness';
+import {DEMO_COLLECTION, DEMO_MENU_LINKS, HARNESS} from '~/blocks/harness';
 import unigridStyles from '@unigrid/blocks/unigrid.css?url';
 import demoStyles from '~/styles/unigrid-demo.css?url';
 import {loadMedia} from '~/lib/layout';
@@ -31,7 +31,12 @@ export default function GridHarness() {
   return (
     <div className="unigrid-demo u-page">
       <div className="u-stack">
-        <Grid dev={DEV} collection={DEMO_COLLECTION} media={media}>
+        <Grid
+          dev={DEV}
+          collection={DEMO_COLLECTION}
+          media={media}
+          menus={DEMO_MENU_LINKS}
+        >
           {HARNESS.blocks.map((block) => {
             const placement = at.get(block.id);
             if (!placement) return null;

@@ -65,6 +65,13 @@ export const HARNESS: Layout = {
             kind: 'group',
             flex: flex({direction: 'row', justify: 'end', gap: 2}),
             children: [
+              {
+                id: 'masthead-menu',
+                kind: 'menu',
+                handle: 'main-menu',
+                direction: 'row',
+                collapse: true,
+              },
               {id: 'masthead-account', kind: 'account', label: 'Account'},
               {id: 'masthead-cart', kind: 'cart', label: 'Cart'},
             ],
@@ -261,3 +268,7 @@ export const DEMO_COLLECTION = {
   })),
   next: '#',
 };
+
+export const DEMO_MENU_LINKS = Object.fromEntries(
+  DEMO_MENUS.map((m) => [m.handle, m.items]),
+);

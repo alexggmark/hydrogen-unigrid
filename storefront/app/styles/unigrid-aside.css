@@ -263,3 +263,26 @@ html:has(.overlay.expanded) {
 .overlay .cart-summary-aside br {
   display: none;
 }
+
+/* the menu drawer. plain stacked links: the burger opens the same aside the
+   cart uses, so the only thing needed here is room to tap. */
+.overlay .u-drawer-menu {
+  display: flex;
+  flex-direction: column;
+}
+
+.overlay .u-drawer-link {
+  color: inherit;
+  text-decoration: none;
+  padding-block: 0.9rem;
+  border-block-end: 1px solid
+    color-mix(in srgb, var(--aside-ink) 12%, transparent);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.overlay .u-drawer-link:last-child {
+  border-block-end: 0;
+}

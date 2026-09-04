@@ -1,5 +1,7 @@
 import {
   Suspense,
+  createContext,
+  useContext,
   type CSSProperties,
   useCallback,
   useEffect,
@@ -7,7 +9,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import {Await, useFetcher, useRouteLoaderData} from 'react-router';
+import {Await, Link, useFetcher, useRouteLoaderData} from 'react-router';
 import {Analytics, CartForm} from '@shopify/hydrogen';
 import type {RootLoader} from '~/root';
 import {Block, Grid, deriveAll, metricVars} from '@unigrid/blocks';
@@ -94,6 +96,30 @@ function CartDrawer({cart}: {cart: RootData['cart'] | undefined}) {
   );
 }
 
+// the menu element renders a button; the drawer it opens is the shell's, the
+// same split the cart already has. one aside serves whichever menu asked.
+function MenuDrawer({menus, handle}: {menus: Menus; handle: string | null}) {
+  const {close} = useAside();
+  const items = (handle && menus[handle]) || [];
+  return (
+    <Aside type="mobile" heading="Menu">
+      <nav className="u-drawer-menu">
+        {items.map((item) => (
+          <Link
+            key={item.id}
+            className="u-drawer-link"
+            to={item.url}
+            onClick={close}
+            prefetch="intent"
+          >
+            {item.title}
+          </Link>
+        ))}
+      </nav>
+    </Aside>
+  );
+}
+
 type RootData = NonNullable<ReturnType<typeof useRouteLoaderData<RootLoader>>>;
 
 // the cart is a promise and the grid must not wait on it: the count arrives
@@ -114,6 +140,7 @@ function useCartCount(cart: RootData['cart'] | undefined): number {
 
 function useShopState(root: RootData | undefined): ShopState {
   const {open} = useAside();
+  const onOpenMenu = useContext(OpenMenuCtx);
   const cartCount = useCartCount(root?.cart);
   const [loggedIn, setLoggedIn] = useState(false);
   useEffect(() => {
@@ -154,21 +181,24 @@ function useShopState(root: RootData | undefined): ShopState {
       loggedIn,
       onAddToCart,
       addingToCart: fetcher.state !== 'idle',
+      onOpenMenu,
     }),
-    [cartCount, loggedIn, open, onAddToCart, fetcher.state],
+    [cartCount, loggedIn, open, onAddToCart, fetcher.state, onOpenMenu],
   );
 }
 
 // the view events the product and collection routes already render do nothing
 // without this: hydrogen's analytics context has a non-null default, so a
 // missing provider is silent rather than an error.
-function Shell({children}: {children: ReactNode}) {
+function Shell({menus, children}: {menus: Menus; children: ReactNode}) {
   const root = useRouteLoaderData<RootLoader>('root');
+  const [menuHandle, setMenuHandle] = useState<string | null>(null);
 
   const page = (
     <Aside.Provider>
       <CartDrawer cart={root?.cart} />
-      {children}
+      <MenuDrawer menus={menus} handle={menuHandle} />
+      <OpenMenu onHandle={setMenuHandle}>{children}</OpenMenu>
     </Aside.Provider>
   );
 
@@ -182,6 +212,32 @@ function Shell({children}: {children: ReactNode}) {
     </Analytics.Provider>
   ) : (
     page
+  );
+}
+
+// records which menu was asked for and opens the one drawer. it sits below the
+// provider because useAside cannot run above it.
+const OpenMenuCtx = createContext<((handle: string) => void) | undefined>(
+  undefined,
+);
+
+function OpenMenu({
+  onHandle,
+  children,
+}: {
+  onHandle: (handle: string) => void;
+  children: ReactNode;
+}) {
+  const {open} = useAside();
+  const openMenu = useCallback(
+    (handle: string) => {
+      onHandle(handle);
+      open('mobile');
+    },
+    [onHandle, open],
+  );
+  return (
+    <OpenMenuCtx.Provider value={openMenu}>{children}</OpenMenuCtx.Provider>
   );
 }
 
@@ -279,7 +335,7 @@ function Page({
 // cart button has to be able to open a drawer that is above it in the tree.
 export function Composition(props: Parameters<typeof Page>[0]) {
   return (
-    <Shell>
+    <Shell menus={props.menus}>
       <Page {...props} />
     </Shell>
   );

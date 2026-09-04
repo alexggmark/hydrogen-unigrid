@@ -12,6 +12,9 @@ export type ShopState = {
   // takes a variant id because a cart line is a variant, never a product
   onAddToCart?: (variantId: string) => void;
   addingToCart?: boolean;
+  // a collapsed menu opens this rather than expanding in place. absent means
+  // the shell has no drawer, and the toggle falls back to expanding inline.
+  onOpenMenu?: (handle: string) => void;
 };
 
 const Ctx = createContext<ShopState>({});

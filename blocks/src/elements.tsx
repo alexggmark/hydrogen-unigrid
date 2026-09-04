@@ -96,23 +96,30 @@ const HEADINGS = ['h1', 'h2', 'h3', 'h4', 'h5'] as const;
 function Menu({node}: {node: Extract<Element, {kind: 'menu'}>}) {
   const Link = useLinkRender();
   const items = useMenu(node.handle);
+  const {onOpenMenu} = useShop();
   const [open, setOpen] = useState(false);
+  // the drawer belongs to the shell, so this stays a button and never learns
+  // what a portal is. without one, the list still expands in place.
+  const drawer = Boolean(onOpenMenu);
 
   return (
     <nav
       className="u-menu"
       data-collapse={node.collapse ? '' : undefined}
       data-dir={node.direction}
-      data-open={open ? '' : undefined}
+      data-open={open && !drawer ? '' : undefined}
     >
       {node.collapse ? (
         <button
-          aria-expanded={open}
+          aria-expanded={drawer ? undefined : open}
+          aria-haspopup={drawer ? 'dialog' : undefined}
           className="u-menu-toggle"
-          onClick={() => setOpen((v) => !v)}
+          onClick={() =>
+            drawer ? onOpenMenu?.(node.handle) : setOpen((v) => !v)
+          }
           type="button"
         >
-          <span aria-hidden>{open ? '\u2715' : '\u2630'}</span>
+          <span aria-hidden>{open && !drawer ? '\u2715' : '\u2630'}</span>
           <span className="u-sr">Menu</span>
         </button>
       ) : null}
