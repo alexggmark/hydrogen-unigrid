@@ -28,7 +28,6 @@ export {
   type ProductImage,
   type Products,
 } from './product';
-export {GridDev} from './GridDev';
 export {GridProbes} from './GridProbes';
 export {deriveAll, placementVars, type Placement} from './placement';
 export {gridUnits, type Units} from './units';

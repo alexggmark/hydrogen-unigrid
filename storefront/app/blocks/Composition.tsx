@@ -31,7 +31,6 @@ import type {
   ShopState,
 } from '@unigrid/blocks';
 import type {Layout, Metrics, Palette, Settings} from '@unigrid/core';
-import {DEV} from '~/blocks/grid-dev';
 import {StoreImage} from '~/blocks/image';
 import {StoreLink} from '~/blocks/link';
 import {Aside, useAside} from '~/components/Aside';
@@ -68,7 +67,6 @@ function Region({
   const at = deriveAll(layout);
   return (
     <Grid
-      dev={DEV}
       image={StoreImage}
       link={StoreLink}
       menus={menus}

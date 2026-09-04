@@ -6,7 +6,6 @@ import type {CollectionData} from '@unigrid/blocks';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {ProductItem} from '~/components/ProductItem';
 import {Composition} from '~/blocks/Composition';
-import {gridDevLinks} from '~/blocks/grid-dev';
 import {loadComposition, money} from '~/lib/layout';
 import {collectionPageBy, pageHrefs} from '~/lib/paging';
 import type {CollectionItemFragment} from 'storefrontapi.generated';
@@ -18,7 +17,6 @@ export const handle = {bare: true};
 export const links: LinksFunction = () => [
   {rel: 'stylesheet', href: unigridStyles},
   {rel: 'stylesheet', href: demoStyles},
-  ...gridDevLinks(),
 ];
 
 export const meta: Route.MetaFunction = () => {

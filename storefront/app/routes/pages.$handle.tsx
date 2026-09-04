@@ -2,7 +2,6 @@ import type {LinksFunction} from 'react-router';
 import {useLoaderData} from 'react-router';
 import type {Route} from './+types/pages.$handle';
 import {Composition} from '~/blocks/Composition';
-import {gridDevLinks} from '~/blocks/grid-dev';
 import {loadComposition} from '~/lib/layout';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import unigridStyles from '@unigrid/blocks/unigrid.css?url';
@@ -17,7 +16,6 @@ export const handle = {bare: true};
 export const links: LinksFunction = () => [
   {rel: 'stylesheet', href: unigridStyles},
   {rel: 'stylesheet', href: demoStyles},
-  ...gridDevLinks(),
 ];
 
 export const meta: Route.MetaFunction = ({data}) => {

@@ -1,6 +1,5 @@
 import type {CSSProperties, ReactNode} from 'react';
 import {DEFAULT_PALETTE, type Metrics, type Palette} from '@unigrid/core';
-import {GridDev} from './GridDev';
 import {GridProbes} from './GridProbes';
 import {metricVars, paletteVars} from './elements';
 import {
@@ -20,7 +19,6 @@ import {ProductSource, type ProductData, type Products} from './product';
 export function Grid({
   children,
   probes,
-  dev,
   palette = DEFAULT_PALETTE,
   link,
   image,
@@ -37,7 +35,6 @@ export function Grid({
   children?: ReactNode;
   probes?: boolean;
   // the consumer decides, because a shared package cannot know whose build it is in
-  dev?: boolean;
   palette?: Palette;
   // how this surface navigates. absent falls back to a plain anchor.
   link?: LinkRender;
@@ -69,8 +66,7 @@ export function Grid({
       }
     >
       <div className="u-grid">
-        {dev ? <GridDev /> : null}
-        {probes || dev ? <GridProbes /> : null}
+        {probes ? <GridProbes /> : null}
         <LinkRenderer render={link}>
           <ImageRenderer render={image}>
             <MenuSource menus={menus}>

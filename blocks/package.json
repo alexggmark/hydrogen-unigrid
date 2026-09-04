@@ -7,8 +7,7 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./unigrid.css": "./src/unigrid.css",
-    "./dev.css": "./src/dev.css"
+    "./unigrid.css": "./src/unigrid.css"
   },
   "dependencies": {
     "@unigrid/core": "*"

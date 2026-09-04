@@ -191,7 +191,6 @@ export type EditorProps = {
   // shown but inert — clicking one activates it.
   regions?: Region[];
   activeTarget?: string;
-  dev?: boolean;
   // absent means this shell has no code path to a store at all
   // every region with changes, so switching region cannot lose work
   onSave?: (changed: {target: string; layout: Layout}[]) => void;
@@ -240,7 +239,6 @@ export function Editor({
   initial,
   regions,
   activeTarget,
-  dev,
   onSave,
   onPublish,
   busy,
@@ -703,7 +701,6 @@ export function Editor({
                 >
                   {blocks.length && layoutOf ? (
                     <Grid
-                      dev={false}
                       link={InertLink}
                       menus={resolved}
                       product={previewProduct}
@@ -731,7 +728,6 @@ export function Editor({
             >
             <Grid
               probes
-              dev={dev}
               link={InertLink}
               menus={resolved}
               product={previewProduct}

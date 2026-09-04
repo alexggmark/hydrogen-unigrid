@@ -2,7 +2,6 @@ import type {LinksFunction} from 'react-router';
 import {useLoaderData} from 'react-router';
 import type {Route} from './+types/_index';
 import {Composition} from '~/blocks/Composition';
-import {gridDevLinks} from '~/blocks/grid-dev';
 import {loadComposition} from '~/lib/layout';
 import unigridStyles from '@unigrid/blocks/unigrid.css?url';
 import demoStyles from '~/styles/unigrid-demo.css?url';
@@ -14,7 +13,6 @@ export const handle = {bare: true};
 export const links: LinksFunction = () => [
   {rel: 'stylesheet', href: unigridStyles},
   {rel: 'stylesheet', href: demoStyles},
-  ...gridDevLinks(),
 ];
 
 export async function loader({context}: Route.LoaderArgs) {

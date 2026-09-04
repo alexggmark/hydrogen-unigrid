@@ -14,7 +14,6 @@ import {ProductImage} from '~/components/ProductImage';
 import {ProductForm} from '~/components/ProductForm';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {Composition} from '~/blocks/Composition';
-import {gridDevLinks} from '~/blocks/grid-dev';
 import {loadComposition, money} from '~/lib/layout';
 import unigridStyles from '@unigrid/blocks/unigrid.css?url';
 import demoStyles from '~/styles/unigrid-demo.css?url';
@@ -26,7 +25,6 @@ export const handle = {bare: true};
 export const links: LinksFunction = () => [
   {rel: 'stylesheet', href: unigridStyles},
   {rel: 'stylesheet', href: demoStyles},
-  ...gridDevLinks(),
 ];
 
 export const meta: Route.MetaFunction = ({data}) => {

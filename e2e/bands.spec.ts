@@ -14,8 +14,6 @@ test.describe('grid renders the same composition per band', () => {
       await page.setViewportSize({width: band.width, height: 1200});
       await page.goto('/grid');
       await page.waitForLoadState('networkidle');
-      // the dev hud is instrumentation and moves with unrelated changes
-      await page.addStyleTag({content: '.u-hud, .u-overlay {display: none !important}'});
       await expect(page).toHaveScreenshot(`grid-band-${band.name}.png`, {
         fullPage: true,
       });
