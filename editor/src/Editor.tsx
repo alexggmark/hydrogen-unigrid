@@ -101,9 +101,14 @@ type DragData =
   | {kind: 'new'}
   | NodeDrag;
 
+// origin is the pointer's position within the grid when the drag began, so the
+// delta can be taken against the grid's current box rather than the pointer's
+// own transform — the two differ by however far the stage has scrolled.
+type Origin = {x: number; y: number};
+
 type Drag =
-  | {kind: 'move'; block: string; from: Cell}
-  | {kind: 'resize'; block: string; edge: Edge; from: Cell}
+  | {kind: 'move'; block: string; from: Cell; origin: Origin}
+  | {kind: 'resize'; block: string; edge: Edge; from: Cell; origin: Origin}
   | {kind: 'new'};
 
 type Preview = {cell: Cell; ok: boolean; reason?: string};
@@ -514,12 +519,17 @@ export function Editor({
 
     const from = cellOf(data.block);
     if (!from) return;
+    const grid = gridEl();
+    if (!grid) return;
+    const box = grid.getBoundingClientRect();
+    const at = manager.dragOperation.position.current;
+    const origin = {x: at.x - box.left, y: at.y - box.top};
     setSelected(data.block);
     setError(null);
     setDrag(
       data.kind === 'move'
-        ? {kind: 'move', block: data.block, from}
-        : {kind: 'resize', block: data.block, edge: data.edge, from},
+        ? {kind: 'move', block: data.block, from, origin}
+        : {kind: 'resize', block: data.block, edge: data.edge, from, origin},
     );
   };
 
@@ -544,7 +554,16 @@ export function Editor({
       return;
     }
 
-    const {dCol, dRow} = snap(operation.transform.x, operation.transform.y, u);
+    // against the grid's box now, not the pointer's transform: scrolling the
+    // stage moves the grid under a pointer that has not moved, and a transform
+    // cannot see that — the block stopped following the cursor mid-scroll
+    const box = grid.getBoundingClientRect();
+    const at = operation.position.current;
+    const {dCol, dRow} = snap(
+      at.x - box.left - drag.origin.x,
+      at.y - box.top - drag.origin.y,
+      u,
+    );
     const target =
       drag.kind === 'resize'
         ? resized(drag.from, drag.edge, dCol, dRow, u.cols)
