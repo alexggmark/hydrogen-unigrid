@@ -794,6 +794,15 @@ button.u-btn[data-variant='outline']:not(:disabled):hover {
   --gutter-u: var(--gutter-narrow-u, 2);
 }
 
+[data-band='c'] .u-stack,
+[data-band='c'] .u-frame {
+  --margin: calc(var(--margin-narrow-vw, var(--margin-vw, 4)) * 1vw);
+}
+[data-band='c'] .u-stack {
+  padding-block: calc(var(--u-page) * var(--pad-narrow-u, var(--pad-u, 2)));
+  gap: calc(var(--u-page) * var(--gutter-narrow-u, 2));
+}
+
 [data-band='a'] .u-block {
   --c: var(--ca);
   --cs: var(--csa);
@@ -807,6 +816,8 @@ button.u-btn[data-variant='outline']:not(:disabled):hover {
   --rs: var(--rsb, var(--rsa));
 }
 [data-band='c'] .u-block {
+  padding: calc(var(--u) * var(--block-pad-y-c-u, var(--block-pad-y-u, 1)))
+    calc(var(--u) * var(--block-pad-x-c-u, var(--block-pad-x-u, 1)));
   border-radius: calc(
     var(--u) * var(--block-radius-u, 0) * var(--radius-narrow-f, 3)
   );
