@@ -974,7 +974,13 @@ const METRIC_GROUPS: {title: string; note?: string; keys: (keyof Metrics)[]}[] =
     {
       title: 'Page',
       note: 'Margins are a rate, so they already scale — the mobile value is for when proportional is too tight.',
-      keys: ['pageMax', 'pageMargin', 'pageMarginNarrow'],
+      keys: [
+      'pageMax',
+      'pageMargin',
+      'pageMarginNarrow',
+      'pagePadY',
+      'pagePadYNarrow',
+    ],
     },
     {title: 'Gutter', keys: ['gutter']},
     {
@@ -994,6 +1000,8 @@ const METRIC_LABEL: Record<keyof Metrics, string> = {
   pageMax: 'Max width',
   pageMargin: 'Side margin',
   pageMarginNarrow: 'Side margin, mobile',
+  pagePadY: 'Top and bottom space',
+  pagePadYNarrow: 'Top and bottom space, mobile',
   gutter: 'Between blocks',
   blockPadX: 'Horizontal',
   blockPadY: 'Vertical',
@@ -1010,6 +1018,7 @@ const METRIC_LABEL: Record<keyof Metrics, string> = {
 // they are the same number, which is why the sliders can read in rem
 const unitOf = (key: keyof Metrics) => {
   if (key === 'pageMax') return 'rem';
+  if (key === 'pagePadY' || key === 'pagePadYNarrow') return 'u';
   if (key === 'pageMargin' || key === 'pageMarginNarrow') return 'vw';
   return 'u';
 };

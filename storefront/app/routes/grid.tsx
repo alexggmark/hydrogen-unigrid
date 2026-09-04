@@ -6,7 +6,7 @@ import {DEV, gridDevLinks} from '~/blocks/grid-dev';
 import {DEMO_COLLECTION, DEMO_MENU_LINKS, HARNESS} from '~/blocks/harness';
 import unigridStyles from '@unigrid/blocks/unigrid.css?url';
 import demoStyles from '~/styles/unigrid-demo.css?url';
-import {loadLogo, loadMedia} from '~/lib/layout';
+import {loadMedia} from '~/lib/layout';
 
 // read-only reference render. /editor is the same geometry with chrome on top.
 
@@ -20,16 +20,15 @@ export const links: LinksFunction = () => [
 
 // the harness holds file references like a real layout, so the route resolves
 // them the same way loadComposition does
+// deliberately no theme: this is the reference render, and a baseline that
+// moves when a merchant changes their logo is testing the store, not the code.
+// the logo element renders its placeholder here, like any unbound element.
 export async function loader({context}: Route.LoaderArgs) {
-  const [media, logo] = await Promise.all([
-    loadMedia(context.storefront, [HARNESS]),
-    loadLogo(context.storefront),
-  ]);
-  return {media, logo};
+  return {media: await loadMedia(context.storefront, [HARNESS])};
 }
 
 export default function GridHarness() {
-  const {media, logo} = useLoaderData<typeof loader>();
+  const {media} = useLoaderData<typeof loader>();
   const at = deriveAll(HARNESS);
 
   return (
@@ -40,7 +39,6 @@ export default function GridHarness() {
           collection={DEMO_COLLECTION}
           media={media}
           menus={DEMO_MENU_LINKS}
-          logo={logo}
         >
           {HARNESS.blocks.map((block) => {
             const placement = at.get(block.id);

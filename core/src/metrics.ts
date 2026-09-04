@@ -14,6 +14,10 @@ export type Metrics = {
   // the page is a fraction of a phone, so the same rate that reads as generous
   // on a desktop is a few px there
   pageMarginNarrow: number;
+  // the space above and below the whole page, as a share of its width. 4 was a
+  // sensible phone value and nearly 60px on a desktop, so the bands split.
+  pagePadY: number;
+  pagePadYNarrow: number;
 
   gutter: number;
 
@@ -39,6 +43,8 @@ export const DEFAULT_METRICS: Metrics = {
   pageMax: 100,
   pageMargin: 4,
   pageMarginNarrow: 4,
+  pagePadY: 2,
+  pagePadYNarrow: 4,
   gutter: 1.5,
   blockPadX: 1,
   blockPadY: 1,
@@ -57,6 +63,8 @@ export const METRIC_RANGE: Record<keyof Metrics, [number, number, number]> = {
   pageMax: [60, 140, 2],
   pageMargin: [0, 10, 0.25],
   pageMarginNarrow: [0, 10, 0.25],
+  pagePadY: [0, 10, 0.25],
+  pagePadYNarrow: [0, 10, 0.25],
   gutter: [0, 4, 0.1],
   blockPadX: [0, 6, 0.2],
   blockPadY: [0, 6, 0.2],

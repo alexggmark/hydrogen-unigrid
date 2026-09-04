@@ -15,7 +15,10 @@
   --margin: calc(var(--margin-vw, 4) * 1vw);
   --grid-max: 100rem;
   --gutter-u: 1.5;
-  --pad-u: 4;
+  /* a share of the page's width, so it scales — but 4 is a phone value and was
+     nearly 60px on a desktop, which is why the bands hold different ones */
+  --pad-u: 2;
+  --pad-narrow-u: 4;
 }
 
 /* separate elements on purpose: cqw resolves against the ancestor container, so
@@ -50,6 +53,15 @@
   flex-direction: column;
   gap: calc(var(--u-page) * var(--gutter-u));
   padding-block: calc(var(--u-page) * var(--pad-u));
+}
+
+/* after .u-stack, not with the margin override above it: a container query has
+   the specificity of its selector, so an identical one earlier in the file
+   simply loses */
+@container page (width < 40rem) {
+  .u-stack {
+    padding-block: calc(var(--u-page) * var(--pad-narrow-u, var(--pad-u, 2)));
+  }
 }
 
 .u-grid {

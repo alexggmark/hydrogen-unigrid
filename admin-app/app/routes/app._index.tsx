@@ -92,11 +92,12 @@ export const loader = async ({request}: LoaderFunctionArgs) => {
 
   // after the layouts, because which files to resolve is authored in them
   const ids = [
-    ...new Set(
-      [regions.header, regions.body, regions.footer].flatMap((r) =>
+    ...new Set([
+      ...[regions.header, regions.body, regions.footer].flatMap((r) =>
         r ? mediaIds(r.layout) : [],
       ),
-    ),
+      ...(settings.logo ? [settings.logo] : []),
+    ]),
   ];
   const media: MediaUrls = Object.fromEntries(
     (await resolveMedia(admin, ids)).map((m) => [m.id, m.url]),

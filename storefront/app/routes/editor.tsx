@@ -7,7 +7,7 @@ import {DEV, gridDevLinks} from '~/blocks/grid-dev';
 import radixStyles from '@radix-ui/themes/styles.css?url';
 import unigridStyles from '@unigrid/blocks/unigrid.css?url';
 import editorStyles from '@unigrid/editor/editor.css?url';
-import {loadMedia} from '~/lib/layout';
+import {loadMedia, loadSettings} from '~/lib/layout';
 
 // the playground. no onSave, so there is no path from here to a store.
 
@@ -21,11 +21,19 @@ export const links: LinksFunction = () => [
 ];
 
 export async function loader({context}: Route.LoaderArgs) {
-  return {media: await loadMedia(context.storefront, [HARNESS])};
+  // the playground reads the theme but never writes one, so the logo resolves
+  // exactly as it does in the admin
+  const settings = await loadSettings(context.storefront);
+  const media = await loadMedia(
+    context.storefront,
+    [HARNESS],
+    settings.logo ? [settings.logo] : [],
+  );
+  return {media, settings};
 }
 
 export default function Playground() {
-  const {media} = useLoaderData<typeof loader>();
+  const {media, settings} = useLoaderData<typeof loader>();
   return (
     <Editor
       initial={HARNESS}
@@ -34,7 +42,7 @@ export default function Playground() {
       menus={DEMO_MENUS}
       products={DEMO_PRODUCTS}
       collections={[DEMO_COLLECTION]}
-      initialSettings={{}}
+      initialSettings={settings}
     />
   );
 }

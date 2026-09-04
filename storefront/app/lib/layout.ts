@@ -101,17 +101,12 @@ export function settingsFromFields(fields: Fields | null | undefined): Settings 
   }
 }
 
-// the theme's mark on its own, for a surface that renders no composition
-export async function loadLogo(
-  storefront: Queryable,
-): Promise<LogoData | undefined> {
+// the theme's settings on their own, for a surface that renders no composition
+export async function loadSettings(storefront: Queryable): Promise<Settings> {
   const data = await storefront.query<{metaobject?: {fields: Fields} | null}>(
     THEME_QUERY,
   );
-  const {logo} = settingsFromFields(data?.metaobject?.fields);
-  if (!logo) return undefined;
-  const urls = await loadMedia(storefront, [], [logo]);
-  return urls[logo] ? {url: urls[logo]} : undefined;
+  return settingsFromFields(data?.metaobject?.fields);
 }
 
 export async function loadPalette(storefront: Queryable): Promise<Palette> {

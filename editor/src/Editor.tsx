@@ -59,6 +59,7 @@ import {
   Grid,
   deriveAll,
   metricVars,
+  pageVars,
   overflowing,
   sameOverflow,
   type MenuLink,
@@ -318,6 +319,12 @@ export function Editor({
     () => ({...media, ...pickedMedia}),
     [media, pickedMedia],
   );
+  // the theme's mark, resolved from the same map a block fill uses. picking a
+  // new one puts its url in there, so the stage updates before any save.
+  const themeLogo = useMemo(() => {
+    const url = settings.logo ? mediaUrls[settings.logo] : undefined;
+    return url ? {url} : undefined;
+  }, [settings.logo, mediaUrls]);
   // the shell resolves the url; remembering it is the editor's job
   const onPickMedia = pickMedia
     ? async () => {
@@ -655,7 +662,12 @@ export function Editor({
           className="e-stage u-page"
           ref={hostRef}
           data-band={band}
-          style={metricVars(metrics) as CSSProperties}
+          style={
+            {
+              ...metricVars(metrics),
+              ...pageVars(palette, settings.background),
+            } as CSSProperties
+          }
         >
           <div className="e-canvas u-stack">
             {/* inert regions: rendered so the page reads whole, but no chrome,
@@ -690,6 +702,7 @@ export function Editor({
                       collection={previewCollection}
                       collections={byCollection}
                       media={mediaUrls}
+                      logo={themeLogo}
                       palette={palette}
                       metrics={metrics}
                     >
@@ -717,6 +730,7 @@ export function Editor({
               collection={previewCollection}
               collections={byCollection}
               media={mediaUrls}
+              logo={themeLogo}
               palette={palette}
               metrics={metrics}
             >

@@ -22,7 +22,8 @@
 /* the canvas paints itself rather than borrowing the storefront's demo styles,
    which do not exist in the admin app */
 .e-canvas {
-  background: #efece6;
+  /* the theme sets --page-bg, the same var the storefront's page reads */
+  background: var(--page-bg, #efece6);
   color: #111;
   font-family: 'Helvetica Neue', Helvetica, Inter, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
