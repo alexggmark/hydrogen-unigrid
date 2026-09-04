@@ -151,6 +151,8 @@ export function children(r: () => number, id: string): Node[] {
         id: `${id}-g${i}`,
         kind: 'group' as const,
         flex: flex(r),
+        // capped and uncapped, because both have to survive the wire
+        ...(r() < 0.5 ? {width: int(r, 10, 100)} : {}),
         children: Array.from({length: int(r, 0, 2)}, (_, j) =>
           element(r, `${id}-g${i}-e${j}`),
         ),

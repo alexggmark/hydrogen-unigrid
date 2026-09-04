@@ -8,6 +8,7 @@ import {
   DEFAULT_LOGO_NARROW,
   DEFAULT_LOGO_WIDTH,
   DEFAULT_STARS,
+  GROUP_WIDTH_RANGE,
   LOGO_RANGE,
   fitCount,
   fitNarrow,
@@ -149,6 +150,7 @@ function encodeNode(n: Node): Obj {
         i: n.id,
         k: 'g',
         ...(flex ? {x: flex} : {}),
+        ...(n.width ? {w: n.width} : {}),
         c: n.children.map(encodeNode),
       };
     }
@@ -246,7 +248,18 @@ function decodeNode(w: unknown): Node | undefined {
         // a group holds elements only; a nested group is dropped, not represented
         if (node && node.kind !== 'group') children.push(node);
       }
-      return {id, kind: 'group', flex: decodeFlex(o.x), children} satisfies Group;
+      const [min, max] = GROUP_WIDTH_RANGE;
+      const w =
+        typeof o.w === 'number' && Number.isFinite(o.w)
+          ? Math.min(max, Math.max(min, o.w))
+          : undefined;
+      return {
+        id,
+        kind: 'group',
+        flex: decodeFlex(o.x),
+        ...(w ? {width: w} : {}),
+        children,
+      } satisfies Group;
     }
     case 'h': {
       const level = LEVELS.includes(o.l as HeadingLevel)

@@ -20,6 +20,7 @@ import {
 import {
   BANDS,
   DEFAULT_METRICS,
+  GROUP_WIDTH_RANGE,
   LOGO_RANGE,
   METRIC_RANGE,
   STAR_CHOICES,
@@ -328,12 +329,43 @@ function Inspector({found, props}: {found: Found; props: RailProps}) {
   const {node} = found;
 
   if (isGroup(node)) {
+    const [min, max, step] = GROUP_WIDTH_RANGE;
     return (
       <>
         <FlexFields
           flex={node.flex}
           onChange={(p) => props.onFlex(node.id, p)}
         />
+        <Field
+          label={`Max width — ${node.width ? `${node.width}u` : 'full'}`}
+        >
+          <Flex gap="2" align="center">
+            <Slider
+              size="1"
+              min={min}
+              max={max}
+              step={step}
+              value={[node.width ?? max]}
+              onValueChange={([w]) =>
+                props.onPatchNode(node.id, {
+                  width: w === max ? undefined : w,
+                })
+              }
+            />
+            <Button
+              size="1"
+              variant="soft"
+              disabled={!node.width}
+              onClick={() => props.onPatchNode(node.id, {width: undefined})}
+            >
+              Full
+            </Button>
+          </Flex>
+        </Field>
+        <Text size="1" color="gray">
+          Holds the group to a measure. Released on mobile, where a share of the
+          grid is a column of two words.
+        </Text>
         <AddMenu parentId={node.id} onAdd={props.onAddChild} />
       </>
     );

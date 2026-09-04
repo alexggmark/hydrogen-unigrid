@@ -127,7 +127,18 @@ export type Flex = {
   gap: number;
 };
 
-export type Group = {id: string; kind: 'group'; flex: Flex; children: Element[]};
+// width caps the group horizontally, in --u multiples, so a headline can be
+// held to a measure without narrowing the block it sits in. horizontal only: a
+// height cap would be a second way to say what the block's span already says.
+export type Group = {
+  id: string;
+  kind: 'group';
+  flex: Flex;
+  width?: number;
+  children: Element[];
+};
+
+export const GROUP_WIDTH_RANGE: [number, number, number] = [10, 100, 1];
 
 // one level only: nested groups make this a page builder
 export type Node = Element | Group;

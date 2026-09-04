@@ -676,6 +676,26 @@ button.u-btn[data-variant='outline']:not(:disabled):hover {
 }
 
 /* background and tint fill the block behind the content, so neither is content */
+/* a group can be capped horizontally, to hold a headline to a measure without
+   narrowing the block around it. band c releases it: --u is a share of the grid,
+   so a cap that reads as a measure on a desktop squeezes a phone into a column
+   of two words. */
+.u-group {
+  max-inline-size: calc(var(--u) * var(--group-w, 100));
+}
+@container grid (width < 36rem) {
+  .u-group {
+    max-inline-size: none;
+  }
+}
+[data-band='a'] .u-group,
+[data-band='b'] .u-group {
+  max-inline-size: calc(var(--u) * var(--group-w, 100));
+}
+[data-band='c'] .u-group {
+  max-inline-size: none;
+}
+
 /* the rating. the stars take a colour of their own, the words take the block's
    — so inverting a block inverts the label and leaves the mark alone. */
 .u-rating {

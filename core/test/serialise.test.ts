@@ -10,8 +10,10 @@ import {
   BUTTON_VARIANTS,
   COLUMN_CHOICES,
   DEFAULT_LOGO_NARROW,
+  DEFAULT_FLEX,
   DEFAULT_LOGO_WIDTH,
   DEFAULT_STARS,
+  GROUP_WIDTH_RANGE,
   LOGO_RANGE,
   divisorsOf,
   fitCount,
@@ -314,6 +316,45 @@ describe('shopper controls', () => {
   it('writes the label and nothing else', () => {
     const wire = JSON.parse(encode(withNode({id: 'n', kind: 'cart', label: 'Bag'})));
     expect(wire.b[0].k[0]).toEqual({i: 'n', k: 'r', v: 'Bag'});
+  });
+});
+
+describe('group width', () => {
+  const withGroup = (width?: number): Layout => ({
+    version: 1,
+    blocks: [
+      {
+        ...emptyBlock('x', {a: {col: 1, colSpan: 6, row: 1, rowSpan: 2}}),
+        children: [
+          {
+            id: 'g1',
+            kind: 'group' as const,
+            flex: {...DEFAULT_FLEX},
+            ...(width ? {width} : {}),
+            children: [{id: 'g1-a', kind: 'text' as const, size: 'sm' as const, value: 'x'}],
+          },
+        ],
+      },
+    ],
+  });
+
+  it('roundtrips capped and uncapped', () => {
+    for (const width of [undefined, 40]) {
+      expect(decode(encode(withGroup(width)))).toEqual(withGroup(width));
+    }
+  });
+
+  // an uncapped group is the common one, so it costs nothing to store
+  it('writes nothing when the group is full width', () => {
+    expect(JSON.parse(encode(withGroup())).b[0].k[0].w).toBeUndefined();
+    expect(JSON.parse(encode(withGroup(40))).b[0].k[0].w).toBe(40);
+  });
+
+  it('clamps a width outside its range', () => {
+    const wire = JSON.parse(encode(withGroup(40)));
+    wire.b[0].k[0].w = 900;
+    const node = decode(JSON.stringify(wire))?.blocks[0]?.children[0];
+    expect(node && node.kind === 'group' && node.width).toBe(GROUP_WIDTH_RANGE[1]);
   });
 });
 

@@ -327,7 +327,12 @@ export function Nodes({nodes}: {nodes: readonly Node[]}) {
             key={node.id}
             className="u-flow u-group"
             data-node={node.id}
-            style={flexVars(node.flex)}
+            style={
+              {
+                ...flexVars(node.flex),
+                ...(node.width ? {'--group-w': node.width} : {}),
+              } as CSSProperties
+            }
           >
             <Nodes nodes={node.children} />
           </div>
