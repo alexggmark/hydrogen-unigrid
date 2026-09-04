@@ -244,7 +244,7 @@ button.u-btn[data-variant='primary']:not(:disabled):hover {
 }
 a.u-btn[data-variant='outline']:hover,
 button.u-btn[data-variant='outline']:not(:disabled):hover {
-  opacity: 0.7;
+  opacity: 0.8;
 }
 
 /* glass. the tint is white at both ends: a sheen reads as light whatever it

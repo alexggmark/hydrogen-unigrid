@@ -603,11 +603,19 @@ function Inspector({found, props}: {found: Found; props: RailProps}) {
 
       {node.kind === 'button' ? (
         <Field label="Link">
-          <TextField.Root
-            size="1"
-            value={node.href}
-            onChange={(e) => patch({href: e.target.value})}
-          />
+          <Flex direction="column" gap="1">
+            <TextField.Root
+              size="1"
+              placeholder="https://… or /pages/…"
+              value={node.href}
+              onChange={(e) => patch({href: e.target.value})}
+            />
+            <LinkPicker
+              props={props}
+              href={node.href}
+              onPick={(href) => patch({href})}
+            />
+          </Flex>
         </Field>
       ) : null}
     </>
@@ -616,6 +624,75 @@ function Inspector({found, props}: {found: Found; props: RailProps}) {
 
 // the picker when the shell has one, a url when it does not. the playground is
 // the second case: no app bridge, so nothing can open the store's files.
+// the store's own destinations, written into the href as a path. a reference
+// would survive a handle change, but shopify writes a redirect when a handle
+// changes, so the path does not rot — and this needs no model, no wire and no
+// resolution on the storefront.
+function LinkPicker({
+  props,
+  href,
+  onPick,
+}: {
+  props: RailProps;
+  href: string;
+  onPick: (href: string) => void;
+}) {
+  const groups: {label: string; items: {path: string; title: string}[]}[] = [
+    {
+      label: 'Pages',
+      items: [
+        ...(props.pages ?? [])
+          .filter((page) => page.target === 'home')
+          .map((page) => ({path: '/', title: page.title})),
+        ...(props.pages ?? [])
+          .filter((page) => page.handle)
+          .map((page) => ({path: `/pages/${page.handle}`, title: page.title})),
+      ],
+    },
+    {
+      label: 'Products',
+      items: (props.products ?? []).map((p) => ({
+        path: `/products/${p.handle}`,
+        title: p.title,
+      })),
+    },
+    {
+      label: 'Collections',
+      items: (props.collections ?? []).map((c) => ({
+        path: `/collections/${c.handle}`,
+        title: c.title,
+      })),
+    },
+  ].filter((group) => group.items.length);
+
+  if (!groups.length) return null;
+  // the path is the value, so a hand-typed href that happens to match shows as
+  // chosen rather than the two disagreeing
+  const known = groups.some((g) => g.items.some((i) => i.path === href));
+
+  return (
+    <Select.Root
+      size="1"
+      value={known ? href : ''}
+      onValueChange={(path) => onPick(path)}
+    >
+      <Select.Trigger placeholder="or choose one…" style={{width: '100%'}} />
+      <Select.Content>
+        {groups.map((group) => (
+          <Select.Group key={group.label}>
+            <Select.Label>{group.label}</Select.Label>
+            {group.items.map((item) => (
+              <Select.Item key={item.path} value={item.path}>
+                {item.title}
+              </Select.Item>
+            ))}
+          </Select.Group>
+        ))}
+      </Select.Content>
+    </Select.Root>
+  );
+}
+
 function MediaField({
   props,
   fill,
