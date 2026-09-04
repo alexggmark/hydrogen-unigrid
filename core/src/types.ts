@@ -32,6 +32,9 @@ export type ProductRef = 'context' | {handle: string};
 // collection being browsed.
 export type CollectionRef = 'context' | {handle: string};
 
+export const DEFAULT_STARS = 5;
+export const STAR_CHOICES = ['1', '2', '3', '4', '5'] as const;
+
 export const DEFAULT_LOGO_WIDTH = 20;
 // a logo needs more of a phone than of a desktop to stay legible
 export const DEFAULT_LOGO_NARROW = 40;
@@ -88,6 +91,10 @@ export type Element =
   // is the element's, because a header and a footer want different ones. both
   // are --u multiples, so 20 is a fifth of the grid at any width.
   | {id: string; kind: 'logo'; width: number; narrow: number}
+  // stars take a colour of their own because a rating is a mark, not text; the
+  // label beside them follows the block like everything else, so inverting a
+  // block inverts the words and leaves the stars alone.
+  | {id: string; kind: 'rating'; stars: number; label: string; colour?: Colour}
   // the shopper's own two controls. no reference to resolve: the shell knows the
   // cart count and whether anyone is signed in, and hands both in.
   | {id: string; kind: 'cart'; label: string}

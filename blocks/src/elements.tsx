@@ -6,7 +6,8 @@ import {CollectionGrid, useCollection} from './collection';
 import {useShop} from './shop';
 import {useLogo} from './logo';
 import {ProductDetails, ProductMedia, useProduct} from './product';
-import type {Metrics} from '@unigrid/core';
+import type {Metrics, Settings} from '@unigrid/core';
+import {DISPLAY_SERIF} from './font';
 import {
   isGroup,
   isSlot,
@@ -30,10 +31,13 @@ export const paletteVars = (palette: Palette): Record<string, string> =>
 // with it or a slot would have nothing to resolve against.
 export const pageVars = (
   palette: Palette,
-  background?: Colour,
+  settings?: Settings,
 ): Record<string, string> => ({
   ...paletteVars(palette),
-  ...(background ? {'--page-bg': paint(background)} : {}),
+  ...(settings?.background ? {'--page-bg': paint(settings.background)} : {}),
+  ...(settings?.headingFont === 'serif'
+    ? {'--font-display': DISPLAY_SERIF, '--display-weight': '400'}
+    : {}),
 });
 
 // unitless numbers, not lengths: the stylesheet multiplies each by --u so the
@@ -174,6 +178,33 @@ function Collection({node}: {node: Extract<Element, {kind: 'collection'}>}) {
   );
 }
 
+function Rating({node}: {node: Extract<Element, {kind: 'rating'}>}) {
+  // five glyphs, not n: the scale is half the information, and at five they
+  // read as the row of stars this was asked for anyway
+  const stars = [1, 2, 3, 4, 5];
+  return (
+    <span
+      className="u-rating"
+      style={
+        (node.colour ? {'--star': paint(node.colour)} : {}) as CSSProperties
+      }
+    >
+      <span
+        className="u-stars"
+        role="img"
+        aria-label={`${node.stars} out of 5 stars`}
+      >
+        {stars.map((n) => (
+          <span key={n} className="u-star" data-off={n > node.stars ? '' : undefined}>
+            {'\u2605'}
+          </span>
+        ))}
+      </span>
+      {node.label ? <span className="u-rating-text">{node.label}</span> : null}
+    </span>
+  );
+}
+
 function Logo({node}: {node: Extract<Element, {kind: 'logo'}>}) {
   const Image = useImageRender();
   const logo = useLogo();
@@ -253,6 +284,8 @@ function Leaf({node}: {node: Element}) {
       return <Collection node={node} />;
     case 'logo':
       return <Logo node={node} />;
+    case 'rating':
+      return <Rating node={node} />;
     case 'cart':
       return <Cart node={node} />;
     case 'account':

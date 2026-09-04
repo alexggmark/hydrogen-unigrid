@@ -9,6 +9,9 @@ export type Settings = {
   // a slot or a literal, the same shape a block fill uses, so the palette stays
   // reachable: change a slot and every page using it moves.
   background?: Colour;
+  // serif only from h3 up: a serif at small sizes reads badly, and the small
+  // headings are the ones that carry text rather than announce it
+  headingFont?: 'sans' | 'serif';
 };
 
 const colourFrom = (value: unknown): Colour | undefined => {
@@ -25,7 +28,9 @@ export function settingsFrom(value: unknown): Settings {
   if (!value || typeof value !== 'object') return {};
   const raw = value as Record<string, unknown>;
   const background = colourFrom(raw.background);
+  const headingFont = raw.headingFont === 'serif' ? 'serif' : undefined;
   return {
+    ...(headingFont ? {headingFont} : {}),
     ...(typeof raw.logo === 'string' && raw.logo ? {logo: raw.logo} : {}),
     ...(background ? {background} : {}),
   };

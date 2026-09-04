@@ -101,6 +101,7 @@ export const HARNESS: Layout = {
             'sm',
             'Ink and paper swap together, so the button follows the block without being told.',
           ),
+          {id: 'intro-rating', kind: 'rating', stars: 4, label: '15 Reviews'},
           button('intro-b', 'primary', 'Primary'),
         ],
       },
@@ -116,6 +117,13 @@ export const HARNESS: Layout = {
       {
         flex: flex({gap: 1}),
         children: [
+          {
+            id: 'essay-rating',
+            kind: 'rating',
+            stars: 5,
+            label: '15 Reviews',
+            colour: {slot: 5},
+          },
           hl('essay-h', 4, 'Every block is the same box'),
           text(
             'essay-t',

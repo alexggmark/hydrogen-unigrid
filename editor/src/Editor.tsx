@@ -31,6 +31,7 @@ import {
   DEFAULT_LOGO_NARROW,
   DEFAULT_LOGO_WIDTH,
   DEFAULT_METRICS,
+  DEFAULT_STARS,
   history,
   insertAfter,
   isBand,
@@ -58,6 +59,7 @@ import {
   Block,
   Grid,
   deriveAll,
+  ThemeFont,
   metricVars,
   pageVars,
   overflowing,
@@ -155,6 +157,12 @@ const NEW_NODE: Record<AddKey, (id: string) => Node> = {
     narrow: DEFAULT_COLUMNS,
     count: DEFAULT_COUNT,
     variant: 'outline',
+  }),
+  rating: (id) => ({
+    id,
+    kind: 'rating',
+    stars: DEFAULT_STARS,
+    label: '15 Reviews',
   }),
   logo: (id) => ({
     id,
@@ -665,10 +673,11 @@ export function Editor({
           style={
             {
               ...metricVars(metrics),
-              ...pageVars(palette, settings.background),
+              ...pageVars(palette, settings),
             } as CSSProperties
           }
         >
+          <ThemeFont settings={settings} />
           <div className="e-canvas u-stack">
             {/* inert regions: rendered so the page reads whole, but no chrome,
                 no selection and no drag. clicking one makes it the active one. */}

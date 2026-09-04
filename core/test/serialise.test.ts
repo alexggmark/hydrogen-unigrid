@@ -11,6 +11,7 @@ import {
   COLUMN_CHOICES,
   DEFAULT_LOGO_NARROW,
   DEFAULT_LOGO_WIDTH,
+  DEFAULT_STARS,
   LOGO_RANGE,
   divisorsOf,
   fitCount,
@@ -313,6 +314,48 @@ describe('shopper controls', () => {
   it('writes the label and nothing else', () => {
     const wire = JSON.parse(encode(withNode({id: 'n', kind: 'cart', label: 'Bag'})));
     expect(wire.b[0].k[0]).toEqual({i: 'n', k: 'r', v: 'Bag'});
+  });
+});
+
+describe('star rating', () => {
+  const withRating = (patch: Record<string, unknown> = {}): Layout => ({
+    version: 1,
+    blocks: [
+      {
+        ...emptyBlock('x', {a: {col: 1, colSpan: 3, row: 1, rowSpan: 1}}),
+        children: [
+          {
+            id: 'r1',
+            kind: 'rating' as const,
+            stars: DEFAULT_STARS,
+            label: '15 Reviews',
+            ...patch,
+          } as Node,
+        ],
+      },
+    ],
+  });
+
+  it('roundtrips a slot, a hex and no colour at all', () => {
+    for (const patch of [{}, {colour: {slot: 3 as const}}, {colour: {hex: '#ff0000'}}]) {
+      const layout = withRating(patch);
+      expect(decode(encode(layout))).toEqual(layout);
+    }
+  });
+
+  it('carries only the label at five stars in the block ink', () => {
+    expect(JSON.parse(encode(withRating())).b[0].k[0]).toEqual({
+      i: 'r1',
+      k: 's',
+      v: '15 Reviews',
+    });
+  });
+
+  it('clamps a star count outside one to five', () => {
+    const wire = JSON.parse(encode(withRating({stars: 3})));
+    wire.b[0].k[0].n = 12;
+    const node = decode(JSON.stringify(wire))?.blocks[0]?.children[0];
+    expect(node && node.kind === 'rating' && node.stars).toBe(5);
   });
 });
 

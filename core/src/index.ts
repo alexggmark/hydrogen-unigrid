@@ -41,6 +41,8 @@ export {
   DEFAULT_LOGO_NARROW,
   DEFAULT_LOGO_WIDTH,
   LOGO_RANGE,
+  DEFAULT_STARS,
+  STAR_CHOICES,
   fitCount,
   BUTTON_VARIANTS,
   type ProductRef,

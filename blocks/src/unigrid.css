@@ -170,6 +170,12 @@
   letter-spacing: -0.02em;
   line-height: 1.02;
 }
+.u-hl-1,
+.u-hl-2,
+.u-hl-3 {
+  font-family: var(--font-display, inherit);
+  font-weight: var(--display-weight, 700);
+}
 .u-hl-1 {
   font-size: var(--t-h1);
   line-height: 0.9;
@@ -648,6 +654,26 @@ button.u-btn[data-variant='outline']:not(:disabled):hover {
 }
 
 /* background and tint fill the block behind the content, so neither is content */
+/* the rating. the stars take a colour of their own, the words take the block's
+   — so inverting a block inverts the label and leaves the mark alone. */
+.u-rating {
+  display: inline-flex;
+  align-items: baseline;
+  gap: calc(var(--u) * 0.7);
+  font-size: var(--t-sm);
+}
+.u-stars {
+  color: var(--star, var(--ink));
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+.u-star[data-off] {
+  opacity: 0.25;
+}
+.u-rating-text {
+  color: inherit;
+}
+
 /* the logo. the width is a --u multiple like everything else, so 20 is a fifth
    of the grid at any size, and band c gets its own because a mark that reads at
    a fifth of a desktop disappears at a fifth of a phone. the forced band rule

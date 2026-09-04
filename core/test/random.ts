@@ -67,11 +67,12 @@ export function element(
       | 'collection'
       | 'cart'
       | 'account'
-      | 'logo';
+      | 'logo'
+      | 'rating';
   }
 > {
   const s = `v${int(r, 0, 9999)} — ünïcode "quotes"`;
-  const pick = int(r, 0, 9);
+  const pick = int(r, 0, 10);
   if (pick === 0) {
     return {id, kind: 'headline', level: int(r, 1, 5) as 1 | 2 | 3 | 4 | 5, value: s};
   }
@@ -101,6 +102,18 @@ export function element(
   }
   if (pick === 8) {
     return {id, kind: 'logo', width: int(r, 2, 100), narrow: int(r, 2, 100)};
+  }
+  if (pick === 9) {
+    return {
+      id,
+      kind: 'rating',
+      stars: int(r, 1, 5),
+      label: s,
+      // both shapes and absent, because all three have to survive the wire
+      ...(r() < 0.66
+        ? {colour: r() < 0.5 ? {slot: int(r, 1, 5) as Slot} : {hex: '#a1b2c3'}}
+        : {}),
+    };
   }
   if (pick === 6) {
     return {id, kind: 'account', label: s};

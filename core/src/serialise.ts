@@ -7,6 +7,7 @@ import {
   DEFAULT_FLEX,
   DEFAULT_LOGO_NARROW,
   DEFAULT_LOGO_WIDTH,
+  DEFAULT_STARS,
   LOGO_RANGE,
   fitCount,
   fitNarrow,
@@ -39,7 +40,7 @@ import type {
 //   {v, b:[block]}
 //   block   = {i, a:cell, b?:cell, c?:cell, f?:fill, x?:flex, n?:1, k?:[node]}
 //   cell    = [col, row] | [col, row, colSpan] | [col, row, colSpan, rowSpan]
-//   node    = {i, k:'h'|'t'|'x'|'b'|'m'|'p'|'c'|'r'|'a'|'l'|'g', ...}
+//   node    = {i, k:'h'|'t'|'x'|'b'|'m'|'p'|'c'|'r'|'a'|'l'|'s'|'g', ...}
 //   fill    = {c?:hex, m?:[kind, url | gid], o?:[hex, opacity]}
 
 const encodeCell = (c: Cell): number[] =>
@@ -182,6 +183,14 @@ function encodeNode(n: Node): Obj {
         ...(n.source !== 'context' ? {v: n.source.handle} : {}),
         ...(n.variant !== 'primary' ? {p: n.variant} : {}),
       };
+    case 'rating':
+      return {
+        i: n.id,
+        k: 's',
+        v: n.label,
+        ...(n.stars !== DEFAULT_STARS ? {n: n.stars} : {}),
+        ...(n.colour ? {f: encodeColour(n.colour)} : {}),
+      };
     case 'logo':
       return {
         i: n.id,
@@ -265,6 +274,19 @@ function decodeNode(w: unknown): Node | undefined {
       const view: ProductView = o.w === 'd' ? 'details' : 'media';
       const source: ProductRef = value ? {handle: value} : 'context';
       return {id, kind: 'product', view, source, variant: readVariant(o.p, 'primary')};
+    }
+    case 's': {
+      const stars = typeof o.n === 'number' && Number.isFinite(o.n)
+        ? Math.min(5, Math.max(1, Math.round(o.n)))
+        : DEFAULT_STARS;
+      const colour = decodeColour(o.f);
+      return {
+        id,
+        kind: 'rating',
+        stars,
+        label: value,
+        ...(colour ? {colour} : {}),
+      };
     }
     case 'l': {
       const size = (raw: unknown, fallback: number) =>

@@ -12,7 +12,14 @@ import {
 import {Await, Link, useFetcher, useRouteLoaderData} from 'react-router';
 import {Analytics, CartForm} from '@shopify/hydrogen';
 import type {RootLoader} from '~/root';
-import {Block, Grid, deriveAll, metricVars, pageVars} from '@unigrid/blocks';
+import {
+  Block,
+  Grid,
+  ThemeFont,
+  deriveAll,
+  metricVars,
+  pageVars,
+} from '@unigrid/blocks';
 import type {
   CollectionData,
   Collections,
@@ -290,10 +297,11 @@ function Page({
       style={
         {
           ...metricVars(metrics),
-          ...pageVars(palette, settings?.background),
+          ...pageVars(palette, settings),
         } as CSSProperties
       }
     >
+      <ThemeFont settings={settings} />
       <div className="u-stack">
         {header ? (
           <Region

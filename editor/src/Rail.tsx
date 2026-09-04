@@ -22,6 +22,7 @@ import {
   DEFAULT_METRICS,
   LOGO_RANGE,
   METRIC_RANGE,
+  STAR_CHOICES,
   divisorsOf,
   isMediaRef,
   fitCount,
@@ -88,6 +89,7 @@ const ADDABLE: AddKey[] = [
   'productDetails',
   'collection',
   'logo',
+  'rating',
   'cart',
   'account',
   'group',
@@ -104,6 +106,7 @@ export const LABEL: Record<string, string> = {
   productDetails: 'Product details',
   collection: 'Collection',
   logo: 'Logo',
+  rating: 'Star rating',
   cart: 'Cart',
   account: 'Account',
   group: 'Group',
@@ -613,6 +616,33 @@ function Inspector({found, props}: {found: Found; props: RailProps}) {
           onPick={(variant) => patch({variant})}
         />
       ) : null}
+      {node.kind === 'rating' ? (
+        <>
+          <Segment
+            label="Stars"
+            value={String(node.stars)}
+            options={STAR_CHOICES}
+            onPick={(stars) => patch({stars: Number(stars)})}
+          />
+          <Field label="Star colour">
+            <Flex gap="2" align="center" wrap="wrap">
+              <Swatches
+                value={node.colour}
+                palette={props.palette}
+                onPick={(colour) => patch({colour})}
+              />
+              <Button
+                size="1"
+                variant="soft"
+                disabled={!node.colour}
+                onClick={() => patch({colour: undefined})}
+              >
+                Match text
+              </Button>
+            </Flex>
+          </Field>
+        </>
+      ) : null}
 
       <Field label={'label' in node ? 'Label' : 'Content'}>
         {node.kind === 'richText' ? (
@@ -1118,6 +1148,27 @@ function SettingsPanel({props}: {props: RailProps}) {
             this file is no longer in the store
           </Text>
         ) : null}
+      </Section>
+
+      <Section title="Headings">
+        <Text size="1" color="gray">
+          Serif applies from h3 up. Smaller headings stay sans, where a serif
+          reads worse than the text around it.
+        </Text>
+        <SegmentedControl.Root
+          size="1"
+          value={settings.headingFont === 'serif' ? 'serif' : 'sans'}
+          onValueChange={(v) =>
+            onSettings?.({
+              ...settings,
+              headingFont: v === 'serif' ? 'serif' : undefined,
+            })
+          }
+          style={{width: '100%'}}
+        >
+          <SegmentedControl.Item value="sans">Sans serif</SegmentedControl.Item>
+          <SegmentedControl.Item value="serif">Serif</SegmentedControl.Item>
+        </SegmentedControl.Root>
       </Section>
 
       <Section title="Page background">
