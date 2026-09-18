@@ -94,9 +94,19 @@ function Region({
 // bare routes return <Outlet /> straight from root, so PageLayout — and with it
 // Aside.Provider and the cart drawer — never mounts. the unigrid shell has to
 // bring its own or nothing on the page can open one.
-function CartDrawer({cart}: {cart: RootData['cart'] | undefined}) {
+function CartDrawer({
+  cart,
+  metrics,
+}: {
+  cart: RootData['cart'] | undefined;
+  metrics?: Metrics;
+}) {
   return (
-    <Aside type="cart" heading="Cart">
+    <Aside
+      type="cart"
+      heading="Cart"
+      style={metricVars(metrics) as CSSProperties}
+    >
       <Suspense fallback={<p>Loading cart…</p>}>
         <Await resolve={cart ?? Promise.resolve(null)}>
           {(cart) => <CartMain cart={cart} layout="aside" />}
@@ -108,11 +118,23 @@ function CartDrawer({cart}: {cart: RootData['cart'] | undefined}) {
 
 // the menu element renders a button; the drawer it opens is the shell's, the
 // same split the cart already has. one aside serves whichever menu asked.
-function MenuDrawer({menus, handle}: {menus: Menus; handle: string | null}) {
+function MenuDrawer({
+  menus,
+  handle,
+  metrics,
+}: {
+  menus: Menus;
+  handle: string | null;
+  metrics?: Metrics;
+}) {
   const {close} = useAside();
   const items = (handle && menus[handle]) || [];
   return (
-    <Aside type="mobile" heading="Menu">
+    <Aside
+      type="mobile"
+      heading="Menu"
+      style={metricVars(metrics) as CSSProperties}
+    >
       <nav className="u-drawer-menu">
         {items.map((item) => (
           <Link
@@ -200,14 +222,22 @@ function useShopState(root: RootData | undefined): ShopState {
 // the view events the product and collection routes already render do nothing
 // without this: hydrogen's analytics context has a non-null default, so a
 // missing provider is silent rather than an error.
-function Shell({menus, children}: {menus: Menus; children: ReactNode}) {
+function Shell({
+  menus,
+  metrics,
+  children,
+}: {
+  menus: Menus;
+  metrics?: Metrics;
+  children: ReactNode;
+}) {
   const root = useRouteLoaderData<RootLoader>('root');
   const [menuHandle, setMenuHandle] = useState<string | null>(null);
 
   const page = (
     <Aside.Provider>
-      <CartDrawer cart={root?.cart} />
-      <MenuDrawer menus={menus} handle={menuHandle} />
+      <CartDrawer cart={root?.cart} metrics={metrics} />
+      <MenuDrawer menus={menus} handle={menuHandle} metrics={metrics} />
       <OpenMenu onHandle={setMenuHandle}>{children}</OpenMenu>
     </Aside.Provider>
   );
@@ -359,7 +389,7 @@ function Page({
 // cart button has to be able to open a drawer that is above it in the tree.
 export function Composition(props: Parameters<typeof Page>[0]) {
   return (
-    <Shell menus={props.menus}>
+    <Shell menus={props.menus} metrics={props.metrics}>
       <Page {...props} />
     </Shell>
   );

@@ -61,7 +61,8 @@ html:has(.overlay.expanded) {
   justify-content: space-between;
   gap: 1rem;
   padding: 1rem 1.25rem;
-  border-block-end: 1px solid color-mix(in srgb, var(--aside-ink) 15%, transparent);
+  border-block-end: 1px solid
+    color-mix(in srgb, var(--aside-ink) 15%, transparent);
 }
 
 .overlay aside header h3 {
@@ -247,13 +248,33 @@ html:has(.overlay.expanded) {
   margin: 0;
 }
 
+/* the same button as .u-btn[data-variant='primary'] on the page. the grid's own
+   rule cannot be reused: the drawer is fixed chrome outside .u-grid, so --u and
+   --f never reach it and every calc on them collapses.
+*/
 .overlay .cart-summary-aside a {
-  display: block;
-  padding: 0.75rem 1rem;
+  --btn-u: calc(1em / 0.85);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--btn-pad-y-u, 0.7) * var(--btn-u))
+    calc(var(--btn-pad-x-u, 1.4) * var(--btn-u));
   background: var(--aside-ink);
   color: var(--aside-paper);
+  border: 1px solid var(--aside-ink);
+  border-radius: calc(var(--btn-radius-u, 0) * var(--btn-u));
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-indent: 0.14em;
+  text-transform: uppercase;
   text-align: center;
   text-decoration: none;
+}
+
+.overlay .cart-summary-aside a:hover {
+  opacity: 0.9;
 }
 
 .overlay .cart-summary-aside a p {

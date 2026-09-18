@@ -1,5 +1,6 @@
 import {
   createContext,
+  type CSSProperties,
   type ReactNode,
   useContext,
   useEffect,
@@ -27,11 +28,15 @@ type AsideContextValue = {
 export function Aside({
   children,
   heading,
+  style,
   type,
 }: {
   children?: React.ReactNode;
   type: AsideType;
   heading: React.ReactNode;
+  // the drawer sits above the page in the tree, so the theme's own variables
+  // have to be handed to it rather than inherited
+  style?: CSSProperties;
 }) {
   const {type: activeType, close} = useAside();
   const expanded = type === activeType;
@@ -59,6 +64,7 @@ export function Aside({
       className={`overlay ${expanded ? 'expanded' : ''}`}
       role="dialog"
       aria-labelledby={id}
+      style={style}
     >
       <button className="close-outside" onClick={close} />
       <aside>
