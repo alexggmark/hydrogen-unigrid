@@ -503,6 +503,44 @@ button.u-btn[data-variant='outline']:not(:disabled):hover {
   text-transform: uppercase;
   font-weight: 700;
 }
+/* nav underline, desktop composition only. em, not px: it follows the link's
+   own type, which already follows --u. the end inset drops the tracking the
+   last letter carries, so the line stops where the word does */
+@container grid (width >= 60rem) {
+  .u-menu-link,
+  .u-shop-link {
+    position: relative;
+  }
+  .u-menu-link::after,
+  .u-shop-link::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0 0.14em;
+    inset-block-end: -0.35em;
+    block-size: 0.12em;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.5s ease;
+  }
+  .u-menu-link:focus-visible::after,
+  .u-shop-link:focus-visible::after {
+    transform: scaleX(1);
+  }
+  /* a tap on a touch screen would leave it stuck on */
+  @media (hover: hover) {
+    .u-menu-link:hover::after,
+    .u-shop-link:hover::after {
+      transform: scaleX(1);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .u-menu-link::after,
+    .u-shop-link::after {
+      transition: none;
+    }
+  }
+}
 .u-shop-count::before {
   content: '(';
 }
