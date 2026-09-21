@@ -28,6 +28,23 @@
   font-family: 'Helvetica Neue', Helvetica, Inter, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   min-block-size: 100%;
+  /* the canvas is the page, so cq units and the page query measure it rather
+     than the stage, and narrowing it previews a real device */
+  container: page / inline-size;
+}
+/* tablet and phone preview at a device width. it is the same grid at that width,
+   so it scales rather than being a separate rendering; the stage still scrolls */
+.e-stage[data-band='b'] .e-canvas,
+.e-stage[data-band='c'] .e-canvas {
+  inline-size: min(100% - 48px, var(--device));
+  margin-inline: auto;
+  box-shadow: 0 0 0 1px #d8d8d4, 0 8px 32px rgb(0 0 0 / 0.08);
+}
+.e-stage[data-band='b'] {
+  --device: 768px;
+}
+.e-stage[data-band='c'] {
+  --device: 390px;
 }
 /* outline, never a border: a border takes layout space and moves the block */
 .u-block[data-selected] {

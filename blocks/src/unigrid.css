@@ -11,8 +11,9 @@
 .u-frame,
 .u-page {
   /* a rate, not a length: the margin is part of the composition below the cap,
-     and --grid-max already absorbs the surplus above it */
-  --margin: calc(var(--margin-vw, 4) * 1vw);
+     and --grid-max already absorbs the surplus above it. cqw of the page, not vw,
+     so an editor previewing a phone inside a wide window gets a phone's margin */
+  --margin: calc(var(--margin-vw, 4) * 1cqw);
   --grid-max: 100rem;
   --gutter-u: 1.5;
   /* a share of the page's width, so it scales — but 4 is a phone value and was
@@ -44,7 +45,7 @@
 @container page (width < 40rem) {
   .u-stack,
   .u-frame {
-    --margin: calc(var(--margin-narrow-vw, var(--margin-vw, 4)) * 1vw);
+    --margin: calc(var(--margin-narrow-vw, var(--margin-vw, 4)) * 1cqw);
   }
 }
 .u-stack {
@@ -816,7 +817,7 @@ button.u-btn[data-variant='outline']:not(:disabled):hover {
 
 [data-band='c'] .u-stack,
 [data-band='c'] .u-frame {
-  --margin: calc(var(--margin-narrow-vw, var(--margin-vw, 4)) * 1vw);
+  --margin: calc(var(--margin-narrow-vw, var(--margin-vw, 4)) * 1cqw);
 }
 [data-band='c'] .u-stack {
   padding-block: calc(var(--u-page) * var(--pad-narrow-u, var(--pad-u, 2)));

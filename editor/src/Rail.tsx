@@ -1453,6 +1453,13 @@ function ViewAsPicker({props}: {props: RailProps}) {
   );
 }
 
+// display names only: a/b/c stay as keys because the wire format and url carry them
+const BAND_NAME: Record<Band, string> = {
+  a: 'Desktop',
+  b: 'Tablet',
+  c: 'Mobile',
+};
+
 function EditorPanel({props}: {props: RailProps}) {
   const {layout, band, selected, authored, editable, clipped, block, node} =
     props;
@@ -1462,7 +1469,7 @@ function EditorPanel({props}: {props: RailProps}) {
     <>
       <RegionPicker props={props} />
       <ViewAsPicker props={props} />
-      <Section title="Band">
+      <Section title="Breakpoint">
         <SegmentedControl.Root
           size="1"
           value={band}
@@ -1471,7 +1478,7 @@ function EditorPanel({props}: {props: RailProps}) {
         >
           {BANDS.map((b) => (
             <SegmentedControl.Item key={b} value={b}>
-              {b.toUpperCase()}
+              {BAND_NAME[b]}
             </SegmentedControl.Item>
           ))}
         </SegmentedControl.Root>
@@ -1517,10 +1524,10 @@ function EditorPanel({props}: {props: RailProps}) {
               color={band === WIDEST ? 'indigo' : derived ? 'gray' : 'green'}
             >
               {band === WIDEST
-                ? 'widest band — authoritative'
+                ? 'desktop — other breakpoints follow it'
                 : derived
-                  ? 'derived — editing overrides it'
-                  : 'overridden in this band'}
+                  ? 'derived from desktop — editing overrides it'
+                  : `overridden on ${BAND_NAME[band].toLowerCase()}`}
             </Badge>
 
             <Grid columns="2" gap="2">

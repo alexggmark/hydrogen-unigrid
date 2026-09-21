@@ -89,7 +89,7 @@ import {DEFAULT_PALETTE, type Layout, type Palette} from '@unigrid/core';
 
 
 const REASON: Record<string, string> = {
-  'out-of-bounds': 'outside the grid for this band',
+  'out-of-bounds': 'outside the grid at this breakpoint',
   'bad-span': 'spans must be whole numbers, 1 or more',
   overlap: 'that cell is occupied',
   'no-such-block': 'block no longer exists',
