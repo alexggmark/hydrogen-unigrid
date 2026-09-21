@@ -1693,16 +1693,18 @@ function EditorPanel({props}: {props: RailProps}) {
     </>
   );
 }
+// shared with the stage's context menu, which portals outside the rail
+export const RAIL_THEME = {
+  appearance: 'light',
+  accentColor: 'indigo',
+  grayColor: 'sand',
+  radius: 'small',
+  scaling: '90%',
+} as const;
+
 export function Rail(props: RailProps) {
   return (
-    <Theme
-      className="e-rail"
-      appearance="light"
-      accentColor="indigo"
-      grayColor="sand"
-      radius="small"
-      scaling="90%"
-    >
+    <Theme className="e-rail" {...RAIL_THEME}>
       <Tabs.Root
         className="e-tabs-bar"
         value={props.tab}

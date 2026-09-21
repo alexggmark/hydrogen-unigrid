@@ -5,7 +5,9 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type MouseEvent as ReactMouseEvent,
 } from 'react';
+import {ContextMenu, Theme} from '@radix-ui/themes';
 import {DragDropProvider} from '@dnd-kit/react';
 import {
   Accessibility,
@@ -19,6 +21,7 @@ import {
   add,
   addNode,
   cellIn,
+  COLUMNS,
   commit,
   canRedo,
   canUndo,
@@ -32,8 +35,10 @@ import {
   DEFAULT_LOGO_WIDTH,
   DEFAULT_METRICS,
   DEFAULT_STARS,
+  duplicate,
   history,
   insertAfter,
+  insertRow,
   isBand,
   moveNode,
   overlaps,
@@ -84,6 +89,7 @@ import {
   type PageEntry,
   type PickedMedia,
   type Tab,
+  RAIL_THEME,
 } from './Rail';
 import {DEFAULT_PALETTE, type Layout, type Palette} from '@unigrid/core';
 
@@ -509,6 +515,69 @@ export function Editor({
     setNode(id);
   };
 
+  const duplicateBlock = (id: string) => {
+    const out = duplicate(layout, id);
+    if (!out) return;
+    setError(null);
+    setHist((h) => commit(h, out.layout));
+    setSelected(out.id);
+    setNode(null);
+  };
+
+  const deleteBlock = (id: string) => {
+    setError(null);
+    setHist((h) => commit(h, remove(layout, id)));
+    setSelected(null);
+    setNode(null);
+  };
+
+  const addRow = (row: number) => {
+    setError(null);
+    setHist((h) => commit(h, insertRow(layout, row)));
+  };
+
+  // the palette's size where it fits, shrunk where it does not: refusing a
+  // click on visibly empty space would read as broken
+  const addFitted = (spot: {col: number; row: number}) => {
+    const cols = COLUMNS[band];
+    let best: Cell | null = null;
+    for (let colSpan = Math.min(NEW_SPAN.colSpan, cols); colSpan >= 1; colSpan--) {
+      for (let rowSpan = NEW_SPAN.rowSpan; rowSpan >= 1; rowSpan--) {
+        if (best && best.colSpan * best.rowSpan >= colSpan * rowSpan) continue;
+        const c = {col: Math.min(spot.col, cols - colSpan + 1), row: spot.row, colSpan, rowSpan};
+        const free = layout.blocks.every((b) => {
+          const other = cellOf(b.id);
+          return !other || !overlaps(c, other);
+        });
+        if (free) best = c;
+      }
+    }
+    if (!best) return setError(REASON.overlap ?? null);
+    addAt(best);
+  };
+
+  // what was under the pointer when the menu opened. a block, or an empty cell
+  const [menu, setMenu] = useState<{block: string | null; col: number; row: number} | null>(
+    null,
+  );
+  const onContextMenu = (e: ReactMouseEvent) => {
+    const hit =
+      (e.target as HTMLElement).closest<HTMLElement>('[data-block]')?.dataset.block ?? null;
+    if (hit) setSelected(hit);
+    const grid = gridEl();
+    const u = grid ? gridUnits(grid) : null;
+    const spot = grid && u ? cellAt(grid, e.clientX, e.clientY, u, 1) : {col: 1, row: 1};
+    setMenu({block: hit, ...spot});
+  };
+  const menuBlock = menu?.block ? findBlock(layout, menu.block) : undefined;
+  // rows are inserted in the wide band only: the narrow ones derive from it and
+  // hold no gaps of their own to insert into
+  const rowLine = menuBlock
+    ? menuBlock.at.a.row + menuBlock.at.a.rowSpan
+    : menu
+      ? menu.row + 1
+      : 1;
+
   // read off the manager, not the event: the event's transform is a snapshot,
   // refreshed only when the live getter is read, and feedback is off here
   const onDragStart = (_event: unknown, manager: DragDropManager) => {
@@ -605,10 +674,20 @@ export function Editor({
       const el = e.target as HTMLElement | null;
       // the whole rail, not just form elements — a radix slider is a span with
       // a role, so arrows would move the control and the block at once
-      if (el?.closest('.e-rail, input, textarea, select, [contenteditable]')) return;
+      // an open menu owns its arrows too
+      if (el?.closest('.e-rail, input, textarea, select, [contenteditable], [role="menu"]')) return;
       if (e.key === 'Escape') return setSelected(null);
       // dnd-kit owns the arrows once a keyboard drag is up
       if (drag || !selected || !editable) return;
+
+      if ((e.metaKey || e.ctrlKey) && e.key === 'd') {
+        e.preventDefault();
+        return duplicateBlock(selected);
+      }
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        return deleteBlock(selected);
+      }
 
       const grow = e.shiftKey;
       const patch =
@@ -635,7 +714,8 @@ export function Editor({
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [drag, editable, move, selected]);
+    // the handlers close over the layout, so they are rebound with it
+  }, [drag, editable, move, selected, layout]);
 
   // a drag released outside the block fires its click on a common ancestor,
   // which would clear the selection the drag just acted on
@@ -742,6 +822,8 @@ export function Editor({
                 </div>
               );
             })}
+            <ContextMenu.Root>
+            <ContextMenu.Trigger onContextMenu={onContextMenu}>
             <div
               className="e-region e-region-active"
               data-label={regions?.find((r) => r.target === active)?.label}
@@ -797,6 +879,45 @@ export function Editor({
               ) : null}
             </Grid>
             </div>
+            </ContextMenu.Trigger>
+            {/* the stage has no theme on purpose, so its reset cannot reach a
+                block. the menu brings its own. */}
+            <Theme asChild {...RAIL_THEME}>
+            {/* focus returning to the clicked block would reselect it over a copy */}
+            <ContextMenu.Content
+              size="1"
+              className="e-menu"
+              onCloseAutoFocus={(e) => e.preventDefault()}>
+              {menuBlock ? (
+                <>
+                  <ContextMenu.Item shortcut="⌘ D" onSelect={() => duplicateBlock(menuBlock.id)}>
+                    Duplicate
+                  </ContextMenu.Item>
+                  <ContextMenu.Item disabled={band !== WIDEST} onSelect={() => addRow(rowLine)}>
+                    Add row below
+                  </ContextMenu.Item>
+                  <ContextMenu.Separator />
+                  <ContextMenu.Item
+                    color="red"
+                    shortcut="⌫"
+                    onSelect={() => deleteBlock(menuBlock.id)}
+                  >
+                    Delete
+                  </ContextMenu.Item>
+                </>
+              ) : (
+                <>
+                  <ContextMenu.Item onSelect={() => menu && addFitted(menu)}>
+                    Add block
+                  </ContextMenu.Item>
+                  <ContextMenu.Item disabled={band !== WIDEST} onSelect={() => addRow(rowLine)}>
+                    Add row below
+                  </ContextMenu.Item>
+                </>
+              )}
+            </ContextMenu.Content>
+            </Theme>
+            </ContextMenu.Root>
           </div>
         </div>
 
@@ -889,11 +1010,7 @@ export function Editor({
             setHist((h) => commit(h, resetToDerived(layout, selected, band)));
           }}
           onDelete={() => {
-            if (!selected) return;
-            setError(null);
-            setHist((h) => commit(h, remove(layout, selected)));
-            setSelected(null);
-            setNode(null);
+            if (selected) deleteBlock(selected);
           }}
           onUndo={() => setHist(undo)}
           onRedo={() => setHist(redo)}

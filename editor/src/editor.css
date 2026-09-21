@@ -359,3 +359,8 @@
   background: none;
   color: var(--gray-a10);
 }
+/* the menu carries its own theme, which marks itself a page root and takes a
+   page's full height */
+.e-menu.radix-themes {
+  min-block-size: 0;
+}

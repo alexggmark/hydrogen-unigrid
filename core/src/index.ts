@@ -103,4 +103,4 @@ export {
   type History,
 } from './history';
 export {derive, cellFor, type Resolved} from './derive';
-export {insertAfter} from './insert';
+export {duplicate, insertAfter, insertRow} from './insert';
