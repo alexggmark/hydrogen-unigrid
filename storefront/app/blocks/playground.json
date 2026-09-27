@@ -1,0 +1,588 @@
+{
+  "regions": {
+    "page": {
+      "version": 1,
+      "blocks": [
+        {
+          "id": "masthead",
+          "at": {
+            "a": {
+              "col": 1,
+              "colSpan": 6,
+              "row": 1,
+              "rowSpan": 1
+            },
+            "b": {
+              "col": 1,
+              "colSpan": 8,
+              "row": 1,
+              "rowSpan": 3
+            },
+            "c": {
+              "col": 1,
+              "colSpan": 4,
+              "row": 1,
+              "rowSpan": 3
+            }
+          },
+          "fill": {},
+          "flex": {
+            "direction": "row",
+            "justify": "between",
+            "align": "center",
+            "gap": 1
+          },
+          "invert": false,
+          "children": [
+            {
+              "id": "masthead-logo",
+              "kind": "logo",
+              "width": 14,
+              "narrow": 30
+            }
+          ]
+        },
+        {
+          "id": "intro",
+          "at": {
+            "a": {
+              "col": 1,
+              "colSpan": 4,
+              "row": 5,
+              "rowSpan": 3
+            },
+            "b": {
+              "col": 1,
+              "colSpan": 4,
+              "row": 4,
+              "rowSpan": 4
+            },
+            "c": {
+              "col": 1,
+              "colSpan": 4,
+              "row": 4,
+              "rowSpan": 5
+            }
+          },
+          "fill": {
+            "color": {
+              "slot": 3
+            }
+          },
+          "flex": {
+            "direction": "column",
+            "justify": "between",
+            "align": "stretch",
+            "gap": 2
+          },
+          "invert": true,
+          "children": [
+            {
+              "id": "intro-h",
+              "kind": "headline",
+              "level": 3,
+              "value": "Inverted"
+            },
+            {
+              "id": "intro-t",
+              "kind": "text",
+              "size": "sm",
+              "value": "Ink and paper swap together, so the button follows the block without being told."
+            },
+            {
+              "id": "intro-rating",
+              "kind": "rating",
+              "stars": 4,
+              "label": "15 Reviews"
+            },
+            {
+              "id": "intro-b",
+              "kind": "button",
+              "variant": "primary",
+              "label": "Primary",
+              "href": "#"
+            }
+          ]
+        },
+        {
+          "id": "essay",
+          "at": {
+            "a": {
+              "col": 5,
+              "colSpan": 5,
+              "row": 5,
+              "rowSpan": 9
+            },
+            "b": {
+              "col": 5,
+              "colSpan": 4,
+              "row": 4,
+              "rowSpan": 6
+            },
+            "c": {
+              "col": 1,
+              "colSpan": 4,
+              "row": 9,
+              "rowSpan": 6
+            }
+          },
+          "fill": {
+            "color": {
+              "slot": 3
+            }
+          },
+          "flex": {
+            "direction": "column",
+            "justify": "start",
+            "align": "stretch",
+            "gap": 1
+          },
+          "invert": false,
+          "children": [
+            {
+              "id": "essay-rating",
+              "kind": "rating",
+              "stars": 5,
+              "label": "15 Reviews",
+              "colour": {
+                "slot": 5
+              }
+            },
+            {
+              "id": "essay-h",
+              "kind": "headline",
+              "level": 4,
+              "value": "Every block is the same box"
+            },
+            {
+              "id": "essay-t",
+              "kind": "text",
+              "size": "sm",
+              "value": "Type picks the renderer. Geometry is identical: a span, whole modules in both axes, and content that overruns is clipped rather than grown."
+            },
+            {
+              "id": "essay-row",
+              "kind": "group",
+              "flex": {
+                "direction": "row",
+                "justify": "start",
+                "align": "center",
+                "gap": 1
+              },
+              "children": [
+                {
+                  "id": "essay-b1",
+                  "kind": "button",
+                  "variant": "primary",
+                  "label": "Primary",
+                  "href": "#"
+                },
+                {
+                  "id": "essay-b2",
+                  "kind": "button",
+                  "variant": "outline",
+                  "label": "Outline",
+                  "href": "#"
+                },
+                {
+                  "id": "essay-b3",
+                  "kind": "button",
+                  "variant": "glass",
+                  "label": "Glass",
+                  "href": "#"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "tint",
+          "at": {
+            "a": {
+              "col": 10,
+              "colSpan": 3,
+              "row": 5,
+              "rowSpan": 9
+            },
+            "b": {
+              "col": 1,
+              "colSpan": 8,
+              "row": 10,
+              "rowSpan": 3
+            },
+            "c": {
+              "col": 1,
+              "colSpan": 4,
+              "row": 15,
+              "rowSpan": 4
+            }
+          },
+          "fill": {
+            "color": {
+              "slot": 4
+            },
+            "media": {
+              "kind": "image",
+              "id": "gid://shopify/MediaImage/33216148897974"
+            },
+            "overlay": {
+              "color": {
+                "hex": "#000000"
+              },
+              "opacity": 0.35
+            }
+          },
+          "flex": {
+            "direction": "column",
+            "justify": "center",
+            "align": "center",
+            "gap": 1
+          },
+          "invert": true,
+          "children": [
+            {
+              "id": "tint-h",
+              "kind": "headline",
+              "level": 5,
+              "value": "Overlay"
+            },
+            {
+              "id": "tint-t",
+              "kind": "text",
+              "size": "sm",
+              "value": "Colour, then a tint at any opacity."
+            },
+            {
+              "id": "tint-b",
+              "kind": "button",
+              "variant": "glass",
+              "label": "Glass",
+              "href": "#"
+            }
+          ]
+        },
+        {
+          "id": "strip",
+          "at": {
+            "a": {
+              "col": 1,
+              "colSpan": 12,
+              "row": 14,
+              "rowSpan": 1
+            },
+            "b": {
+              "col": 1,
+              "colSpan": 8,
+              "row": 13,
+              "rowSpan": 1
+            },
+            "c": {
+              "col": 1,
+              "colSpan": 4,
+              "row": 19,
+              "rowSpan": 2
+            }
+          },
+          "fill": {
+            "color": {
+              "slot": 5
+            }
+          },
+          "flex": {
+            "direction": "row",
+            "justify": "between",
+            "align": "center",
+            "gap": 1
+          },
+          "invert": true,
+          "children": [
+            {
+              "id": "strip-a",
+              "kind": "text",
+              "size": "sm",
+              "value": "01 grid"
+            },
+            {
+              "id": "strip-b",
+              "kind": "text",
+              "size": "sm",
+              "value": "02 blocks"
+            },
+            {
+              "id": "strip-c",
+              "kind": "text",
+              "size": "sm",
+              "value": "03 groups"
+            },
+            {
+              "id": "strip-d",
+              "kind": "text",
+              "size": "sm",
+              "value": "04 editor"
+            }
+          ]
+        },
+        {
+          "id": "catalogue",
+          "at": {
+            "a": {
+              "col": 1,
+              "colSpan": 12,
+              "row": 15,
+              "rowSpan": 10
+            },
+            "b": {
+              "col": 1,
+              "colSpan": 8,
+              "row": 14,
+              "rowSpan": 7
+            },
+            "c": {
+              "col": 1,
+              "colSpan": 4,
+              "row": 21,
+              "rowSpan": 13
+            }
+          },
+          "fill": {},
+          "flex": {
+            "direction": "column",
+            "justify": "start",
+            "align": "stretch",
+            "gap": 1
+          },
+          "invert": false,
+          "children": [
+            {
+              "id": "catalogue-grid",
+              "kind": "collection",
+              "source": "context",
+              "columns": 4,
+              "narrow": 2,
+              "count": 8,
+              "variant": "outline"
+            }
+          ]
+        },
+        {
+          "id": "masthead-1",
+          "at": {
+            "a": {
+              "col": 1,
+              "colSpan": 12,
+              "row": 2,
+              "rowSpan": 3
+            }
+          },
+          "fill": {
+            "color": {
+              "slot": 5
+            }
+          },
+          "flex": {
+            "direction": "column",
+            "justify": "end",
+            "align": "stretch",
+            "gap": 1
+          },
+          "invert": false,
+          "children": [
+            {
+              "id": "masthead-shop-1",
+              "kind": "group",
+              "flex": {
+                "direction": "row",
+                "justify": "end",
+                "align": "stretch",
+                "gap": 2
+              },
+              "children": [
+                {
+                  "id": "masthead-logo-1",
+                  "kind": "logo",
+                  "width": 14,
+                  "narrow": 30
+                },
+                {
+                  "id": "masthead-menu-1",
+                  "kind": "menu",
+                  "handle": "main-menu",
+                  "direction": "row",
+                  "collapse": true
+                },
+                {
+                  "id": "masthead-account-1",
+                  "kind": "account",
+                  "label": "Account"
+                },
+                {
+                  "id": "masthead-cart-1",
+                  "kind": "cart",
+                  "label": "Cart"
+                }
+              ]
+            },
+            {
+              "id": "masthead-h-1",
+              "kind": "headline",
+              "level": 1,
+              "value": "Zoom, not reflow."
+            },
+            {
+              "id": "masthead-t-1",
+              "kind": "text",
+              "size": "lg",
+              "value": "A storefront on a strict modular grid."
+            }
+          ]
+        },
+        {
+          "id": "intro-1",
+          "at": {
+            "a": {
+              "col": 1,
+              "colSpan": 4,
+              "row": 11,
+              "rowSpan": 3
+            }
+          },
+          "fill": {
+            "color": {
+              "slot": 3
+            }
+          },
+          "flex": {
+            "direction": "column",
+            "justify": "between",
+            "align": "stretch",
+            "gap": 2
+          },
+          "invert": true,
+          "children": [
+            {
+              "id": "intro-h-1",
+              "kind": "headline",
+              "level": 3,
+              "value": "Inverted"
+            },
+            {
+              "id": "intro-t-1",
+              "kind": "text",
+              "size": "sm",
+              "value": "Ink and paper swap together, so the button follows the block without being told."
+            },
+            {
+              "id": "intro-rating-1",
+              "kind": "rating",
+              "stars": 4,
+              "label": "15 Reviews"
+            },
+            {
+              "id": "intro-b-1",
+              "kind": "button",
+              "variant": "primary",
+              "label": "Primary",
+              "href": "#"
+            }
+          ]
+        },
+        {
+          "id": "intro-2",
+          "at": {
+            "a": {
+              "col": 1,
+              "colSpan": 4,
+              "row": 8,
+              "rowSpan": 3
+            }
+          },
+          "fill": {
+            "color": {
+              "slot": 3
+            }
+          },
+          "flex": {
+            "direction": "column",
+            "justify": "between",
+            "align": "stretch",
+            "gap": 2
+          },
+          "invert": true,
+          "children": [
+            {
+              "id": "intro-h-2",
+              "kind": "headline",
+              "level": 3,
+              "value": "Inverted"
+            },
+            {
+              "id": "intro-t-2",
+              "kind": "text",
+              "size": "sm",
+              "value": "Ink and paper swap together, so the button follows the block without being told."
+            },
+            {
+              "id": "intro-rating-2",
+              "kind": "rating",
+              "stars": 4,
+              "label": "15 Reviews"
+            },
+            {
+              "id": "intro-b-2",
+              "kind": "button",
+              "variant": "primary",
+              "label": "Primary",
+              "href": "#"
+            }
+          ]
+        },
+        {
+          "id": "block-1",
+          "at": {
+            "a": {
+              "col": 7,
+              "row": 1,
+              "colSpan": 6,
+              "rowSpan": 1
+            }
+          },
+          "fill": {},
+          "flex": {
+            "direction": "column",
+            "justify": "center",
+            "align": "end",
+            "gap": 1
+          },
+          "invert": false,
+          "children": [
+            {
+              "id": "menu-1",
+              "kind": "menu",
+              "handle": "main-menu",
+              "direction": "row",
+              "collapse": false
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "palette": {
+    "1": "#111110",
+    "2": "#fbfbf9",
+    "3": "#d8261c",
+    "4": "#1b3fa0",
+    "5": "#f2c200"
+  },
+  "metrics": {
+    "blockRadius": 1.4,
+    "imageRadius": 1.4,
+    "buttonRadius": 2
+  },
+  "settings": {
+    "logo": "gid://shopify/MediaImage/33440674316470",
+    "background": {
+      "slot": 1
+    }
+  }
+}

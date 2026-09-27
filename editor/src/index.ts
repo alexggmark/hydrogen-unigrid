@@ -1,1 +1,1 @@
-export {Editor, type EditorProps, type StoreMenu} from './Editor';
+export {Editor, type EditorProps, type Region, type Snapshot, type StoreMenu} from './Editor';

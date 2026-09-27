@@ -37,6 +37,7 @@ import {
   DEFAULT_STARS,
   duplicate,
   history,
+  metricsDiff,
   insertAfter,
   insertRow,
   isBand,
@@ -245,6 +246,18 @@ export type EditorProps = {
   // what it holds is the last save, not what is live.
   unpublished?: boolean;
   error?: string;
+  // everything that decides how the page looks, handed to the shell to keep.
+  // the playground downloads it; the admin app has save instead.
+  onExport?: (snapshot: Snapshot) => void;
+};
+
+// every region by target, not just the one being edited, so a header arranged
+// in the playground can become a default too
+export type Snapshot = {
+  regions: Record<string, Layout>;
+  palette: Palette;
+  metrics: Partial<Metrics>;
+  settings: Settings;
 };
 
 export function Editor({
@@ -272,6 +285,7 @@ export function Editor({
   onSavePalette,
   unpublished,
   error: outerError,
+  onExport,
 }: EditorProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const afterDrag = useRef(false);
@@ -979,6 +993,19 @@ export function Editor({
           }
           error={outerError ?? error}
           bytes={bytes}
+          onExport={
+            onExport
+              ? () =>
+                  onExport({
+                    regions: Object.fromEntries(
+                      Object.entries(hists).map(([t, h]) => [t, h.present]),
+                    ),
+                    palette,
+                    metrics: metricsDiff(metrics),
+                    settings,
+                  })
+              : undefined
+          }
           canUndo={canUndo(hist)}
           canRedo={canRedo(hist)}
           onBand={setBand}

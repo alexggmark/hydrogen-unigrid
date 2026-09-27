@@ -170,7 +170,7 @@ type RawItem = {id: string; title: string; url?: string | null};
 
 // one query per referenced handle rather than one aliased query for all of
 // them: a header and a footer reference one menu each, and each caches alone.
-async function loadMenus(
+export async function loadMenus(
   storefront: Queryable,
   layouts: (Layout | null)[],
   domains: readonly string[],

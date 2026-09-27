@@ -16,7 +16,6 @@
   min-inline-size: 0;
   min-block-size: 0;
   overflow: auto;
-  padding-block: 24px;
 }
 
 /* the canvas paints itself rather than borrowing the storefront's demo styles,
@@ -39,6 +38,12 @@
   inline-size: min(100% - 48px, var(--device));
   margin-inline: auto;
   box-shadow: 0 0 0 1px #d8d8d4, 0 8px 32px rgb(0 0 0 / 0.08);
+}
+/* breathing room only where the canvas is a device on the grey; at desktop the
+   canvas is the page and runs edge to edge */
+.e-stage[data-band='b'],
+.e-stage[data-band='c'] {
+  padding-block: 24px;
 }
 .e-stage[data-band='b'] {
   --device: 768px;

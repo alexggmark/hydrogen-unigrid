@@ -172,6 +172,7 @@ export type RailProps = {
   unpublished?: boolean;
   error: string | null;
   bytes: number;
+  onExport?: () => void;
   canUndo: boolean;
   canRedo: boolean;
   onBand: (band: Band) => void;
@@ -1650,6 +1651,11 @@ function EditorPanel({props}: {props: RailProps}) {
           >
             Redo
           </Button>
+          {props.onExport ? (
+            <Button size="1" variant="soft" onClick={props.onExport}>
+              Export
+            </Button>
+          ) : null}
         </Flex>
         <Text size="1" color="gray">
           Layout serialises to {(props.bytes / 1024).toFixed(1)}kb
