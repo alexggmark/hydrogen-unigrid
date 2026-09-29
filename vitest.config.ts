@@ -7,6 +7,7 @@ export default defineConfig({
     include: [
       'core/**/*.test.ts',
       'blocks/**/*.test.ts',
+      'editor/**/*.test.ts',
       'storefront/app/**/*.test.ts',
       'admin-app/app/**/*.test.ts',
     ],

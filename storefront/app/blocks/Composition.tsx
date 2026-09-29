@@ -19,6 +19,7 @@ import {
   deriveAll,
   metricVars,
   pageIsDark,
+  paletteVars,
   pageVars,
 } from '@unigrid/blocks';
 import type {
@@ -96,16 +97,16 @@ function Region({
 // bring its own or nothing on the page can open one.
 function CartDrawer({
   cart,
-  metrics,
+  style,
 }: {
   cart: RootData['cart'] | undefined;
-  metrics?: Metrics;
+  style: CSSProperties;
 }) {
   return (
     <Aside
       type="cart"
       heading="Cart"
-      style={metricVars(metrics) as CSSProperties}
+      style={style}
     >
       <Suspense fallback={<p>Loading cart…</p>}>
         <Await resolve={cart ?? Promise.resolve(null)}>
@@ -121,11 +122,11 @@ function CartDrawer({
 function MenuDrawer({
   menus,
   handle,
-  metrics,
+  style,
 }: {
   menus: Menus;
   handle: string | null;
-  metrics?: Metrics;
+  style: CSSProperties;
 }) {
   const {close} = useAside();
   const items = (handle && menus[handle]) || [];
@@ -133,7 +134,7 @@ function MenuDrawer({
     <Aside
       type="mobile"
       heading="Menu"
-      style={metricVars(metrics) as CSSProperties}
+      style={style}
     >
       <nav className="u-drawer-menu">
         {items.map((item) => (
@@ -225,19 +226,26 @@ function useShopState(root: RootData | undefined): ShopState {
 function Shell({
   menus,
   metrics,
+  palette,
   children,
 }: {
   menus: Menus;
   metrics?: Metrics;
+  palette: Palette;
   children: ReactNode;
 }) {
   const root = useRouteLoaderData<RootLoader>('root');
   const [menuHandle, setMenuHandle] = useState<string | null>(null);
+  // the drawers mount outside the page, so the theme has to be handed to them
+  const drawer = {
+    ...metricVars(metrics),
+    ...paletteVars(palette),
+  } as CSSProperties;
 
   const page = (
     <Aside.Provider>
-      <CartDrawer cart={root?.cart} metrics={metrics} />
-      <MenuDrawer menus={menus} handle={menuHandle} metrics={metrics} />
+      <CartDrawer cart={root?.cart} style={drawer} />
+      <MenuDrawer menus={menus} handle={menuHandle} style={drawer} />
       <OpenMenu onHandle={setMenuHandle}>{children}</OpenMenu>
     </Aside.Provider>
   );
@@ -389,7 +397,7 @@ function Page({
 // cart button has to be able to open a drawer that is above it in the tree.
 export function Composition(props: Parameters<typeof Page>[0]) {
   return (
-    <Shell menus={props.menus} metrics={props.metrics}>
+    <Shell menus={props.menus} metrics={props.metrics} palette={props.palette}>
       <Page {...props} />
     </Shell>
   );

@@ -4,8 +4,8 @@
 
 .overlay {
   --aside-width: 26rem;
-  --aside-ink: #111110;
-  --aside-paper: #fbfbf9;
+  --aside-ink: var(--theme-1, #111110);
+  --aside-paper: var(--theme-2, #fbfbf9);
 
   position: fixed;
   inset: 0;

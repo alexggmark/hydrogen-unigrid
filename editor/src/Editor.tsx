@@ -38,6 +38,7 @@ import {
   duplicate,
   history,
   metricsDiff,
+  metricsFrom,
   insertAfter,
   insertRow,
   isBand,
@@ -93,6 +94,7 @@ import {
   RAIL_THEME,
 } from './Rail';
 import {DEFAULT_PALETTE, type Layout, type Palette} from '@unigrid/core';
+import {readSnapshot, regionFor, type Snapshot} from './snapshot';
 
 
 const REASON: Record<string, string> = {
@@ -251,14 +253,7 @@ export type EditorProps = {
   onExport?: (snapshot: Snapshot) => void;
 };
 
-// every region by target, not just the one being edited, so a header arranged
-// in the playground can become a default too
-export type Snapshot = {
-  regions: Record<string, Layout>;
-  palette: Palette;
-  metrics: Partial<Metrics>;
-  settings: Settings;
-};
+export type {Snapshot};
 
 export function Editor({
   initial,
@@ -521,6 +516,34 @@ export function Editor({
     },
     [setHist],
   );
+
+  // a commit per region, so the import is one undo away and save sees it as a
+  // change. the theme is replaced in memory only; save theme is what keeps it.
+  const importFile = async (file: File) => {
+    const snapshot = readSnapshot(await file.text());
+    if (!snapshot) {
+      setError('That file is not a unigrid export');
+      return;
+    }
+    setHists((all) =>
+      Object.fromEntries(
+        Object.entries(all).map(([t, h]) => {
+          const next = regionFor(snapshot, t);
+          return [t, next ? commit(h, next) : h];
+        }),
+      ),
+    );
+    setPalette(snapshot.palette);
+    setMetrics(metricsFrom(snapshot.metrics));
+    // a mockup rarely carries the store's logo, and losing it would be silent
+    setSettings((s) => ({
+      ...snapshot.settings,
+      ...(!snapshot.settings.logo && s.logo ? {logo: s.logo} : {}),
+    }));
+    setSelected(null);
+    setNode(null);
+    setError(null);
+  };
 
   const addChild = (key: AddKey, parentId: string | null) => {
     if (!selected) return;
@@ -1006,6 +1029,7 @@ export function Editor({
                   })
               : undefined
           }
+          onImport={onExport ? importFile : undefined}
           canUndo={canUndo(hist)}
           canRedo={canRedo(hist)}
           onBand={setBand}

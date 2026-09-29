@@ -48,8 +48,9 @@ import {
   type Metrics,
   type Palette as ThemePalette,
   type Settings,
+  type Slot,
 } from '@unigrid/core';
-import {useState} from 'react';
+import {useRef, useState} from 'react';
 import {Palette} from './Palette';
 import {Tree, type NodeDrag} from './Tree';
 
@@ -173,6 +174,7 @@ export type RailProps = {
   error: string | null;
   bytes: number;
   onExport?: () => void;
+  onImport?: (file: File) => void;
   canUndo: boolean;
   canRedo: boolean;
   onBand: (band: Band) => void;
@@ -1271,13 +1273,17 @@ function MetricsPanel({props}: {props: RailProps}) {
 
 const METRIC_KEYS_LOCAL = Object.keys(DEFAULT_METRICS) as (keyof Metrics)[];
 
+// the stylesheet reads 1 and 2 as ink and paper, so the rail says so
+const ROLE: Partial<Record<Slot, string>> = {1: 'Ink', 2: 'Paper'};
+
 function ThemePanel({props}: {props: RailProps}) {
   return (
     <>
       <Section title="Theme colours">
         <Text size="1" color="gray">
           Blocks store which colour, not the colour itself — change one here and
-          every block using it moves, published pages included.
+          every block using it moves, published pages included. Ink and paper
+          are the text and button pair; invert swaps them.
         </Text>
         {SLOTS.map((slot) => (
           <Flex key={slot} gap="3" align="center">
@@ -1291,7 +1297,10 @@ function ThemePanel({props}: {props: RailProps}) {
                 props.onPalette?.({...props.palette, [slot]: e.target.value})
               }
             />
-            <Text size="2">Colour {slot}</Text>
+            <Text size="2">
+              Colour {slot}
+              {ROLE[slot] ? ` · ${ROLE[slot]}` : ''}
+            </Text>
             <Text size="1" color="gray">
               {props.palette[slot]}
             </Text>
@@ -1651,11 +1660,6 @@ function EditorPanel({props}: {props: RailProps}) {
           >
             Redo
           </Button>
-          {props.onExport ? (
-            <Button size="1" variant="soft" onClick={props.onExport}>
-              Export
-            </Button>
-          ) : null}
         </Flex>
         <Text size="1" color="gray">
           Layout serialises to {(props.bytes / 1024).toFixed(1)}kb
@@ -1699,6 +1703,39 @@ function EditorPanel({props}: {props: RailProps}) {
     </>
   );
 }
+// temporary, for switching between mocked-up layouts. the file replaces every
+// region and the theme in memory; nothing is written until save.
+function Mockups({props}: {props: RailProps}) {
+  const input = useRef<HTMLInputElement>(null);
+  return (
+    <Flex gap="2" align="center" mb="2">
+      <Button size="1" variant="soft" onClick={props.onExport}>
+        Export
+      </Button>
+      <Button
+        size="1"
+        variant="soft"
+        disabled={!props.onImport}
+        onClick={() => input.current?.click()}
+      >
+        Import
+      </Button>
+      <input
+        ref={input}
+        type="file"
+        accept="application/json,.json"
+        hidden
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          // cleared so picking the same file twice still fires
+          e.target.value = '';
+          if (file) props.onImport?.(file);
+        }}
+      />
+    </Flex>
+  );
+}
+
 // shared with the stage's context menu, which portals outside the rail
 export const RAIL_THEME = {
   appearance: 'light',
@@ -1751,6 +1788,7 @@ export function Rail(props: RailProps) {
       </Box>
 
       <Box className="e-foot" px="3" py="2">
+        {props.onExport ? <Mockups props={props} /> : null}
         <Text size="1" color="gray">
           drag to move · grab an edge to resize · arrows nudge · esc deselect
         </Text>

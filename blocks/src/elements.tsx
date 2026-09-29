@@ -61,7 +61,7 @@ export const pageVars = (
     : {}),
   // anything the page itself renders — a route's fallback content — has to
   // follow the background too, not just the blocks
-  ...(pageIsDark(palette, settings) ? {'--page-ink': '#fbfbf9'} : {}),
+  '--page-ink': `var(--theme-${pageIsDark(palette, settings) ? 2 : 1})`,
 });
 
 // unitless numbers, not lengths: the stylesheet multiplies each by --u so the

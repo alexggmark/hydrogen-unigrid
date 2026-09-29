@@ -227,15 +227,16 @@
 }
 
 /* ink and paper are a pair, so invert swaps them and every element inside
-   follows without knowing it happened */
+   follows without knowing it happened. theme colours 1 and 2 are the pair, so
+   the merchant's black and white are the theme's, not ours. */
 .u-block {
-  --ink: #111110;
-  --paper: #fbfbf9;
+  --ink: var(--theme-1, #111110);
+  --paper: var(--theme-2, #fbfbf9);
   color: var(--ink);
 }
 .u-block[data-invert] {
-  --ink: #fbfbf9;
-  --paper: #111110;
+  --ink: var(--theme-2, #fbfbf9);
+  --paper: var(--theme-1, #111110);
 }
 
 /* a block with no fill of its own is sitting on the page, so the page's colour
@@ -243,8 +244,8 @@
    an image or video keeps the manual toggle — a photograph has no luminance we
    can read from here. */
 [data-page-dark] .u-block[data-plain] {
-  --ink: #fbfbf9;
-  --paper: #111110;
+  --ink: var(--theme-2, #fbfbf9);
+  --paper: var(--theme-1, #111110);
 }
 
 .u-btn {

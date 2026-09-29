@@ -12,7 +12,7 @@ import {
   useRouteError,
 } from 'react-router';
 import {boundary} from '@shopify/shopify-app-react-router/server';
-import {Editor} from '@unigrid/editor';
+import {Editor, downloadSnapshot, type Snapshot} from '@unigrid/editor';
 import {
   DEFAULT_METRICS,
   DEFAULT_PALETTE,
@@ -270,6 +270,13 @@ export default function Index() {
 
   const result = fetcher.data;
 
+  // temporary: mockups are swapped in by file while layouts are being drafted
+  const onExport = useCallback(
+    (snapshot: Snapshot) =>
+      downloadSnapshot(snapshot, `unigrid-${target.replace(/[^a-z0-9-]+/gi, '-')}.json`),
+    [target],
+  );
+
   return (
     <Editor
       key={target}
@@ -295,6 +302,7 @@ export default function Index() {
       version={version}
       unpublished={unpublished}
       error={result && !result.ok ? result.message : undefined}
+      onExport={onExport}
     />
   );
 }

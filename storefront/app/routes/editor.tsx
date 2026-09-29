@@ -1,7 +1,13 @@
 import type {LinksFunction} from 'react-router';
 import {useLoaderData} from 'react-router';
 import type {Route} from './+types/editor';
-import {Editor, type Region, type Snapshot, type StoreMenu} from '@unigrid/editor';
+import {
+  Editor,
+  downloadSnapshot,
+  type Region,
+  type Snapshot,
+  type StoreMenu,
+} from '@unigrid/editor';
 import {decode, encode, metricsFrom, type Layout, type Palette} from '@unigrid/core';
 import {DEMO_COLLECTION, DEMO_MENUS, DEMO_PRODUCTS, HARNESS} from '~/blocks/harness';
 import radixStyles from '@radix-ui/themes/styles.css?url';
@@ -52,16 +58,9 @@ export async function loader({context}: Route.LoaderArgs) {
   return {media, settings, header, footer, menus};
 }
 
-// a file, not storage: the playground persists nothing, and a snapshot is
-// something to read, diff and hand back as the next default
-function download(snapshot: Snapshot) {
-  const blob = new Blob([JSON.stringify(snapshot, null, 2)], {type: 'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'unigrid-playground.json';
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
+// what export hands back becomes the next playground.json
+const download = (snapshot: Snapshot) =>
+  downloadSnapshot(snapshot, 'unigrid-playground.json');
 
 export default function Playground() {
   const {media, settings, header, footer, menus} = useLoaderData<typeof loader>();
