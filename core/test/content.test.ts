@@ -2,12 +2,14 @@ import {describe, expect, it} from 'vitest';
 import {
   addNode,
   findNode,
+  flexIn,
   menuHandles,
   moveNode,
   patchBlock,
   patchNode,
   placeNode,
   removeNode,
+  resetFlex,
   setFlex,
 } from '../src/content';
 import {decode, encode} from '../src/serialise';
@@ -83,6 +85,31 @@ describe('content tree', () => {
     expect(l.blocks[0]?.flex.direction).toBe('row');
     const g = l.blocks[0]?.children[0];
     expect(g && isGroup(g) ? g.flex.gap : null).toBe(4);
+  });
+
+  it('a phone edit overrides the phone only, starting from the desktop', () => {
+    let l = addNode(base(), 'b', null, group('g'));
+    l = setFlex(l, 'g', {direction: 'column'}, 'c');
+    const g = l.blocks[0]?.children[0];
+    if (!g || !isGroup(g)) throw new Error('no group');
+    expect(g.flex.direction).toBe('row');
+    expect(g.narrowFlex).toEqual({...g.flex, direction: 'column'});
+    expect(flexIn(g, 'b')).toBe(g.flex);
+    expect(flexIn(g, 'c')).toBe(g.narrowFlex);
+  });
+
+  it('desktop edits leave a phone override alone, and reset removes it', () => {
+    let l = setFlex(base(), 'b', {gap: 3}, 'c');
+    l = setFlex(l, 'b', {gap: 6}, 'b');
+    expect(l.blocks[0]?.flex.gap).toBe(6);
+    expect(l.blocks[0]?.narrowFlex?.gap).toBe(3);
+    l = resetFlex(l, 'b');
+    expect(l.blocks[0] && 'narrowFlex' in l.blocks[0]).toBe(false);
+  });
+
+  it('an override at defaults survives the wire', () => {
+    const l = setFlex(base(), 'b', {}, 'c');
+    expect(decode(encode(l))).toEqual(l);
   });
 
   it('patchBlock leaves the placement alone', () => {

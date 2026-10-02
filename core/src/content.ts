@@ -1,3 +1,4 @@
+import {NARROW, WIDEST, type Band} from './bands';
 import type {Block, Element, Flex, Group, Layout, Node} from './types';
 import {isGroup, isMediaRef} from './types';
 
@@ -164,17 +165,47 @@ export function patchBlock(
   return mapBlock(layout, blockId, (b) => ({...b, ...patch}));
 }
 
+type FlexHolder = {flex: Flex; narrowFlex?: Flex};
+
+export const flexIn = (h: FlexHolder, band: Band): Flex =>
+  band === NARROW ? (h.narrowFlex ?? h.flex) : h.flex;
+
+// a block or a group, by id. groups sit one level down, never deeper.
+const mapHolder = (
+  layout: Layout,
+  id: string,
+  fn: <T extends FlexHolder>(h: T) => T,
+): Layout => ({
+  ...layout,
+  blocks: layout.blocks.map((b) => {
+    const block = b.id === id ? fn(b) : b;
+    return {
+      ...block,
+      children: block.children.map((n) => (isGroup(n) && n.id === id ? fn(n) : n)),
+    };
+  }),
+});
+
+// an edit on the phone copies the desktop arrangement the first time, so the
+// override starts from what was showing rather than from defaults
 export const setFlex = (
   layout: Layout,
   id: string,
   patch: Partial<Flex>,
-): Layout => {
-  const block = layout.blocks.find((b) => b.id === id);
-  if (block) return patchBlock(layout, id, {flex: {...block.flex, ...patch}});
-  const found = findNode(layout, id);
-  if (!found || !isGroup(found.node)) return layout;
-  return patchNode(layout, id, {flex: {...found.node.flex, ...patch}});
-};
+  band: Band = WIDEST,
+): Layout =>
+  mapHolder(layout, id, (h) =>
+    band === NARROW
+      ? {...h, narrowFlex: {...flexIn(h, band), ...patch}}
+      : {...h, flex: {...h.flex, ...patch}},
+  );
+
+export const resetFlex = (layout: Layout, id: string): Layout =>
+  mapHolder(layout, id, (h) => {
+    const rest = {...h};
+    delete rest.narrowFlex;
+    return rest;
+  });
 
 // pinned product handles. a 'context' source resolves from the route, so it is
 // not a reference the loader has to go and fetch.

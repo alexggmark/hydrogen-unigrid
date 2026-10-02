@@ -150,6 +150,7 @@ function encodeNode(n: Node): Obj {
         i: n.id,
         k: 'g',
         ...(flex ? {x: flex} : {}),
+        ...(n.narrowFlex ? {xc: encodeFlex(n.narrowFlex) ?? {}} : {}),
         ...(n.width ? {w: n.width} : {}),
         c: n.children.map(encodeNode),
       };
@@ -257,6 +258,7 @@ function decodeNode(w: unknown): Node | undefined {
         id,
         kind: 'group',
         flex: decodeFlex(o.x),
+        ...(o.xc !== undefined ? {narrowFlex: decodeFlex(o.xc)} : {}),
         ...(w ? {width: w} : {}),
         children,
       } satisfies Group;
@@ -357,6 +359,8 @@ export function encode(layout: Layout): string {
     if (fill) out.f = fill;
     const flex = encodeFlex(b.flex);
     if (flex) out.x = flex;
+    // written even at defaults: an override that matches them is still not absent
+    if (b.narrowFlex) out.xc = encodeFlex(b.narrowFlex) ?? {};
     if (b.invert) out.n = 1;
     if (b.children.length) out.k = b.children.map(encodeNode);
     return out;
@@ -402,6 +406,7 @@ export function decode(json: string): Layout | undefined {
       at,
       fill: decodeFill(o.f),
       flex: decodeFlex(o.x),
+      ...(o.xc !== undefined ? {narrowFlex: decodeFlex(o.xc)} : {}),
       invert: o.n === 1,
       children,
     });

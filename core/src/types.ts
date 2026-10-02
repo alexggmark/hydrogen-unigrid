@@ -134,6 +134,7 @@ export type Group = {
   id: string;
   kind: 'group';
   flex: Flex;
+  narrowFlex?: Flex;
   width?: number;
   children: Element[];
 };
@@ -184,6 +185,8 @@ export type Block = {
   at: Placement;
   fill: Fill;
   flex: Flex;
+  // the phone's own arrangement. absent means it follows flex
+  narrowFlex?: Flex;
   // flips the ink/paper pair for everything inside, buttons included
   invert: boolean;
   children: Node[];

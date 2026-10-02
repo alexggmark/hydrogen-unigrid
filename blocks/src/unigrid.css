@@ -723,17 +723,43 @@ button.u-btn[data-variant='outline']:not(:disabled):hover {
 .u-group {
   max-inline-size: calc(var(--u) * var(--group-w, 100));
 }
+/* full width up to its cap, then placed by the parent's align like any child.
+   released with the cap: on a phone the parent may be a row, where full width
+   would push its siblings out. */
+.u-group[data-self] {
+  inline-size: 100%;
+  align-self: var(--self);
+}
+.u-group[data-self='center'] {
+  --self: center;
+}
+.u-group[data-self='end'] {
+  --self: flex-end;
+}
 @container grid (width < 36rem) {
   .u-group {
     max-inline-size: none;
+  }
+  .u-group[data-self] {
+    inline-size: auto;
+    align-self: stretch;
   }
 }
 [data-band='a'] .u-group,
 [data-band='b'] .u-group {
   max-inline-size: calc(var(--u) * var(--group-w, 100));
 }
+[data-band='a'] .u-group[data-self],
+[data-band='b'] .u-group[data-self] {
+  inline-size: 100%;
+  align-self: var(--self);
+}
 [data-band='c'] .u-group {
   max-inline-size: none;
+}
+[data-band='c'] .u-group[data-self] {
+  inline-size: auto;
+  align-self: stretch;
 }
 
 /* the rating. the stars take a colour of their own, the words take the block's
@@ -811,6 +837,40 @@ button.u-btn[data-variant='outline']:not(:disabled):hover {
 /* the block's one measured child. min-height rather than height, so it fills
    the span for justify-content but still reports its true height when it
    overruns — which is what the clipping badge reads. */
+/* every flow carries both arrangements and picks one here; --fd and the rest
+   stay the names everything inside reads. forced band rules sit beside the
+   container query, which carries no specificity. */
+.u-flow {
+  --fd: var(--fd-d);
+  --jc: var(--jc-d);
+  --ai: var(--ai-d);
+  --ta: var(--ta-d);
+  --gap: var(--gap-d);
+}
+@container grid (width < 36rem) {
+  .u-flow {
+    --fd: var(--fd-c);
+    --jc: var(--jc-c);
+    --ai: var(--ai-c);
+    --ta: var(--ta-c);
+    --gap: var(--gap-c);
+  }
+}
+[data-band='a'] .u-flow,
+[data-band='b'] .u-flow {
+  --fd: var(--fd-d);
+  --jc: var(--jc-d);
+  --ai: var(--ai-d);
+  --ta: var(--ta-d);
+  --gap: var(--gap-d);
+}
+[data-band='c'] .u-flow {
+  --fd: var(--fd-c);
+  --jc: var(--jc-c);
+  --ai: var(--ai-c);
+  --ta: var(--ta-c);
+  --gap: var(--gap-c);
+}
 .u-flow {
   position: relative;
   z-index: 1;
@@ -885,6 +945,12 @@ button.u-btn[data-variant='outline']:not(:disabled):hover {
   --cs: var(--csc, var(--csa));
   --r: var(--rc, var(--ra));
   --rs: var(--rsc, var(--rsa));
+}
+
+/* padding keeps content off a visible edge, and a block with no fill has none,
+   so its content sits on the grid lines instead. last so it beats every band. */
+.u-block[data-plain] {
+  padding: 0;
 }
 
 /* laid out by the grid like anything else, so they report what it actually did */

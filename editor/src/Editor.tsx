@@ -52,6 +52,7 @@ import {
   remove,
   removeNode,
   resetToDerived,
+  resetFlex,
   setFlex,
   undo,
   WIDEST,
@@ -1049,7 +1050,8 @@ export function Editor({
           onPatchBlock={(patch) => {
             if (selected) edit(patchBlock(layout, selected, patch));
           }}
-          onFlex={(id, patch) => edit(setFlex(layout, id, patch))}
+          onFlex={(id, patch) => edit(setFlex(layout, id, patch, band))}
+          onResetFlex={(id) => edit(resetFlex(layout, id))}
           onFit={() => {
             if (!selected || !editable) return;
             const short = clipped[selected] ?? 0;

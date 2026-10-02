@@ -123,13 +123,20 @@ const TEXT_IN_ROW: Record<Flex['justify'], string> = {
 export const textAlign = (f: Flex): string =>
   f.direction === 'column' ? TEXT_IN_COLUMN[f.align] : TEXT_IN_ROW[f.justify];
 
-export const flexVars = (f: Flex): CSSProperties =>
+// both arrangements, always: the stylesheet picks one per band, and a flow that
+// left its phone values unset would inherit its parent's
+export const flexVars = (f: Flex, narrow: Flex = f): CSSProperties =>
   ({
-    '--fd': f.direction,
-    '--jc': JUSTIFY[f.justify],
-    '--ai': ALIGN[f.align],
-    '--ta': textAlign(f),
-    '--gap': f.gap,
+    '--fd-d': f.direction,
+    '--jc-d': JUSTIFY[f.justify],
+    '--ai-d': ALIGN[f.align],
+    '--ta-d': textAlign(f),
+    '--gap-d': f.gap,
+    '--fd-c': narrow.direction,
+    '--jc-c': JUSTIFY[narrow.justify],
+    '--ai-c': ALIGN[narrow.align],
+    '--ta-c': textAlign(narrow),
+    '--gap-c': narrow.gap,
   }) as CSSProperties;
 
 const HEADINGS = ['h1', 'h2', 'h3', 'h4', 'h5'] as const;
@@ -318,7 +325,22 @@ function Leaf({node}: {node: Element}) {
   }
 }
 
-export function Nodes({nodes}: {nodes: readonly Node[]}) {
+// a stretched group with a cap pins to the start edge, so in a column it takes
+// its parent's align instead. a row positions it with justify already. the cap
+// is desktop only, so the desktop arrangement is the one that decides.
+const groupSelf = (parent: Flex): string | undefined =>
+  parent.direction === 'column' &&
+  (parent.align === 'center' || parent.align === 'end')
+    ? parent.align
+    : undefined;
+
+export function Nodes({
+  nodes,
+  parent,
+}: {
+  nodes: readonly Node[];
+  parent: Flex;
+}) {
   return (
     <>
       {nodes.map((node) =>
@@ -327,14 +349,15 @@ export function Nodes({nodes}: {nodes: readonly Node[]}) {
             key={node.id}
             className="u-flow u-group"
             data-node={node.id}
+            data-self={node.width ? groupSelf(parent) : undefined}
             style={
               {
-                ...flexVars(node.flex),
+                ...flexVars(node.flex, node.narrowFlex),
                 ...(node.width ? {'--group-w': node.width} : {}),
               } as CSSProperties
             }
           >
-            <Nodes nodes={node.children} />
+            <Nodes nodes={node.children} parent={node.flex} />
           </div>
         ) : (
           <div

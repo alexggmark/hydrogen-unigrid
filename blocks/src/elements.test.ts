@@ -1,7 +1,7 @@
 import {describe, expect, it} from 'vitest';
 import {DEFAULT_FLEX, type Flex} from '@unigrid/core';
 import {DEFAULT_PALETTE} from '@unigrid/core';
-import {pageIsDark, textAlign} from './elements';
+import {flexVars, pageIsDark, textAlign} from './elements';
 
 const flex = (patch: Partial<Flex>): Flex => ({...DEFAULT_FLEX, ...patch});
 
@@ -67,5 +67,23 @@ describe('the page decides an unfilled block\'s ink', () => {
   it('weights the channels rather than averaging them', () => {
     expect(pageIsDark(DEFAULT_PALETTE, {background: {hex: '#1b3fa0'}})).toBe(true);
     expect(pageIsDark(DEFAULT_PALETTE, {background: {hex: '#f2c200'}})).toBe(false);
+  });
+});
+
+describe('flex vars carry both arrangements', () => {
+  // a group that left its phone values out would inherit its parent's
+  it('writes the phone set even with no override', () => {
+    const vars = flexVars(flex({direction: 'row'})) as Record<string, unknown>;
+    expect(vars['--fd-c']).toBe('row');
+    expect(vars['--fd-d']).toBe('row');
+  });
+
+  it('takes text alignment from the phone arrangement on the phone', () => {
+    const vars = flexVars(
+      flex({direction: 'row', justify: 'end'}),
+      flex({direction: 'column', align: 'center'}),
+    ) as Record<string, unknown>;
+    expect(vars['--ta-d']).toBe('end');
+    expect(vars['--ta-c']).toBe('center');
   });
 });

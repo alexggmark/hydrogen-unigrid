@@ -13,6 +13,7 @@ build/
 *.tsbuildinfo
 .DS_Store
 .wrangler/
+exports/
 
 # playwright
 /test-results/

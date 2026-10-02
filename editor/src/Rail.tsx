@@ -32,6 +32,8 @@ import {
   SLOTS,
   isGroup,
   WIDEST,
+  NARROW,
+  flexIn,
   type Band,
   type Block,
   type Cell,
@@ -193,7 +195,9 @@ export type RailProps = {
   onPatchBlock: (
     patch: Partial<Pick<Block, 'fill' | 'flex' | 'invert'>>,
   ) => void;
+  // writes the phone's own arrangement when the active band is the narrow one
   onFlex: (id: string, patch: Partial<FlexModel>) => void;
+  onResetFlex: (id: string) => void;
 };
 
 function Field({label, children}: {label: string; children: React.ReactNode}) {
@@ -303,6 +307,48 @@ function FlexFields({
   );
 }
 
+// a block or group's arrangement in the active band. tablet shares the
+// desktop's, so only mobile can differ.
+function Arrangement({
+  id,
+  holder,
+  props,
+}: {
+  id: string;
+  holder: {flex: FlexModel; narrowFlex?: FlexModel};
+  props: RailProps;
+}) {
+  const narrow = props.band === NARROW;
+  const own = holder.narrowFlex !== undefined;
+  return (
+    <>
+      <Badge size="1" color={!narrow ? 'indigo' : own ? 'green' : 'gray'}>
+        {!narrow
+          ? 'desktop and tablet — mobile follows it'
+          : own
+            ? 'overridden on mobile'
+            : 'follows desktop — editing overrides it'}
+      </Badge>
+      <FlexFields
+        flex={flexIn(holder, props.band)}
+        onChange={(p) => props.onFlex(id, p)}
+      />
+      {narrow ? (
+        <Box>
+          <Button
+            size="1"
+            variant="soft"
+            disabled={!own}
+            onClick={() => props.onResetFlex(id)}
+          >
+            Reset to desktop
+          </Button>
+        </Box>
+      ) : null}
+    </>
+  );
+}
+
 function AddMenu({
   parentId,
   onAdd,
@@ -335,10 +381,7 @@ function Inspector({found, props}: {found: Found; props: RailProps}) {
     const [min, max, step] = GROUP_WIDTH_RANGE;
     return (
       <>
-        <FlexFields
-          flex={node.flex}
-          onChange={(p) => props.onFlex(node.id, p)}
-        />
+        <Arrangement id={node.id} holder={node} props={props} />
         <Field
           label={`Max width — ${node.width ? `${node.width}u` : 'full'}`}
         >
@@ -1054,7 +1097,7 @@ const METRIC_GROUPS: {title: string; note?: string; keys: (keyof Metrics)[]}[] =
   },
     {
       title: 'Block padding',
-      note: 'A unit is 1% of the grid, so a phone needs its own value where a desktop does not.',
+      note: 'Only blocks with a colour or image are padded; the rest sit on the grid lines. A unit is 1% of the grid, so a phone needs its own value where a desktop does not.',
       keys: ['blockPadX', 'blockPadY', 'blockPadXNarrow', 'blockPadYNarrow'],
     },
     {title: 'Corners', keys: ['blockRadius', 'imageRadius', 'buttonRadius']},
@@ -1609,10 +1652,7 @@ function EditorPanel({props}: {props: RailProps}) {
           </Section>
 
           <Section title="Layout">
-            <FlexFields
-              flex={block.flex}
-              onChange={(p) => props.onFlex(block.id, p)}
-            />
+            <Arrangement id={block.id} holder={block} props={props} />
           </Section>
 
           <Section title="Contents">

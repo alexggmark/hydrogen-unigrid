@@ -2,7 +2,7 @@
 
 export const UNIGRID_CORE = 'unigrid-core' as const;
 
-export {BANDS, COLUMNS, WIDEST, isBand, type Band} from './bands';
+export {BANDS, COLUMNS, NARROW, WIDEST, isBand, type Band} from './bands';
 export {
   DEFAULT_FLEX,
   emptyBlock,
@@ -63,6 +63,7 @@ export {
 export {
   addNode,
   findNode,
+  flexIn,
   collectionCounts,
   collectionPageSize,
   mediaIds,
@@ -73,6 +74,7 @@ export {
   patchNode,
   placeNode,
   removeNode,
+  resetFlex,
   setFlex,
   type Found,
 } from './content';

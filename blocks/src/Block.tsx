@@ -57,8 +57,8 @@ export function Block({block, at, blockId, selected, chrome}: BlockProps) {
         />
       ) : null}
       {/* the one measured element; the rest is background or chrome */}
-      <div className="u-flow" style={flexVars(block.flex)}>
-        <Nodes nodes={block.children} />
+      <div className="u-flow" style={flexVars(block.flex, block.narrowFlex)}>
+        <Nodes nodes={block.children} parent={block.flex} />
       </div>
       {chrome}
     </div>
