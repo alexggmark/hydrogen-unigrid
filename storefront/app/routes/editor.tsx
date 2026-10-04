@@ -93,6 +93,7 @@ export default function Playground() {
       collections={[DEMO_COLLECTION]}
       initialSettings={settings}
       onExport={download}
+      memoryTest
     />
   );
 }

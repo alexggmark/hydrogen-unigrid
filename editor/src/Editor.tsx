@@ -266,6 +266,8 @@ export type EditorProps = {
   onExport?: (snapshot: Snapshot) => void;
   test?: AbTest;
   onTest?: (intent: 'create' | 'arm' | 'flag' | 'rollout', value?: string) => void;
+  // the playground has no store, so its test lives in memory, here
+  memoryTest?: boolean;
 };
 
 export type {Snapshot};
@@ -296,8 +298,9 @@ export function Editor({
   unpublished,
   error: outerError,
   onExport,
-  test,
-  onTest,
+  test: shellTest,
+  onTest: shellOnTest,
+  memoryTest,
 }: EditorProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const afterDrag = useRef(false);
@@ -395,9 +398,41 @@ export function Editor({
     [regions, hists],
   );
 
+  // the arm not on screen, parked whole so its undo history survives a switch
+  const [memo, setMemo] = useState<{
+    arm: 'a' | 'b';
+    parked: LayoutHistory | null;
+    flag: string;
+  }>({arm: 'a', parked: null, flag: ''});
+  const page = target ?? activeTarget ?? active;
+  const test: AbTest | undefined = memoryTest
+    ? {
+        arm: memo.arm,
+        hasB: memo.parked !== null,
+        bLive: true,
+        flag: memo.flag,
+        a: memo.arm === 'b' ? (memo.parked?.present ?? null) : null,
+      }
+    : shellTest;
+  const onTest: EditorProps['onTest'] = memoryTest
+    ? (intent, value = '') => {
+        const here = hists[page] ?? history(initial);
+        if (intent === 'create') setMemo((m) => ({...m, parked: history(here.present)}));
+        if (intent === 'flag') setMemo((m) => ({...m, flag: value}));
+        // the open arm is kept either way, so roll out only forgets the other
+        if (intent === 'rollout') setMemo({arm: 'a', parked: null, flag: ''});
+        if (intent === 'arm' && value !== memo.arm && memo.parked) {
+          const parked = memo.parked;
+          setHists((all) => ({...all, [page]: parked}));
+          setMemo((m) => ({...m, arm: value as 'a' | 'b', parked: here}));
+          activate(page);
+        }
+      }
+    : shellOnTest;
+
   // one commit on the page's own region, so it is a single undo away
   const copyA = () => {
-    const into = target ?? active;
+    const into = page;
     if (!test?.a) return;
     const from = test.a;
     setHists((all) => ({...all, [into]: commit(all[into] ?? history(initial), from)}));
@@ -1070,7 +1105,8 @@ export function Editor({
           test={test}
           onTest={onTest}
           onCopyA={test?.arm === 'b' && test.a ? copyA : undefined}
-          unsaved={unsaved}
+          // nothing in memory is ever saved, so nothing waits on a save
+          unsaved={memoryTest ? false : unsaved}
           canUndo={canUndo(hist)}
           canRedo={canRedo(hist)}
           onBand={setBand}

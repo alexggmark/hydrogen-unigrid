@@ -1583,7 +1583,7 @@ function TestPanel({props}: {props: RailProps}) {
         <Text size="1" color="gray">
           {props.unsaved
             ? 'Save first. B starts as a copy of the saved draft.'
-            : 'B starts as a copy of this page.'}
+            : 'B starts as a copy of this page. Each arm is a whole layout, split per visitor by a PostHog flag.'}
         </Text>
       </Section>
     );
@@ -1649,7 +1649,9 @@ function TestPanel({props}: {props: RailProps}) {
         </Flex>
       </Field>
       <Text size="1" color="gray">
-        {!test.bLive
+        {!props.onSave
+          ? 'In memory here. In the admin app, publish puts both arms live and PostHog splits visitors by this flag.'
+          : !test.bLive
           ? 'Publish to put B live. Until then every visitor sees A.'
           : !test.flag
             ? 'No flag set, so every visitor sees A.'
