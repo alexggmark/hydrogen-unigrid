@@ -47,9 +47,13 @@ async function loadCriticalData({context, request, params}: Route.LoaderArgs) {
         handle: params.handle,
       },
     }),
-    loadComposition(context.storefront, `page:${params.handle}`, 'published', [
-      context.env.PUBLIC_STORE_DOMAIN,
-    ]),
+    loadComposition(
+      context.storefront,
+      `page:${params.handle}`,
+      'published',
+      [context.env.PUBLIC_STORE_DOMAIN],
+      context.ab,
+    ),
   ]);
 
   if (!page) {

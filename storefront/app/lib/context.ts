@@ -1,19 +1,11 @@
 import {createHydrogenContext} from '@shopify/hydrogen';
 import {AppSession} from '~/lib/session';
 import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
+import {createAb, type Ab} from '~/lib/ab';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
 
-// Define the additional context object
-const additionalContext = {
-  // Additional context for custom properties, CMS clients, 3P SDKs, etc.
-  // These will be available as both context.propertyName and context.get(propertyContext)
-  // Example of complex objects that could be added:
-  // cms: await createCMSClient(env),
-  // reviews: await createReviewsClient(env),
-} as const;
-
-// Automatically augment HydrogenAdditionalContext with the additional context type
-type AdditionalContextType = typeof additionalContext;
+// per request, so it cannot be a module-level object
+type AdditionalContextType = {ab: Ab};
 
 declare global {
   interface HydrogenAdditionalContext extends AdditionalContextType {}
@@ -58,7 +50,14 @@ export async function createHydrogenRouterContext(
         queryFragment: CART_QUERY_FRAGMENT,
       },
     },
-    additionalContext,
+    // built here, before any loader, so the whole request shares one answer
+    // per flag. the loader asks once it has read which flag its page uses.
+    {
+      ab: createAb(request, {
+        key: env.PUBLIC_POSTHOG_KEY,
+        host: env.PUBLIC_POSTHOG_HOST,
+      }),
+    },
   );
 
   return hydrogenContext;

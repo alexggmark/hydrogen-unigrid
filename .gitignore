@@ -1,6 +1,7 @@
 TASKS.md
 LEARNING.md
 COMMITS.md
+CASE_STUDY*.md
 node_modules/
 dist/
 build/

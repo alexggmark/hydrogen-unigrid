@@ -78,33 +78,56 @@ async function write(admin: Admin, id: string, fields: Fields): Promise<Result> 
 }
 
 // every region the editor shows at once: the two shared ones plus the target
-export async function loadComposition(admin: Admin, target: string) {
+export async function loadComposition(admin: Admin, target: string, arm: Arm = 'a') {
   const [header, body, footer] = await Promise.all([
     loadDraft(admin, 'header'),
-    loadDraft(admin, target),
+    loadDraft(admin, target, arm),
     loadDraft(admin, 'footer'),
   ]);
   return {header, body, footer};
 }
 
-export async function loadDraft(admin: Admin, handle: string) {
+export type Arm = 'a' | 'b';
+
+// a test exists while B has a draft. cleared on roll out, so an empty string is
+// as absent as a missing field.
+const draftOf = (fields: Fields, arm: Arm) =>
+  arm === 'b'
+    ? field(fields, 'draft_b') || field(fields, 'published_b')
+    : // fall back to published, so a page that has only ever been published is
+      // still editable rather than opening empty
+      field(fields, 'draft') || field(fields, 'published');
+
+const changed = (fields: Fields, draft: string, published: string) =>
+  !!field(fields, draft) && field(fields, draft) !== field(fields, published);
+
+export async function loadDraft(admin: Admin, handle: string, arm: Arm = 'a') {
   const entry = await read(admin, handle);
   if (!entry) return null;
 
-  // fall back to published, so a page that has only ever been published is
-  // still editable rather than opening empty
-  const json = field(entry.fields, 'draft') ?? field(entry.fields, 'published');
+  const hasB = !!field(entry.fields, 'draft_b');
+  const json = draftOf(entry.fields, hasB ? arm : 'a');
   const layout = json ? decode(json) : null;
   if (!layout) return null;
 
-  const published = field(entry.fields, 'published');
+  const a = draftOf(entry.fields, 'a');
   return {
     id: entry.id,
     layout,
     version: Number(field(entry.fields, 'version')) || 1,
     // the editor cannot know this by comparing to its own state, since the
     // draft it holds is whatever was last saved, not what is live
-    unpublished: field(entry.fields, 'draft') !== published,
+    unpublished:
+      field(entry.fields, 'draft') !== field(entry.fields, 'published') ||
+      changed(entry.fields, 'draft_b', 'published_b'),
+    test: {
+      hasB,
+      // what the storefront needs before it will split anyone
+      bLive: !!field(entry.fields, 'published_b'),
+      flag: field(entry.fields, 'flag') ?? '',
+      // copy a into b needs a's saved draft without leaving b
+      a: a ? decode(a) : null,
+    },
   };
 }
 
@@ -113,11 +136,18 @@ export async function saveDraft(
   admin: Admin,
   handle: string,
   layout: Layout,
+  arm: Arm = 'a',
 ): Promise<Result> {
   const entry = await read(admin, handle);
   if (!entry) return {ok: false, message: `no layout entry for "${handle}"`};
+  // a save on b after a roll out in another tab would quietly start a new test
+  if (arm === 'b' && !field(entry.fields, 'draft_b')) {
+    return {ok: false, message: 'this page has no A/B test any more'};
+  }
 
-  return write(admin, entry.id, [{key: 'draft', value: encode(layout)}]);
+  return write(admin, entry.id, [
+    {key: arm === 'b' ? 'draft_b' : 'draft', value: encode(layout)},
+  ]);
 }
 
 // promotes every region of the page: a header saved but not promoted would go
@@ -130,9 +160,9 @@ export async function publishAll(
     const entry = await read(admin, target);
     if (!entry) continue;
 
-    const draft = field(entry.fields, 'draft');
     // already live, or never written: not a failure, just nothing to do
-    if (!draft || draft === field(entry.fields, 'published')) continue;
+    const a = changed(entry.fields, 'draft', 'published');
+    if (!a && !changed(entry.fields, 'draft_b', 'published_b')) continue;
 
     const result = await publish(admin, target);
     if (!result.ok) return result;
@@ -148,9 +178,81 @@ export async function publish(admin: Admin, handle: string): Promise<Result> {
   if (!draft) return {ok: false, message: 'nothing to publish — save a draft first'};
   if (!decode(draft)) return {ok: false, message: 'the draft is unreadable, refusing to publish'};
 
+  // both arms go live together, for the same reason every region does: a saved
+  // arm that never went live would be tested against nothing
+  const b = field(entry.fields, 'draft_b');
+  if (b && !decode(b)) return {ok: false, message: 'draft B is unreadable, refusing to publish'};
+
   const version = (Number(field(entry.fields, 'version')) || 0) + 1;
   return write(admin, entry.id, [
     {key: 'published', value: draft},
+    ...(b ? [{key: 'published_b', value: b}] : []),
+    {key: 'version', value: String(version)},
+  ]);
+}
+
+// what posthog accepts as a flag key. the storefront checks the same pattern,
+// since the key also ends up in a cookie name.
+const FLAG = /^[A-Za-z0-9_-]{1,100}$/;
+
+// b starts as a copy of a's saved draft, so the two differ only by what the
+// merchant changes next
+export async function createTest(admin: Admin, handle: string): Promise<Result> {
+  const entry = await read(admin, handle);
+  if (!entry) return {ok: false, message: `no layout entry for "${handle}"`};
+  if (field(entry.fields, 'draft_b')) return {ok: true};
+
+  const a = draftOf(entry.fields, 'a');
+  if (!a) return {ok: false, message: 'save a draft before starting a test'};
+  return write(admin, entry.id, [{key: 'draft_b', value: a}]);
+}
+
+// written straight away rather than on publish: the flag is the test's
+// connection to posthog, not part of either layout
+export async function setFlag(
+  admin: Admin,
+  handle: string,
+  flag: string,
+): Promise<Result> {
+  const key = flag.trim();
+  if (key && !FLAG.test(key)) {
+    return {ok: false, message: 'a flag key is letters, numbers, - and _ only'};
+  }
+  const entry = await read(admin, handle);
+  if (!entry) return {ok: false, message: `no layout entry for "${handle}"`};
+  return write(admin, entry.id, [{key: 'flag', value: key}]);
+}
+
+// ends the test on the arm the merchant is looking at. b ships what was tested,
+// not edits made since, and its unpublished edits carry over as a's draft.
+export async function rollOut(
+  admin: Admin,
+  handle: string,
+  arm: Arm,
+): Promise<Result> {
+  const entry = await read(admin, handle);
+  if (!entry) return {ok: false, message: `no layout entry for "${handle}"`};
+  if (!field(entry.fields, 'draft_b')) return {ok: false, message: 'this page has no A/B test'};
+
+  const promoted: Fields = [];
+  if (arm === 'b') {
+    const live = field(entry.fields, 'published_b');
+    if (!live || !decode(live)) {
+      return {ok: false, message: 'B has never been published, so there is nothing to roll out'};
+    }
+    promoted.push(
+      {key: 'published', value: live},
+      {key: 'draft', value: field(entry.fields, 'draft_b')},
+    );
+  }
+
+  // the version moves even when a wins, so a cached page stops serving b
+  const version = (Number(field(entry.fields, 'version')) || 0) + 1;
+  return write(admin, entry.id, [
+    ...promoted,
+    {key: 'draft_b', value: ''},
+    {key: 'published_b', value: ''},
+    {key: 'flag', value: ''},
     {key: 'version', value: String(version)},
   ]);
 }

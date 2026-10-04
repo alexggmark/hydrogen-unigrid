@@ -1,4 +1,5 @@
 import {
+  AlertDialog,
   Badge,
   Box,
   Button,
@@ -55,6 +56,7 @@ import {
 import {useRef, useState} from 'react';
 import {Palette} from './Palette';
 import {Tree, type NodeDrag} from './Tree';
+import type {AbTest} from './Editor';
 
 const AXES = [
   {key: 'col', label: 'Col'},
@@ -177,6 +179,11 @@ export type RailProps = {
   bytes: number;
   onExport?: () => void;
   onImport?: (file: File) => void;
+  test?: AbTest;
+  onTest?: (intent: 'create' | 'arm' | 'flag' | 'rollout', value?: string) => void;
+  onCopyA?: () => void;
+  // edits not yet saved to the store, in any region
+  unsaved?: boolean;
   canUndo: boolean;
   canRedo: boolean;
   onBand: (band: Band) => void;
@@ -1513,6 +1520,171 @@ const BAND_NAME: Record<Band, string> = {
   c: 'Mobile',
 };
 
+// radix's own confirm, for the two actions that replace a whole layout
+function Confirm({
+  trigger,
+  title,
+  body,
+  action,
+  onConfirm,
+}: {
+  trigger: React.ReactNode;
+  title: string;
+  body: string;
+  action: string;
+  onConfirm: () => void;
+}) {
+  return (
+    <AlertDialog.Root>
+      <AlertDialog.Trigger>{trigger}</AlertDialog.Trigger>
+      <AlertDialog.Content maxWidth="420px">
+        <AlertDialog.Title>{title}</AlertDialog.Title>
+        <AlertDialog.Description size="2">{body}</AlertDialog.Description>
+        <Flex gap="3" mt="4" justify="end">
+          <AlertDialog.Cancel>
+            <Button variant="soft" color="gray">
+              Cancel
+            </Button>
+          </AlertDialog.Cancel>
+          <AlertDialog.Action>
+            <Button color="red" onClick={onConfirm}>
+              {action}
+            </Button>
+          </AlertDialog.Action>
+        </Flex>
+      </AlertDialog.Content>
+    </AlertDialog.Root>
+  );
+}
+
+// a/b names are posthog's defaults, so the merchant sees the mapping once and
+// configures nothing
+const ARM_NAME = {a: 'A · control', b: 'B · test'} as const;
+
+function TestPanel({props}: {props: RailProps}) {
+  const {test, onTest} = props;
+  const [flag, setFlag] = useState(test?.flag ?? '');
+  if (!test || !onTest) return null;
+
+  // switching arm reloads from the store, so unsaved work would be lost
+  const blocked = props.unsaved || props.busy;
+
+  if (!test.hasB) {
+    return (
+      <Section title="A/B test">
+        <Button
+          size="1"
+          variant="soft"
+          disabled={blocked}
+          onClick={() => onTest('create')}
+        >
+          Create A/B test
+        </Button>
+        <Text size="1" color="gray">
+          {props.unsaved
+            ? 'Save first. B starts as a copy of the saved draft.'
+            : 'B starts as a copy of this page.'}
+        </Text>
+      </Section>
+    );
+  }
+
+  const other = test.arm === 'a' ? 'B' : 'A';
+  const here = test.arm.toUpperCase();
+  return (
+    <Section title="A/B test">
+      <SegmentedControl.Root
+        size="1"
+        value={test.arm}
+        onValueChange={(arm) => {
+          if (!blocked) onTest('arm', arm);
+        }}
+        // radix has no disabled segment. the guard above refuses the switch;
+        // this only shows it
+        style={{width: '100%', opacity: blocked ? 0.5 : 1}}
+      >
+        {(['a', 'b'] as const).map((arm) => (
+          <SegmentedControl.Item key={arm} value={arm}>
+            {ARM_NAME[arm]}
+          </SegmentedControl.Item>
+        ))}
+      </SegmentedControl.Root>
+      {props.unsaved ? (
+        <Text size="1" color="gray">
+          Save before switching arm.
+        </Text>
+      ) : null}
+
+      {props.onCopyA ? (
+        <Confirm
+          trigger={
+            <Button size="1" variant="soft">
+              Copy A into B…
+            </Button>
+          }
+          title="Replace B with A?"
+          body="B's layout is replaced with A's saved draft. You can undo this until you save."
+          action="Replace B"
+          onConfirm={props.onCopyA}
+        />
+      ) : null}
+
+      <Field label="PostHog flag key">
+        <Flex gap="2">
+          <TextField.Root
+            size="1"
+            value={flag}
+            placeholder="home-hero-test"
+            onChange={(e) => setFlag(e.target.value)}
+            style={{flex: '1 1 auto'}}
+          />
+          <Button
+            size="1"
+            variant="soft"
+            disabled={flag.trim() === test.flag || props.busy}
+            onClick={() => onTest('flag', flag.trim())}
+          >
+            Set
+          </Button>
+        </Flex>
+      </Field>
+      <Text size="1" color="gray">
+        {!test.bLive
+          ? 'Publish to put B live. Until then every visitor sees A.'
+          : !test.flag
+            ? 'No flag set, so every visitor sees A.'
+            : 'Split by this flag in PostHog. Editing either arm while it runs affects the results.'}
+      </Text>
+
+      <Confirm
+        trigger={
+          <Button
+            size="1"
+            color="red"
+            variant="soft"
+            disabled={blocked || (test.arm === 'b' && !test.bLive)}
+          >
+            Roll out {here}
+          </Button>
+        }
+        title={`Roll out ${here}?`}
+        body={`${here} becomes the live page and ${other} is deleted permanently. This cannot be undone. End the experiment in PostHog when you are done.`}
+        action={`Roll out ${here}`}
+        onConfirm={() => onTest('rollout')}
+      />
+      {props.unsaved ? (
+        <Text size="1" color="gray">
+          Save before rolling out.
+        </Text>
+      ) : test.arm === 'b' && !test.bLive ? (
+        <Text size="1" color="gray">
+          B has never been published, so there is nothing to roll out.
+        </Text>
+      ) : null}
+    </Section>
+  );
+}
+
 function EditorPanel({props}: {props: RailProps}) {
   const {layout, band, selected, authored, editable, clipped, block, node} =
     props;
@@ -1520,6 +1692,7 @@ function EditorPanel({props}: {props: RailProps}) {
 
   return (
     <>
+      <TestPanel props={props} />
       <RegionPicker props={props} />
       <ViewAsPicker props={props} />
       <Section title="Breakpoint">

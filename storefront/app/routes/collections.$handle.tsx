@@ -50,9 +50,13 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
   // sequential on purpose: the layout owns the page size, so it cannot be
   // fetched alongside the products it is sizing. one template, target
   // 'collection', for the whole store.
-  const composition = await loadComposition(storefront, 'collection', 'published', [
-    context.env.PUBLIC_STORE_DOMAIN,
-  ]);
+  const composition = await loadComposition(
+    storefront,
+    'collection',
+    'published',
+    [context.env.PUBLIC_STORE_DOMAIN],
+    context.ab,
+  );
   const paginationVariables = getPaginationVariables(request, {
     pageBy: collectionPageBy([
       composition.header,

@@ -12,7 +12,12 @@ import {
   useRouteError,
 } from 'react-router';
 import {boundary} from '@shopify/shopify-app-react-router/server';
-import {Editor, downloadSnapshot, type Snapshot} from '@unigrid/editor';
+import {
+  Editor,
+  downloadSnapshot,
+  type AbTest,
+  type Snapshot,
+} from '@unigrid/editor';
 import {
   DEFAULT_METRICS,
   DEFAULT_PALETTE,
@@ -33,6 +38,10 @@ import {authenticate} from '../shopify.server';
 import {
   createLayout,
   createPage,
+  createTest,
+  rollOut,
+  setFlag,
+  type Arm,
   listCollections,
   listPages,
   listProducts,
@@ -60,9 +69,17 @@ export const links: LinksFunction = () => [
 const targetOf = (request: Request) =>
   new URL(request.url).searchParams.get('target') || 'home';
 
+// which arm of a test is open. url state for the same reason as the target, so
+// a reload or a shared link lands on the arm that was being edited.
+const armOf = (value: unknown): Arm => (value === 'b' ? 'b' : 'a');
+
+// header and footer are shared by every page, so they are never tested
+const isBody = (target: string) => target !== 'header' && target !== 'footer';
+
 export const loader = async ({request}: LoaderFunctionArgs) => {
   const {admin} = await authenticate.admin(request);
   const target = targetOf(request);
+  const arm = armOf(new URL(request.url).searchParams.get('arm'));
   // shared regions have no page of their own. showing them against the homepage
   // avoids a second region with the same target, which collapses to one.
   const bodyTarget =
@@ -78,7 +95,7 @@ export const loader = async ({request}: LoaderFunctionArgs) => {
     metrics,
     settings,
   ] = await Promise.all([
-      loadComposition(admin, bodyTarget),
+      loadComposition(admin, bodyTarget, arm),
       loadPalette(admin),
       listPages(admin),
       loadMenus(admin),
@@ -127,6 +144,14 @@ export const loader = async ({request}: LoaderFunctionArgs) => {
       },
     ],
     version: regions.body?.version ?? 0,
+    // only on a page's own layout. the editor has no test ui without it.
+    test:
+      isBody(target) && regions.body
+        ? {
+            ...regions.body.test,
+            arm: regions.body.test.hasB ? arm : ('a' as Arm),
+          }
+        : null,
     // any region, not just the body — a saved header is unpublished work too
     unpublished: [regions.header, regions.body, regions.footer].some(
       (r) => r?.unpublished,
@@ -139,6 +164,7 @@ export const action = async ({request}: ActionFunctionArgs) => {
   const form = await request.formData();
   const target = String(form.get('target') || targetOf(request));
   const intent = form.get('intent');
+  const arm = armOf(form.get('arm'));
 
   if (intent === 'publish') {
     const body = target === 'header' || target === 'footer' ? 'home' : target;
@@ -147,6 +173,9 @@ export const action = async ({request}: ActionFunctionArgs) => {
   if (intent === 'newPage')
     return createPage(admin, String(form.get('title') || 'Untitled'));
   if (intent === 'attach') return createLayout(admin, target);
+  if (intent === 'abCreate') return createTest(admin, target);
+  if (intent === 'abFlag') return setFlag(admin, target, String(form.get('flag') ?? ''));
+  if (intent === 'abRollout') return rollOut(admin, target, arm);
 
   const theme = form.get('theme');
   if (typeof theme === 'string') {
@@ -173,7 +202,13 @@ export const action = async ({request}: ActionFunctionArgs) => {
   for (const region of changed) {
     const layout = decode(region.layout);
     if (!layout) return {ok: false, message: `could not read ${region.target}`};
-    const result = await saveDraft(admin, region.target, layout);
+    // only the page's own layout has arms. header and footer always save to a.
+    const result = await saveDraft(
+      admin,
+      region.target,
+      layout,
+      isBody(region.target) ? arm : 'a',
+    );
     if (!result.ok) return result;
   }
   return {ok: true};
@@ -193,6 +228,7 @@ export default function Index() {
     settings,
     media,
     target,
+    test,
   } = useLoaderData<typeof loader>() as {
     regions: {target: string; label: string; layout: Layout}[];
     version: number;
@@ -206,7 +242,9 @@ export default function Index() {
     settings: Settings;
     media: MediaUrls;
     target: string;
+    test: AbTest | null;
   };
+  const arm = test?.arm ?? 'a';
   const fetcher = useFetcher<typeof action>();
   const navigate = useNavigate();
 
@@ -218,10 +256,11 @@ export default function Index() {
             changed.map((c) => ({target: c.target, layout: encode(c.layout)})),
           ),
           target,
+          arm,
         },
         {method: 'post'},
       ),
-    [fetcher, target],
+    [fetcher, target, arm],
   );
 
   const onPages = useCallback(
@@ -263,6 +302,24 @@ export default function Index() {
     return resolved[0];
   }, []);
 
+  const onTest = useCallback(
+    (intent: 'create' | 'arm' | 'flag' | 'rollout', value = '') => {
+      if (intent === 'arm') {
+        // keeps band and selection, which the editor also holds in the url
+        const params = new URLSearchParams(window.location.search);
+        if (value === 'b') params.set('arm', 'b');
+        else params.delete('arm');
+        navigate(`?${params.toString()}`);
+        return;
+      }
+      const name = {create: 'abCreate', flag: 'abFlag', rollout: 'abRollout'}[intent];
+      fetcher.submit({intent: name, target, arm, flag: value}, {method: 'post'});
+      // the test is gone, so there is no b to stay on
+      if (intent === 'rollout') navigate(`?target=${encodeURIComponent(target)}`);
+    },
+    [fetcher, navigate, target, arm],
+  );
+
   const onPublish = useCallback(
     () => fetcher.submit({intent: 'publish'}, {method: 'post'}),
     [fetcher],
@@ -279,7 +336,9 @@ export default function Index() {
 
   return (
     <Editor
-      key={target}
+      // each arm is its own undo history, so switching arm remounts like
+      // switching page
+      key={`${target}:${arm}`}
       initial={regions[1]?.layout ?? {version: 1, blocks: []}}
       regions={regions}
       activeTarget={target}
@@ -303,6 +362,8 @@ export default function Index() {
       unpublished={unpublished}
       error={result && !result.ok ? result.message : undefined}
       onExport={onExport}
+      test={test ?? undefined}
+      onTest={test ? onTest : undefined}
     />
   );
 }

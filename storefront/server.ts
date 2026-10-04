@@ -37,6 +37,15 @@ export default {
         );
       }
 
+      const {ab} = hydrogenContext;
+      for (const cookie of ab.setCookies()) {
+        response.headers.append('Set-Cookie', cookie);
+      }
+      // the html now depends on the visitor's cookie, so no shared cache may keep it
+      if (ab.touched())
+        response.headers.set('Cache-Control', 'private, no-store');
+      if (ab.preview) response.headers.set('X-Robots-Tag', 'noindex');
+
       if (response.status === 404) {
         /**
          * Check for redirects only when there's a 404 from the app.

@@ -43,9 +43,13 @@ async function loadCriticalData({context, request}: Route.LoaderArgs) {
   // every product is a collection with no collection behind it, so it renders
   // the collection template like any other. sequential for the same reason
   // collections.$handle is: the layout owns the page size.
-  const composition = await loadComposition(storefront, 'collection', 'published', [
-    context.env.PUBLIC_STORE_DOMAIN,
-  ]);
+  const composition = await loadComposition(
+    storefront,
+    'collection',
+    'published',
+    [context.env.PUBLIC_STORE_DOMAIN],
+    context.ab,
+  );
   const paginationVariables = getPaginationVariables(request, {
     pageBy: collectionPageBy([
       composition.header,

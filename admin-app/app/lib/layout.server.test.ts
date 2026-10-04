@@ -1,6 +1,14 @@
 import {describe, expect, it} from 'vitest';
 import {emptyBlock, encode, type Layout} from '@unigrid/core';
-import {loadDraft, publish, publishAll, saveDraft} from './layout.server';
+import {
+  createTest,
+  loadDraft,
+  publish,
+  publishAll,
+  rollOut,
+  saveDraft,
+  setFlag,
+} from './layout.server';
 
 const layout: Layout = {
   version: 1,
@@ -151,5 +159,118 @@ describe('publishAll', () => {
   it('skips a region that does not exist', async () => {
     const {admin} = many();
     expect(await publishAll(admin, ['footer'])).toEqual({ok: true});
+  });
+});
+
+const other: Layout = {...layout, blocks: []};
+const A = encode(layout);
+const B = encode(other);
+
+describe('a/b test', () => {
+  it('starts b as a copy of a, and only once', async () => {
+    const {admin, writes} = fakeAdmin([{key: 'draft', value: A}]);
+    expect(await createTest(admin, 'home')).toEqual({ok: true});
+    expect(writes[0]).toEqual([{key: 'draft_b', value: A}]);
+
+    const {admin: again, writes: none} = fakeAdmin([
+      {key: 'draft', value: A},
+      {key: 'draft_b', value: B},
+    ]);
+    await createTest(again, 'home');
+    expect(none).toHaveLength(0);
+  });
+
+  it('opens the arm asked for, and a when there is no test', async () => {
+    const fields = [
+      {key: 'draft', value: A},
+      {key: 'draft_b', value: B},
+    ];
+    expect((await loadDraft(fakeAdmin(fields).admin, 'home', 'b'))?.layout).toEqual(other);
+    expect((await loadDraft(fakeAdmin(fields).admin, 'home', 'a'))?.layout).toEqual(layout);
+    const solo = fakeAdmin([{key: 'draft', value: A}]).admin;
+    expect((await loadDraft(solo, 'home', 'b'))?.layout).toEqual(layout);
+  });
+
+  it('saves b to its own field and refuses once the test is gone', async () => {
+    const {admin, writes} = fakeAdmin([{key: 'draft_b', value: A}]);
+    await saveDraft(admin, 'home', other, 'b');
+    expect(writes[0]).toEqual([{key: 'draft_b', value: B}]);
+
+    const {admin: ended, writes: none} = fakeAdmin([{key: 'draft_b', value: ''}]);
+    expect(await saveDraft(ended, 'home', other, 'b')).toMatchObject({ok: false});
+    expect(none).toHaveLength(0);
+  });
+
+  it('publishes both arms with one version', async () => {
+    const {admin, writes} = fakeAdmin([
+      {key: 'draft', value: A},
+      {key: 'draft_b', value: B},
+      {key: 'version', value: '2'},
+    ]);
+    await publish(admin, 'home');
+    expect(writes[0]).toEqual([
+      {key: 'published', value: A},
+      {key: 'published_b', value: B},
+      {key: 'version', value: '3'},
+    ]);
+  });
+
+  // an unpublished b is unpublished work, even when a is already live
+  it('counts a changed b as unpublished', async () => {
+    const {admin} = fakeAdmin([
+      {key: 'draft', value: A},
+      {key: 'published', value: A},
+      {key: 'draft_b', value: B},
+    ]);
+    expect((await loadDraft(admin, 'home'))?.unpublished).toBe(true);
+  });
+
+  it('refuses a flag key posthog would not accept', async () => {
+    const {admin, writes} = fakeAdmin([{key: 'draft', value: A}]);
+    expect(await setFlag(admin, 'home', 'hero test;')).toMatchObject({ok: false});
+    expect(writes).toHaveLength(0);
+    await setFlag(admin, 'home', ' hero-test ');
+    expect(writes[0]).toEqual([{key: 'flag', value: 'hero-test'}]);
+  });
+
+  const running = (): Field[] => [
+    {key: 'draft', value: A},
+    {key: 'published', value: A},
+    {key: 'draft_b', value: encode({...other, version: 9})},
+    {key: 'published_b', value: B},
+    {key: 'flag', value: 'hero'},
+    {key: 'version', value: '5'},
+  ];
+  const cleared = [
+    {key: 'draft_b', value: ''},
+    {key: 'published_b', value: ''},
+    {key: 'flag', value: ''},
+    {key: 'version', value: '6'},
+  ];
+
+  it('rolling out a discards b and leaves a alone', async () => {
+    const {admin, writes} = fakeAdmin(running());
+    expect(await rollOut(admin, 'home', 'a')).toEqual({ok: true});
+    expect(writes[0]).toEqual(cleared);
+  });
+
+  // what was tested ships, not what was edited after; those edits stay a draft
+  it('rolling out b ships the tested version and keeps its edits as a draft', async () => {
+    const {admin, writes} = fakeAdmin(running());
+    expect(await rollOut(admin, 'home', 'b')).toEqual({ok: true});
+    expect(writes[0]).toEqual([
+      {key: 'published', value: B},
+      {key: 'draft', value: encode({...other, version: 9})},
+      ...cleared,
+    ]);
+  });
+
+  it('refuses to roll out a b that never went live, or no test at all', async () => {
+    const unpublished = running().filter((f) => f.key !== 'published_b');
+    const {admin, writes} = fakeAdmin(unpublished);
+    expect(await rollOut(admin, 'home', 'b')).toMatchObject({ok: false});
+    const {admin: none} = fakeAdmin([{key: 'draft', value: A}]);
+    expect(await rollOut(none, 'home', 'a')).toMatchObject({ok: false});
+    expect(writes).toHaveLength(0);
   });
 });

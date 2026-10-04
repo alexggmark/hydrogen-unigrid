@@ -201,6 +201,18 @@ export type Region = {target: string; label: string; layout: Layout};
 // the store's navigation menus, resolved by the shell. the playground has none.
 export type StoreMenu = {handle: string; title: string; items: MenuLink[]};
 
+// a page-level a/b test as the shell sees it. the editor only shows it and
+// reports intent; which arm is open, and every write, belong to the shell.
+export type AbTest = {
+  arm: 'a' | 'b';
+  hasB: boolean;
+  // b has been published, so the storefront can serve it
+  bLive: boolean;
+  flag: string;
+  // a's saved draft, so b can be reset to it without leaving b
+  a: Layout | null;
+};
+
 export type EditorProps = {
   initial: Layout;
   // every region on the canvas, in render order. one is active, the rest are
@@ -252,6 +264,8 @@ export type EditorProps = {
   // everything that decides how the page looks, handed to the shell to keep.
   // the playground downloads it; the admin app has save instead.
   onExport?: (snapshot: Snapshot) => void;
+  test?: AbTest;
+  onTest?: (intent: 'create' | 'arm' | 'flag' | 'rollout', value?: string) => void;
 };
 
 export type {Snapshot};
@@ -282,6 +296,8 @@ export function Editor({
   unpublished,
   error: outerError,
   onExport,
+  test,
+  onTest,
 }: EditorProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const afterDrag = useRef(false);
@@ -368,6 +384,26 @@ export function Editor({
   const [resync, setResync] = useState(0);
 
   const layout = hist.present;
+
+  // against what the shell last loaded, not against undo history: a save
+  // reloads the regions but keeps the history, so past alone would stay dirty
+  const unsaved = useMemo(
+    () =>
+      (regions ?? []).some(
+        (r) => encode(hists[r.target]?.present ?? r.layout) !== encode(r.layout),
+      ),
+    [regions, hists],
+  );
+
+  // one commit on the page's own region, so it is a single undo away
+  const copyA = () => {
+    const into = target ?? active;
+    if (!test?.a) return;
+    const from = test.a;
+    setHists((all) => ({...all, [into]: commit(all[into] ?? history(initial), from)}));
+    activate(into);
+    setError(null);
+  };
   const at = useMemo(() => deriveAll(layout), [layout]);
   const json = useMemo(() => encode(layout), [layout]);
   const bytes = useMemo(() => new TextEncoder().encode(json).length, [json]);
@@ -1031,6 +1067,10 @@ export function Editor({
               : undefined
           }
           onImport={onExport ? importFile : undefined}
+          test={test}
+          onTest={onTest}
+          onCopyA={test?.arm === 'b' && test.a ? copyA : undefined}
+          unsaved={unsaved}
           canUndo={canUndo(hist)}
           canRedo={canRedo(hist)}
           onBand={setBand}

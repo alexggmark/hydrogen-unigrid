@@ -24,6 +24,7 @@ import {
   type ProductData,
   type Products,
 } from '@unigrid/blocks';
+import {VARIANT, isFlag, type Ab} from './ab';
 
 // the metaobject's field shape stops here. everything above this file sees a
 // Layout and nothing else.
@@ -48,7 +49,10 @@ type Queryable = {
   query: <T>(query: string, options?: {variables?: Record<string, unknown>}) => Promise<T>;
 };
 
-export function fromFields(fields: Fields, which: 'draft' | 'published'): Stored | null {
+export function fromFields(
+  fields: Fields,
+  which: 'draft' | 'published' | 'published_b',
+): Stored | null {
   const find = (key: string) => fields.find((f) => f.key === key)?.value ?? null;
 
   const json = find(which);
@@ -152,6 +156,9 @@ export type Composition = {
   // gid to url. the layout holds the reference, never the cdn path, which would
   // go stale the moment the file is replaced in the admin.
   media: MediaUrls;
+  // set only when this visitor counts toward a running test, so the client
+  // reports exposure for exactly what the server rendered
+  experiment?: {flag: string; variant: string};
 };
 
 export const MENU_QUERY = `#graphql
@@ -381,18 +388,40 @@ export async function loadMedia(
 
 const layoutFrom = (
   region: {fields: Fields} | null | undefined,
-  which: 'draft' | 'published',
+  which: 'draft' | 'published' | 'published_b',
 ): Layout | null => {
   const stored = region ? fromFields(region.fields, which) : null;
   // an empty region is the same as no region — nothing to render, no wrapper
   return stored && stored.layout.blocks.length ? stored.layout : null;
 };
 
+// a test is live only when B is published and a flag names it. the flag is
+// stored on the layout, so this is the first point the worker can ask for it.
+export async function chooseBody(
+  region: {fields: Fields} | null | undefined,
+  which: 'draft' | 'published',
+  ab?: Pick<Ab, 'arm'>,
+): Promise<{body: Layout | null; experiment?: Composition['experiment']}> {
+  const a = layoutFrom(region, which);
+  if (which !== 'published' || !ab || !region) return {body: a};
+
+  const flag = region.fields.find((f) => f.key === 'flag')?.value;
+  const b = layoutFrom(region, 'published_b');
+  if (!b || !isFlag(flag)) return {body: a};
+
+  const {arm, counted} = await ab.arm(flag);
+  return {
+    body: arm === 'b' ? b : a,
+    ...(counted ? {experiment: {flag, variant: VARIANT[arm]}} : {}),
+  };
+}
+
 export async function loadComposition(
   storefront: Queryable,
   target: string,
   which: 'draft' | 'published' = 'published',
   domains: readonly string[] = [],
+  ab?: Pick<Ab, 'arm'>,
 ): Promise<Composition> {
   const data = await storefront.query<{
     header?: {fields: Fields} | null;
@@ -402,8 +431,8 @@ export async function loadComposition(
   }>(COMPOSITION_QUERY, {variables: {body: handleFor(target)}});
 
   const header = layoutFrom(data?.header, which);
-  const body = layoutFrom(data?.body, which);
   const footer = layoutFrom(data?.footer, which);
+  const {body, experiment} = await chooseBody(data?.body, which, ab);
 
   const regions = [header, body, footer];
   const settings = settingsFromFields(data?.theme?.fields);
@@ -427,6 +456,7 @@ export async function loadComposition(
     products,
     collections,
     media,
+    ...(experiment ? {experiment} : {}),
   };
 }
 

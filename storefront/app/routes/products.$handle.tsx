@@ -65,9 +65,13 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
     storefront.query(PRODUCT_QUERY, {
       variables: {handle, selectedOptions: getSelectedProductOptions(request)},
     }),
-    loadComposition(storefront, 'product', 'published', [
-      context.env.PUBLIC_STORE_DOMAIN,
-    ]),
+    loadComposition(
+      storefront,
+      'product',
+      'published',
+      [context.env.PUBLIC_STORE_DOMAIN],
+      context.ab,
+    ),
   ]);
 
   if (!product?.id) {
