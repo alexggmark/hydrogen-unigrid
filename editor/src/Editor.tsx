@@ -330,6 +330,7 @@ export function Editor({
     [active, initial],
   );
   const [band, setBand] = useState<Band>(WIDEST);
+  const [guides, setGuides] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [node, setNode] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -472,6 +473,7 @@ export function Editor({
     if (isBand(b)) setBand(b);
     if (s) setSelected(s);
     if (as) setViewAs(as);
+    if (params.get('grid') === '1') setGuides(true);
   }, []);
 
   useEffect(() => {
@@ -481,8 +483,10 @@ export function Editor({
     else params.delete('sel');
     if (viewAs) params.set('as', viewAs);
     else params.delete('as');
+    if (guides) params.set('grid', '1');
+    else params.delete('grid');
     window.history.replaceState(null, '', `?${params.toString()}`);
-  }, [band, selected, viewAs]);
+  }, [band, selected, viewAs, guides]);
 
   // re-read on every layout edit: a span change is what starts or stops clipping
   useEffect(() => {
@@ -786,6 +790,7 @@ export function Editor({
       // an open menu owns its arrows too
       if (el?.closest('.e-rail, input, textarea, select, [contenteditable], [role="menu"]')) return;
       if (e.key === 'Escape') return setSelected(null);
+      if (e.key === 'g' && !e.metaKey && !e.ctrlKey && !e.altKey) return setGuides((on) => !on);
       // dnd-kit owns the arrows once a keyboard drag is up
       if (drag || !selected || !editable) return;
 
@@ -877,6 +882,7 @@ export function Editor({
           className="e-stage u-page"
           ref={hostRef}
           data-band={band}
+          data-guides={guides ? '' : undefined}
           data-page-dark={pageIsDark(palette, settings) ? '' : undefined}
           style={
             {
@@ -1033,6 +1039,8 @@ export function Editor({
         <Rail
           layout={layout}
           band={band}
+          guides={guides}
+          onGuides={setGuides}
           selected={selected}
           authored={authored}
           editable={editable}

@@ -187,6 +187,8 @@ export type RailProps = {
   canUndo: boolean;
   canRedo: boolean;
   onBand: (band: Band) => void;
+  guides: boolean;
+  onGuides: (on: boolean) => void;
   onSelect: (id: string | null) => void;
   onCell: (patch: Partial<Cell>) => void;
   onFit: () => void;
@@ -1710,6 +1712,17 @@ function EditorPanel({props}: {props: RailProps}) {
             </SegmentedControl.Item>
           ))}
         </SegmentedControl.Root>
+        <Flex gap="2" align="center">
+          <Switch
+            size="1"
+            id="guides"
+            checked={props.guides}
+            onCheckedChange={props.onGuides}
+          />
+          <Text as="label" htmlFor="guides" size="2">
+            Show grid (g)
+          </Text>
+        </Flex>
       </Section>
 
       <Section title="Add block">

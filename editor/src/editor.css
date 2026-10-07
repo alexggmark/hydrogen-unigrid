@@ -369,3 +369,24 @@
 .e-menu.radix-themes {
   min-block-size: 0;
 }
+
+/* column and row guides. drawn from the grid's own vars, so each band shows its
+   own composition. absolute, so it takes no cell and moves nothing */
+.e-stage[data-guides] .u-grid::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgb(11 75 216 / 0.45) 0 1px,
+      transparent 1px calc(var(--row) + var(--gutter))
+    ),
+    repeating-linear-gradient(
+      to right,
+      rgb(216 38 28 / 0.1) 0 var(--col),
+      transparent var(--col) calc(var(--col) + var(--gutter))
+    );
+}

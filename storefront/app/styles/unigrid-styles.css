@@ -1,0 +1,218 @@
+/* the /styles specimen. sits inside a real .u-grid so --u, --f and the type
+   tokens are the theme's own; only the page furniture is defined here. */
+
+.sb {
+  --sb-paper: var(--theme-2, #fbfbf9);
+  --sb-ink: var(--theme-1, #111110);
+  --sb-rule: color-mix(in srgb, var(--sb-ink) 14%, transparent);
+  --sb-dim: color-mix(in srgb, var(--sb-ink) 55%, transparent);
+  --ink: var(--sb-ink);
+  --paper: var(--sb-paper);
+  background: var(--sb-paper);
+  color: var(--sb-ink);
+  font-family: 'Helvetica Neue', Helvetica, Inter, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-block-size: 100vb;
+}
+
+/* a document, not an authored layout: rows size to their content */
+.sb-grid {
+  grid-auto-rows: auto;
+  row-gap: calc(var(--u) * 7);
+  padding-block: calc(var(--u) * 3) calc(var(--u) * 8);
+}
+.sb-grid > * {
+  grid-column: 1 / -1;
+}
+
+.sb code {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: var(--t-micro);
+  color: var(--sb-dim);
+}
+.sb dl,
+.sb dd,
+.sb figure {
+  margin: 0;
+}
+.sb-dim {
+  color: var(--sb-dim);
+}
+
+/* masthead */
+.sb-mast {
+  display: grid;
+  gap: calc(var(--u) * 1.5 * var(--f));
+}
+.sb-mast .u-hl-1 {
+  font-size: calc(var(--t-h1) * 2);
+}
+.sb-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--gutter);
+}
+.sb-meta dd {
+  margin-block-start: calc(var(--u) * 0.4 * var(--f));
+}
+
+/* section heads: a number on a rule, the way a printed manual indexes */
+.sb-section {
+  display: grid;
+  gap: calc(var(--u) * 2.5 * var(--f));
+}
+.sb-section-head {
+  display: flex;
+  align-items: baseline;
+  gap: calc(var(--u) * 2 * var(--f));
+  padding-block-start: calc(var(--u) * 1 * var(--f));
+  border-block-start: 1px solid var(--sb-ink);
+}
+.sb-num {
+  font-size: var(--t-micro);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+.sb-note {
+  max-inline-size: 52ch;
+  color: var(--sb-dim);
+}
+.sb-row-label,
+.sb-spec-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--gutter);
+  padding-block-end: calc(var(--u) * 0.5 * var(--f));
+  border-block-end: 1px solid var(--sb-rule);
+}
+
+/* grid bands. each frame is its own container, so 1cqw is that band's --u and
+   the gutter keeps its true proportion at every size */
+.sb-bands {
+  display: grid;
+  gap: calc(var(--u) * 3 * var(--f));
+}
+.sb-band {
+  display: grid;
+  gap: calc(var(--u) * 1 * var(--f));
+}
+.sb-band-frame {
+  container-type: inline-size;
+  /* set here, where cqw still measures the page grid. inside the frame the
+     tokens would resolve against the band and the labels would shrink with it */
+  font-size: var(--t-micro);
+}
+.sb-cols {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  gap: calc(1cqw * var(--g));
+  border-block: 1px solid rgb(11 75 216 / 0.45);
+}
+.sb-cols i {
+  aspect-ratio: 4 / 3;
+  background: rgb(216 38 28 / 0.12);
+  font-style: normal;
+  font-weight: 700;
+  color: rgb(216 38 28);
+  padding: 0.4em 0.5em;
+}
+
+/* buttons */
+.sb-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--gutter);
+}
+.sb-row > .sb-row-label {
+  grid-column: 1 / -1;
+}
+.sb-row + .sb-row {
+  margin-block-start: calc(var(--u) * 2 * var(--f));
+}
+.sb-card {
+  display: grid;
+  gap: calc(var(--u) * 0.8 * var(--f));
+}
+.sb-swatch {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--sb-rule);
+}
+/* glass has nothing to refract on paper, so it gets a fill and light ink */
+.sb-card[data-variant='glass'] .sb-swatch {
+  --ink: var(--sb-paper);
+  border-color: transparent;
+  background:
+    radial-gradient(circle at 25% 30%, var(--theme-5, #f2c200), transparent 45%),
+    linear-gradient(135deg, var(--theme-4, #1b3fa0), var(--theme-3, #d8261c));
+}
+.sb-card figcaption {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--gutter);
+  font-weight: 700;
+}
+
+/* type */
+.sb-faces {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--gutter);
+}
+.sb-face {
+  display: grid;
+  align-content: start;
+  gap: calc(var(--u) * 2 * var(--f));
+  padding: calc(var(--u) * 2 * var(--f));
+  border: 1px solid var(--sb-rule);
+}
+.sb-face-head {
+  display: flex;
+  align-items: end;
+  gap: calc(var(--u) * 1.5 * var(--f));
+}
+.sb-glyph.u-hl-1 {
+  font-size: calc(var(--t-h1) * 1.6);
+}
+.sb-spec {
+  display: grid;
+  gap: calc(var(--u) * 0.8 * var(--f));
+}
+.sb-scale {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: calc(var(--u) * 1.5 * var(--f)) var(--gutter);
+  margin-block-start: calc(var(--u) * 1 * var(--f));
+}
+.sb-scale > .sb-row-label {
+  grid-column: 1 / -1;
+}
+.sb-scale-item {
+  display: grid;
+  align-content: start;
+  gap: calc(var(--u) * 0.8 * var(--f));
+}
+
+@container grid (width < 60rem) {
+  .sb-scale {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+/* on a phone the bands are shown full width: a quarter of a phone is too
+   small to count columns in */
+@container grid (width < 36rem) {
+  .sb-band-frame {
+    inline-size: 100% !important;
+  }
+  .sb-row,
+  .sb-faces,
+  .sb-meta {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sb-scale {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
