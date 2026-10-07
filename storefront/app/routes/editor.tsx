@@ -4,11 +4,13 @@ import type {Route} from './+types/editor';
 import {
   Editor,
   downloadSnapshot,
+  readSnapshot,
+  regionFor,
   type Region,
   type Snapshot,
   type StoreMenu,
 } from '@unigrid/editor';
-import {decode, encode, metricsFrom, type Layout, type Palette} from '@unigrid/core';
+import {DEFAULT_PALETTE, metricsFrom, type Layout} from '@unigrid/core';
 import {DEMO_COLLECTION, DEMO_MENUS, DEMO_PRODUCTS, HARNESS} from '~/blocks/harness';
 import radixStyles from '@radix-ui/themes/styles.css?url';
 import unigridStyles from '@unigrid/blocks/unigrid.css?url';
@@ -17,15 +19,15 @@ import {loadLayout, loadMedia, loadMenus, loadSettings} from '~/lib/layout';
 import snapshot from '~/blocks/playground.json';
 
 // what the playground opens on: a snapshot exported from the playground itself,
-// so the default is arranged by hand rather than typed. through the wire and
-// back, because a json import is only typed as strings, and decode is what
-// actually checks it is a layout. /grid keeps the harness as its fixture.
-const saved = snapshot.regions as Record<string, unknown>;
+// so the default is arranged by hand rather than typed. read the way an import
+// is, so any export dropped in works whatever its body region is called.
+// /grid keeps the harness as its fixture.
+const SAVED = readSnapshot(JSON.stringify(snapshot));
 const region = (target: string): Layout | null =>
-  saved[target] ? (decode(encode(saved[target] as Layout)) ?? null) : null;
+  (SAVED && regionFor(SAVED, target)) ?? null;
 const DEFAULT: Layout = region('page') ?? HARNESS;
-const PALETTE = snapshot.palette as Palette;
-const METRICS = metricsFrom(snapshot.metrics);
+const PALETTE = SAVED?.palette ?? DEFAULT_PALETTE;
+const METRICS = metricsFrom(SAVED?.metrics);
 
 // the playground. no onSave, so there is no path from here to a store.
 
@@ -43,11 +45,14 @@ export async function loader({context}: Route.LoaderArgs) {
   const {storefront} = context;
   // header and footer are the store's live ones unless the snapshot carries its
   // own, so the playground reads as the real site. reading is all it does.
-  const [settings, liveHeader, liveFooter] = await Promise.all([
+  const [liveSettings, liveHeader, liveFooter] = await Promise.all([
     loadSettings(storefront),
     loadLayout(storefront, 'header'),
     loadLayout(storefront, 'footer'),
   ]);
+  // the snapshot's logo and background win too, or its palette lands on the
+  // store's page colour
+  const settings = {...liveSettings, ...SAVED?.settings};
   const header = region('header') ?? liveHeader?.layout ?? EMPTY;
   const footer = region('footer') ?? liveFooter?.layout ?? EMPTY;
   const all = [header, DEFAULT, footer];

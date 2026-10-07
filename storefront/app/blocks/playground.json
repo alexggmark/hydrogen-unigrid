@@ -1,31 +1,35 @@
 {
   "regions": {
-    "page": {
+    "header": {
       "version": 1,
       "blocks": [
         {
-          "id": "masthead",
+          "id": "block-2",
           "at": {
             "a": {
               "col": 1,
-              "colSpan": 6,
               "row": 1,
+              "colSpan": 12,
               "rowSpan": 1
             },
             "b": {
               "col": 1,
-              "colSpan": 8,
               "row": 1,
-              "rowSpan": 3
+              "colSpan": 8,
+              "rowSpan": 1
             },
             "c": {
               "col": 1,
-              "colSpan": 4,
               "row": 1,
-              "rowSpan": 3
+              "colSpan": 4,
+              "rowSpan": 1
             }
           },
-          "fill": {},
+          "fill": {
+            "color": {
+              "slot": 3
+            }
+          },
           "flex": {
             "direction": "row",
             "justify": "between",
@@ -35,32 +39,360 @@
           "invert": false,
           "children": [
             {
-              "id": "masthead-logo",
+              "id": "menu-1",
+              "kind": "menu",
+              "handle": "main-menu",
+              "direction": "row",
+              "collapse": true
+            },
+            {
+              "id": "logo-1",
               "kind": "logo",
-              "width": 14,
-              "narrow": 30
+              "width": 6,
+              "narrow": 26
+            },
+            {
+              "id": "group-1",
+              "kind": "group",
+              "flex": {
+                "direction": "row",
+                "justify": "start",
+                "align": "center",
+                "text": "start",
+                "gap": 1
+              },
+              "children": [
+                {
+                  "id": "cart-1",
+                  "kind": "cart",
+                  "label": "Cart"
+                },
+                {
+                  "id": "account-1",
+                  "kind": "account",
+                  "label": "Account"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "home": {
+      "version": 1,
+      "blocks": [
+        {
+          "id": "block-2",
+          "at": {
+            "a": {
+              "col": 1,
+              "row": 9,
+              "colSpan": 6,
+              "rowSpan": 7
+            },
+            "b": {
+              "col": 1,
+              "row": 6,
+              "colSpan": 4,
+              "rowSpan": 5
+            },
+            "c": {
+              "col": 1,
+              "row": 6,
+              "colSpan": 4,
+              "rowSpan": 5
+            }
+          },
+          "fill": {
+            "media": {
+              "kind": "image",
+              "id": "gid://shopify/MediaImage/46333615308982"
+            },
+            "overlay": {
+              "color": {
+                "slot": 1
+              },
+              "opacity": 0.22
+            }
+          },
+          "flex": {
+            "direction": "column",
+            "justify": "start",
+            "align": "stretch",
+            "gap": 1
+          },
+          "invert": true,
+          "children": [
+            {
+              "id": "rating-1",
+              "kind": "rating",
+              "stars": 5,
+              "label": "15 Reviews",
+              "colour": {
+                "slot": 3
+              }
+            },
+            {
+              "id": "headline-2",
+              "kind": "headline",
+              "level": 1,
+              "value": "Skin cream"
+            },
+            {
+              "id": "text-1",
+              "kind": "text",
+              "size": "lg",
+              "value": "Feel the difference every morning"
+            },
+            {
+              "id": "button-2",
+              "kind": "button",
+              "variant": "glass",
+              "label": "Button",
+              "href": ""
             }
           ]
         },
         {
-          "id": "intro",
+          "id": "block-4",
+          "at": {
+            "a": {
+              "col": 7,
+              "row": 9,
+              "colSpan": 6,
+              "rowSpan": 7
+            },
+            "b": {
+              "col": 5,
+              "row": 6,
+              "colSpan": 4,
+              "rowSpan": 5
+            },
+            "c": {
+              "col": 1,
+              "row": 18,
+              "colSpan": 4,
+              "rowSpan": 3
+            }
+          },
+          "fill": {
+            "color": {
+              "slot": 3
+            }
+          },
+          "flex": {
+            "direction": "column",
+            "justify": "center",
+            "align": "center",
+            "gap": 1
+          },
+          "invert": false,
+          "children": [
+            {
+              "id": "rating-3",
+              "kind": "rating",
+              "stars": 5,
+              "label": "15 Reviews"
+            },
+            {
+              "id": "group-3",
+              "kind": "group",
+              "flex": {
+                "direction": "column",
+                "justify": "center",
+                "align": "center",
+                "gap": 1
+              },
+              "width": 35,
+              "children": [
+                {
+                  "id": "headline-4",
+                  "kind": "headline",
+                  "level": 2,
+                  "value": "Feel good formulas"
+                },
+                {
+                  "id": "button-4",
+                  "kind": "button",
+                  "variant": "glass",
+                  "label": "Button",
+                  "href": ""
+                }
+              ]
+            }
+          ],
+          "narrowFlex": {
+            "direction": "column",
+            "justify": "center",
+            "align": "center",
+            "gap": 1
+          }
+        },
+        {
+          "id": "block-6",
           "at": {
             "a": {
               "col": 1,
-              "colSpan": 4,
-              "row": 5,
-              "rowSpan": 3
+              "row": 1,
+              "colSpan": 12,
+              "rowSpan": 8
             },
             "b": {
               "col": 1,
+              "row": 1,
+              "colSpan": 8,
+              "rowSpan": 5
+            },
+            "c": {
+              "col": 1,
+              "row": 1,
               "colSpan": 4,
-              "row": 4,
-              "rowSpan": 4
+              "rowSpan": 5
+            }
+          },
+          "fill": {
+            "color": {
+              "slot": 3
+            },
+            "media": {
+              "kind": "image",
+              "id": "gid://shopify/MediaImage/46333531652278"
+            },
+            "overlay": {
+              "color": {
+                "hex": "#411028"
+              },
+              "opacity": 0.23
+            }
+          },
+          "flex": {
+            "direction": "column",
+            "justify": "center",
+            "align": "center",
+            "gap": 2
+          },
+          "invert": true,
+          "children": [
+            {
+              "id": "group-1",
+              "kind": "group",
+              "flex": {
+                "direction": "column",
+                "justify": "center",
+                "align": "center",
+                "gap": 2
+              },
+              "width": 45,
+              "children": [
+                {
+                  "id": "headline-5",
+                  "kind": "headline",
+                  "level": 1,
+                  "value": "Your best skin starts here"
+                },
+                {
+                  "id": "button-5",
+                  "kind": "button",
+                  "variant": "glass",
+                  "label": "Get started",
+                  "href": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "block-1",
+          "at": {
+            "a": {
+              "col": 1,
+              "row": 23,
+              "colSpan": 12,
+              "rowSpan": 8
             },
             "c": {
               "col": 1,
               "colSpan": 4,
-              "row": 4,
+              "row": 21,
+              "rowSpan": 4
+            },
+            "b": {
+              "col": 1,
+              "colSpan": 8,
+              "row": 16,
+              "rowSpan": 5
+            }
+          },
+          "fill": {
+            "color": {
+              "slot": 3
+            },
+            "media": {
+              "kind": "image",
+              "id": "gid://shopify/MediaImage/46333531390134"
+            },
+            "overlay": {
+              "color": {
+                "hex": "#4e0424"
+              },
+              "opacity": 0.22
+            }
+          },
+          "flex": {
+            "direction": "column",
+            "justify": "center",
+            "align": "center",
+            "gap": 2
+          },
+          "invert": true,
+          "children": [
+            {
+              "id": "group-2",
+              "kind": "group",
+              "flex": {
+                "direction": "column",
+                "justify": "center",
+                "align": "center",
+                "gap": 2
+              },
+              "width": 61,
+              "children": [
+                {
+                  "id": "headline-1",
+                  "kind": "headline",
+                  "level": 1,
+                  "value": "Real users, real results"
+                },
+                {
+                  "id": "button-1",
+                  "kind": "button",
+                  "variant": "glass",
+                  "label": "Upgrade now",
+                  "href": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "block-3",
+          "at": {
+            "a": {
+              "col": 1,
+              "row": 31,
+              "colSpan": 6,
+              "rowSpan": 7
+            },
+            "c": {
+              "col": 1,
+              "colSpan": 4,
+              "row": 25,
+              "rowSpan": 4
+            },
+            "b": {
+              "col": 1,
+              "colSpan": 4,
+              "row": 21,
               "rowSpan": 5
             }
           },
@@ -71,312 +403,84 @@
           },
           "flex": {
             "direction": "column",
-            "justify": "between",
-            "align": "stretch",
-            "gap": 2
-          },
-          "invert": true,
-          "children": [
-            {
-              "id": "intro-h",
-              "kind": "headline",
-              "level": 3,
-              "value": "Inverted"
-            },
-            {
-              "id": "intro-t",
-              "kind": "text",
-              "size": "sm",
-              "value": "Ink and paper swap together, so the button follows the block without being told."
-            },
-            {
-              "id": "intro-rating",
-              "kind": "rating",
-              "stars": 4,
-              "label": "15 Reviews"
-            },
-            {
-              "id": "intro-b",
-              "kind": "button",
-              "variant": "primary",
-              "label": "Primary",
-              "href": "#"
-            }
-          ]
-        },
-        {
-          "id": "essay",
-          "at": {
-            "a": {
-              "col": 5,
-              "colSpan": 5,
-              "row": 5,
-              "rowSpan": 9
-            },
-            "b": {
-              "col": 5,
-              "colSpan": 4,
-              "row": 4,
-              "rowSpan": 6
-            },
-            "c": {
-              "col": 1,
-              "colSpan": 4,
-              "row": 9,
-              "rowSpan": 6
-            }
-          },
-          "fill": {
-            "color": {
-              "slot": 3
-            }
-          },
-          "flex": {
-            "direction": "column",
-            "justify": "start",
-            "align": "stretch",
+            "justify": "center",
+            "align": "center",
             "gap": 1
           },
           "invert": false,
           "children": [
             {
-              "id": "essay-rating",
+              "id": "rating-2",
               "kind": "rating",
               "stars": 5,
-              "label": "15 Reviews",
-              "colour": {
-                "slot": 5
-              }
+              "label": "15 Reviews"
             },
             {
-              "id": "essay-h",
-              "kind": "headline",
-              "level": 4,
-              "value": "Every block is the same box"
-            },
-            {
-              "id": "essay-t",
-              "kind": "text",
-              "size": "sm",
-              "value": "Type picks the renderer. Geometry is identical: a span, whole modules in both axes, and content that overruns is clipped rather than grown."
-            },
-            {
-              "id": "essay-row",
+              "id": "group-4",
               "kind": "group",
               "flex": {
-                "direction": "row",
-                "justify": "start",
+                "direction": "column",
+                "justify": "center",
                 "align": "center",
                 "gap": 1
               },
+              "width": 33,
               "children": [
                 {
-                  "id": "essay-b1",
-                  "kind": "button",
-                  "variant": "primary",
-                  "label": "Primary",
-                  "href": "#"
+                  "id": "headline-3",
+                  "kind": "headline",
+                  "level": 2,
+                  "value": "Same routine, different cream"
                 },
                 {
-                  "id": "essay-b2",
-                  "kind": "button",
-                  "variant": "outline",
-                  "label": "Outline",
-                  "href": "#"
-                },
-                {
-                  "id": "essay-b3",
+                  "id": "button-3",
                   "kind": "button",
                   "variant": "glass",
-                  "label": "Glass",
-                  "href": "#"
+                  "label": "Button",
+                  "href": ""
                 }
               ]
             }
-          ]
-        },
-        {
-          "id": "tint",
-          "at": {
-            "a": {
-              "col": 10,
-              "colSpan": 3,
-              "row": 5,
-              "rowSpan": 9
-            },
-            "b": {
-              "col": 1,
-              "colSpan": 8,
-              "row": 10,
-              "rowSpan": 3
-            },
-            "c": {
-              "col": 1,
-              "colSpan": 4,
-              "row": 15,
-              "rowSpan": 4
-            }
-          },
-          "fill": {
-            "color": {
-              "slot": 4
-            },
-            "media": {
-              "kind": "image",
-              "id": "gid://shopify/MediaImage/33216148897974"
-            },
-            "overlay": {
-              "color": {
-                "hex": "#000000"
-              },
-              "opacity": 0.35
-            }
-          },
-          "flex": {
+          ],
+          "narrowFlex": {
             "direction": "column",
             "justify": "center",
             "align": "center",
             "gap": 1
-          },
-          "invert": true,
-          "children": [
-            {
-              "id": "tint-h",
-              "kind": "headline",
-              "level": 5,
-              "value": "Overlay"
-            },
-            {
-              "id": "tint-t",
-              "kind": "text",
-              "size": "sm",
-              "value": "Colour, then a tint at any opacity."
-            },
-            {
-              "id": "tint-b",
-              "kind": "button",
-              "variant": "glass",
-              "label": "Glass",
-              "href": "#"
-            }
-          ]
+          }
         },
         {
-          "id": "strip",
+          "id": "block-5",
           "at": {
             "a": {
-              "col": 1,
-              "colSpan": 12,
-              "row": 14,
-              "rowSpan": 1
-            },
-            "b": {
-              "col": 1,
-              "colSpan": 8,
-              "row": 13,
-              "rowSpan": 1
-            },
-            "c": {
-              "col": 1,
-              "colSpan": 4,
-              "row": 19,
-              "rowSpan": 2
-            }
-          },
-          "fill": {
-            "color": {
-              "slot": 5
-            }
-          },
-          "flex": {
-            "direction": "row",
-            "justify": "between",
-            "align": "center",
-            "gap": 1
-          },
-          "invert": true,
-          "children": [
-            {
-              "id": "strip-a",
-              "kind": "text",
-              "size": "sm",
-              "value": "01 grid"
-            },
-            {
-              "id": "strip-b",
-              "kind": "text",
-              "size": "sm",
-              "value": "02 blocks"
-            },
-            {
-              "id": "strip-c",
-              "kind": "text",
-              "size": "sm",
-              "value": "03 groups"
-            },
-            {
-              "id": "strip-d",
-              "kind": "text",
-              "size": "sm",
-              "value": "04 editor"
-            }
-          ]
-        },
-        {
-          "id": "catalogue",
-          "at": {
-            "a": {
-              "col": 1,
-              "colSpan": 12,
-              "row": 15,
-              "rowSpan": 10
-            },
-            "b": {
-              "col": 1,
-              "colSpan": 8,
-              "row": 14,
+              "col": 7,
+              "row": 31,
+              "colSpan": 6,
               "rowSpan": 7
             },
             "c": {
               "col": 1,
               "colSpan": 4,
+              "row": 29,
+              "rowSpan": 5
+            },
+            "b": {
+              "col": 5,
+              "colSpan": 4,
               "row": 21,
-              "rowSpan": 13
-            }
-          },
-          "fill": {},
-          "flex": {
-            "direction": "column",
-            "justify": "start",
-            "align": "stretch",
-            "gap": 1
-          },
-          "invert": false,
-          "children": [
-            {
-              "id": "catalogue-grid",
-              "kind": "collection",
-              "source": "context",
-              "columns": 4,
-              "narrow": 2,
-              "count": 8,
-              "variant": "outline"
-            }
-          ]
-        },
-        {
-          "id": "masthead-1",
-          "at": {
-            "a": {
-              "col": 1,
-              "colSpan": 12,
-              "row": 2,
-              "rowSpan": 3
+              "rowSpan": 5
             }
           },
           "fill": {
-            "color": {
-              "slot": 5
+            "media": {
+              "kind": "image",
+              "id": "gid://shopify/MediaImage/46333614981302"
+            },
+            "overlay": {
+              "color": {
+                "slot": 1
+              },
+              "opacity": 0.15
             }
           },
           "flex": {
@@ -385,115 +489,58 @@
             "align": "stretch",
             "gap": 1
           },
-          "invert": false,
+          "invert": true,
           "children": [
             {
-              "id": "masthead-shop-1",
-              "kind": "group",
-              "flex": {
-                "direction": "row",
-                "justify": "end",
-                "align": "stretch",
-                "gap": 2
-              },
-              "children": [
-                {
-                  "id": "masthead-logo-1",
-                  "kind": "logo",
-                  "width": 14,
-                  "narrow": 30
-                },
-                {
-                  "id": "masthead-menu-1",
-                  "kind": "menu",
-                  "handle": "main-menu",
-                  "direction": "row",
-                  "collapse": true
-                },
-                {
-                  "id": "masthead-account-1",
-                  "kind": "account",
-                  "label": "Account"
-                },
-                {
-                  "id": "masthead-cart-1",
-                  "kind": "cart",
-                  "label": "Cart"
-                }
-              ]
+              "id": "rating-4",
+              "kind": "rating",
+              "stars": 5,
+              "label": "15 Reviews",
+              "colour": {
+                "slot": 3
+              }
             },
             {
-              "id": "masthead-h-1",
+              "id": "headline-6",
               "kind": "headline",
-              "level": 1,
-              "value": "Zoom, not reflow."
+              "level": 2,
+              "value": "Do you really need to add Vitamin C this spring?"
             },
             {
-              "id": "masthead-t-1",
+              "id": "text-2",
               "kind": "text",
               "size": "lg",
-              "value": "A storefront on a strict modular grid."
+              "value": "Feel the difference every morning"
+            },
+            {
+              "id": "button-6",
+              "kind": "button",
+              "variant": "glass",
+              "label": "Button",
+              "href": ""
             }
           ]
         },
         {
-          "id": "intro-1",
+          "id": "block-7",
           "at": {
             "a": {
+              "col": 1,
+              "row": 16,
+              "colSpan": 12,
+              "rowSpan": 7
+            },
+            "c": {
               "col": 1,
               "colSpan": 4,
               "row": 11,
-              "rowSpan": 3
-            }
-          },
-          "fill": {
-            "color": {
-              "slot": 3
-            }
-          },
-          "flex": {
-            "direction": "column",
-            "justify": "between",
-            "align": "stretch",
-            "gap": 2
-          },
-          "invert": true,
-          "children": [
-            {
-              "id": "intro-h-1",
-              "kind": "headline",
-              "level": 3,
-              "value": "Inverted"
+              "rowSpan": 7
             },
-            {
-              "id": "intro-t-1",
-              "kind": "text",
-              "size": "sm",
-              "value": "Ink and paper swap together, so the button follows the block without being told."
-            },
-            {
-              "id": "intro-rating-1",
-              "kind": "rating",
-              "stars": 4,
-              "label": "15 Reviews"
-            },
-            {
-              "id": "intro-b-1",
-              "kind": "button",
-              "variant": "primary",
-              "label": "Primary",
-              "href": "#"
-            }
-          ]
-        },
-        {
-          "id": "intro-2",
-          "at": {
-            "a": {
+            "b": {
               "col": 1,
-              "colSpan": 4,
-              "row": 8,
-              "rowSpan": 3
+              "colSpan": 8,
+              "row": 11,
+              "rowSpan": 5
             }
           },
           "fill": {
@@ -503,54 +550,61 @@
           },
           "flex": {
             "direction": "column",
-            "justify": "between",
+            "justify": "start",
             "align": "stretch",
-            "gap": 2
+            "gap": 1
           },
-          "invert": true,
+          "invert": false,
           "children": [
             {
-              "id": "intro-h-2",
+              "id": "headline-7",
               "kind": "headline",
-              "level": 3,
-              "value": "Inverted"
+              "level": 2,
+              "value": "The collection"
             },
             {
-              "id": "intro-t-2",
-              "kind": "text",
-              "size": "sm",
-              "value": "Ink and paper swap together, so the button follows the block without being told."
-            },
-            {
-              "id": "intro-rating-2",
-              "kind": "rating",
-              "stars": 4,
-              "label": "15 Reviews"
-            },
-            {
-              "id": "intro-b-2",
-              "kind": "button",
-              "variant": "primary",
-              "label": "Primary",
-              "href": "#"
+              "id": "collection-1",
+              "kind": "collection",
+              "source": {
+                "handle": "hydrogen"
+              },
+              "columns": 3,
+              "narrow": 1,
+              "count": 3,
+              "variant": "outline"
             }
-          ]
-        },
+          ],
+          "narrowFlex": {
+            "direction": "column",
+            "justify": "center",
+            "align": "center",
+            "gap": 1
+          }
+        }
+      ]
+    },
+    "footer": {
+      "version": 1,
+      "blocks": [
         {
           "id": "block-1",
           "at": {
             "a": {
-              "col": 7,
+              "col": 1,
               "row": 1,
-              "colSpan": 6,
-              "rowSpan": 1
+              "colSpan": 12,
+              "rowSpan": 3
             }
           },
-          "fill": {},
+          "fill": {
+            "color": {
+              "slot": 3
+            }
+          },
           "flex": {
-            "direction": "column",
-            "justify": "center",
-            "align": "end",
+            "direction": "row",
+            "justify": "between",
+            "align": "start",
             "gap": 1
           },
           "invert": false,
@@ -559,8 +613,76 @@
               "id": "menu-1",
               "kind": "menu",
               "handle": "main-menu",
-              "direction": "row",
+              "direction": "column",
               "collapse": false
+            },
+            {
+              "id": "menu-2",
+              "kind": "menu",
+              "handle": "footer",
+              "direction": "column",
+              "collapse": false
+            },
+            {
+              "id": "logo-1",
+              "kind": "logo",
+              "width": 17,
+              "narrow": 40
+            }
+          ],
+          "narrowFlex": {
+            "direction": "column",
+            "justify": "between",
+            "align": "start",
+            "gap": 1
+          }
+        },
+        {
+          "id": "block-2",
+          "at": {
+            "a": {
+              "col": 1,
+              "row": 4,
+              "colSpan": 12,
+              "rowSpan": 1
+            }
+          },
+          "fill": {
+            "color": {
+              "slot": 3
+            }
+          },
+          "flex": {
+            "direction": "row",
+            "justify": "between",
+            "align": "center",
+            "gap": 1
+          },
+          "invert": false,
+          "children": [
+            {
+              "id": "text-1",
+              "kind": "text",
+              "size": "sm",
+              "value": "01 grid"
+            },
+            {
+              "id": "text-2",
+              "kind": "text",
+              "size": "sm",
+              "value": "02 blocks"
+            },
+            {
+              "id": "text-3",
+              "kind": "text",
+              "size": "sm",
+              "value": "03 groups"
+            },
+            {
+              "id": "text-4",
+              "kind": "text",
+              "size": "sm",
+              "value": "04 editor"
             }
           ]
         }
@@ -568,19 +690,32 @@
     }
   },
   "palette": {
-    "1": "#111110",
-    "2": "#fbfbf9",
-    "3": "#d8261c",
-    "4": "#1b3fa0",
-    "5": "#f2c200"
+    "1": "#060003",
+    "2": "#ffffff",
+    "3": "#eca7c7",
+    "4": "#a9c5bf",
+    "5": "#98b9e0"
   },
   "metrics": {
-    "blockRadius": 1.4,
-    "imageRadius": 1.4,
+    "pageMax": 94,
+    "pageMargin": 2,
+    "pageMarginNarrow": 2.5,
+    "pagePadY": 1,
+    "pagePadYNarrow": 0.75,
+    "gutter": 0.8,
+    "gutterNarrow": 1.6,
+    "blockPadX": 2,
+    "blockPadY": 2,
+    "blockPadXNarrow": 3.6,
+    "blockPadYNarrow": 3.6,
+    "blockRadius": 1.8,
+    "imageRadius": 0.8,
+    "buttonPadX": 2.2,
+    "buttonPadY": 1,
     "buttonRadius": 2
   },
   "settings": {
-    "logo": "gid://shopify/MediaImage/33440674316470",
+    "logo": "gid://shopify/MediaImage/46333760602294",
     "background": {
       "slot": 1
     }
