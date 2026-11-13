@@ -48,6 +48,8 @@ admin-app/   embedded Shopify app. The only thing that writes
 - Blocks store references (product handle, image ID), never copies of the data.
 - `/editor` on the storefront is a public instance of the same editor, with no write access. Export downloads the layout as JSON.
 
+The design calls behind all this, dated, with what was rejected: [DECISIONS.md](DECISIONS.md).
+
 ## Stack
 
 - Hydrogen 2026.4 / React Router 7, TypeScript strict, Vite
@@ -56,6 +58,7 @@ admin-app/   embedded Shopify app. The only thing that writes
 - Radix Themes for the editor's controls
 - Plain CSS for the grid: custom properties, container queries, subgrid
 - Vitest, Playwright
+- Built with Claude Code
 
 ## Running it
 
@@ -81,3 +84,82 @@ npm run lint && npm run typecheck
   - an edit changes only the block being edited
 - Playwright screenshot tests at one width per breakpoint.
 - CI runs lint (which includes the boundary rules), typecheck and the unit tests.
+
+## How it works
+
+unigrid is a headless Shopify storefront. Shopify holds the data — products, collections, menus,
+files, and the page layouts themselves — but renders nothing. It is not a Liquid theme, and the
+admin app replaces the theme editor. Checkout is still Shopify's own.
+
+```
+ admin-app (Node, embedded in Shopify admin)        storefront (Hydrogen on Cloudflare Workers)
+ ┌───────────────────────────────┐                  ┌──────────────────────────────────┐
+ │ <Editor> from editor/         │                  │ <Composition> → <Grid>/<Block>   │
+ │ loader/action → layout.server │                  │ loader → lib/layout.ts           │
+ └──────────────┬────────────────┘                  └───────────────┬──────────────────┘
+                │ Admin GraphQL API (write)                         │ Storefront API (read)
+                ▼                                                   ▼
+        ┌─────────────────────────────────────────────────────────────────┐
+        │ Shopify metaobjects:  unigrid_layout (one per page or region)   │
+        │                       unigrid_theme  (palette, metrics, logo)   │
+        └─────────────────────────────────────────────────────────────────┘
+```
+
+### The admin app
+
+1. Shopify loads it in an iframe inside the admin (`embedded = true` in `shopify.app.toml`).
+2. On install it runs OAuth under `/auth/*` and stores an offline token in a Prisma session table.
+3. Every request goes through `authenticate.admin(request)`, which verifies App Bridge's session
+   token. App Bridge also supplies toasts and Shopify's own file picker.
+4. `app._index.tsx` loads the header, body and footer drafts, the theme, and the pages, menus,
+   products and collections the editor's pickers offer. The page being edited and the A/B arm
+   are URL state (`?target=product&arm=b`).
+5. It renders `<Editor>` from `editor/` — the same component as the public `/editor` playground,
+   with save and publish wired to Shopify instead of a JSON download.
+
+### Saving and publishing
+
+Each `unigrid_layout` entry has `draft`, `published` and `version` fields, plus `draft_b`,
+`published_b` and `flag` while an A/B test runs. Layouts are stored as compact JSON from `core`'s
+`encode()`.
+
+- **Save** writes `draft` only. One submit carries every region that changed. Nothing goes live,
+  because the storefront never reads `draft`.
+- **Publish** copies `draft → published` for header, body and footer together and bumps
+  `version`. A draft that fails to decode is refused.
+- **Theme** changes have no draft: every page references the theme, so saving is publishing.
+- **A/B tests** copy A's draft into `draft_b`, attach a PostHog flag key, and publish both arms
+  together. Rolling out promotes one arm and clears the test.
+
+All of it lives in `admin-app/app/lib/layout.server.ts`, framework-free; the route action is a
+thin dispatcher into it.
+
+### Rendering a page
+
+1. `storefront/server.ts` builds the Hydrogen context per request — Storefront API client, Cache
+   API, session, cart — and hands off to React Router.
+2. Each route's loader asks for a fixed target: `home`, `product`, `collection` or
+   `page:<handle>`. Product and collection use one template for the whole catalogue.
+3. One aliased GraphQL query fetches header, body, footer and theme in a single round trip,
+   reading `published`.
+4. If the page has a live test, the worker picks an arm before render: from a cookie, or from
+   PostHog with a 300ms timeout that falls back to A. Those pages are served `private, no-store`.
+5. Layouts hold references — menu and product handles, file IDs — so only what a layout names is
+   fetched, in parallel.
+6. `<Composition>` renders each region as its own `<Grid>`. Placements for all three breakpoints
+   are derived up front as CSS custom properties, and container queries pick the active one.
+7. Hydrogen's `<Image>` and router links are injected into `<Grid>`, which is what lets `blocks/`
+   build inside the admin app too.
+
+Published changes reach the storefront within seconds: layout queries use Hydrogen's short cache.
+
+### Setting up a store
+
+The metaobject definitions are created in the Shopify admin, not in code:
+
+- `unigrid_layout` with `target`, `version`, `draft`, `published`, `draft_b`, `published_b`,
+  `flag`
+- `unigrid_theme` (handle `default`) with colour slots, `metrics` and `settings`
+
+Both need **Storefront API access** enabled and entries published, or the storefront's queries
+return nothing. Products must be published to the Hydrogen sales channel.
